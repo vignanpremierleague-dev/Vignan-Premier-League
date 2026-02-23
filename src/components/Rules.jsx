@@ -27,7 +27,7 @@ const rules = [
     'Spirit of cricket must be upheld at all times.',
   ]},
   { icon:<GraduationCap size={14} color="#ff6b22"/>, title:'Eligibility', items:[
-    'Must be currently enrolled at Vignan.',
+    'Must be a student of Vignan University.',
     'Valid student ID required at registration.',
     'Faculty are owners only—they cannot play.',
     'One registration per player.',
@@ -55,8 +55,8 @@ export default function Rules() {
   }, [])
 
   return (
-    <section id="rules" style={{ padding:'100px 0', background:'#06060a' }}>
-      <div className="wrap" style={{ maxWidth:700 }}>
+    <section id="rules" style={{ padding:'100px 0', background:'#070707' }}>
+      <div className="wrap" style={{ maxWidth:780 }}>
         <div ref={headRef} style={{ textAlign:'center', marginBottom:56, opacity:0 }}>
           <h2 className="section-heading fire-text" style={{ marginBottom:8 }}>Rules & Regulations</h2>
           <span className="divider" />
@@ -72,7 +72,7 @@ export default function Rules() {
               <Accordion.Content className="acc-content">
                 <ul style={{ padding:'16px 20px', display:'flex', flexDirection:'column', gap:10 }}>
                   {r.items.map((item, j) => (
-                    <li key={j} style={{ display:'flex', alignItems:'flex-start', gap:10, fontFamily:'"DM Sans",system-ui,sans-serif', color:'#5a5a7a', fontSize:'.875rem', lineHeight:1.65 }}>
+                    <li key={j} style={{ display:'flex', alignItems:'flex-start', gap:10, fontFamily:'"DM Sans",system-ui,sans-serif', color:'#8b8b8b', fontSize:'.875rem', lineHeight:1.65 }}>
                       <span style={{ width:5, height:5, borderRadius:'50%', background:'#ff6b22', marginTop:8, flexShrink:0 }}/>
                       {item}
                     </li>

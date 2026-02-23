@@ -1,8 +1,14 @@
 import pg from 'pg'
 const { Client } = pg
 
+const connectionString = process.env.DATABASE_URL
+if (!connectionString) {
+  console.error('Missing DATABASE_URL in environment.')
+  process.exit(1)
+}
+
 const client = new Client({
-  connectionString: 'postgresql://postgres.fjezyxdfdjstccvhzydb:242FAVPL2025@aws-1-ap-south-1.pooler.supabase.com:5432/postgres',
+  connectionString,
   ssl: { rejectUnauthorized: false },
 })
 

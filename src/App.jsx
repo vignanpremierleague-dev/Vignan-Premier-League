@@ -1,37 +1,23 @@
-import Navbar from './components/Navbar'
-import Hero from './components/Hero'
-import About from './components/About'
-import HowItWorks from './components/HowItWorks'
-import Timeline from './components/Timeline'
-import Rules from './components/Rules'
-import Schedule from './components/Schedule'
-import Prizes from './components/Prizes'
-import Registration from './components/Registration'
-import Terms from './components/Terms'
-import Contact from './components/Contact'
-import Footer from './components/Footer'
-import EmberParticles from './components/EmberParticles'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import AdminLogin     from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
+import MainSite       from './MainSite'
 
-function App() {
-  return (
-    <div className="relative min-h-screen bg-dark text-text-primary font-outfit">
-      <EmberParticles />
-      <Navbar />
-      <main>
-        <Hero />
-        <About />
-        <HowItWorks />
-        <Timeline />
-        <Rules />
-        <Schedule />
-        <Prizes />
-        <Registration />
-        <Terms />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
-  )
+function ProtectedAdmin() {
+  if (!sessionStorage.getItem('vpl_admin_token')) return <Navigate to="/admin" replace />
+  return <AdminDashboard />
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/"                 element={<MainSite />} />
+        <Route path="/admin"            element={<AdminLogin />} />
+        <Route path="/admin/dashboard"  element={<ProtectedAdmin />} />
+        {/* Catch-all → main site */}
+        <Route path="*"                 element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}

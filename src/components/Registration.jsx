@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { uploadToCloudinary, deleteFromCloudinary } from '../lib/cloudinary'
 import ProgressBar     from './reg/ProgressBar'
 import Step1_Personal  from './reg/Step1_Personal'
 import Step2_Academic  from './reg/Step2_Academic'
@@ -12,9 +13,11 @@ const WA_LINK = 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t'
 
 const INIT = {
   registration_id: '', name: '', phone: '', email: '', photo_url: '',
+  photo_file: null,
   year: '', course: '', branch: '', section: '',
   role: '', batting_side: '', bowling_arm: '', bowling_type: '',
   utr_number: '', payment_screenshot_url: '',
+  payment_file: null,
 }
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -26,7 +29,7 @@ function validate(step, data) {
     if (!data.name.trim())            e.name = 'Name is required.'
     if (!data.phone.trim() || data.phone.length < 10) e.phone = 'Enter a valid 10-digit phone number.'
     if (!emailRe.test(data.email))    e.email = 'Enter a valid email address.'
-    if (!data.photo_url)              e.photo_url = 'Player photo is required for the auction.'
+    if (!data.photo_file)             e.photo_url = 'Player photo is required for the auction.'
   }
   if (step === 2) {
     if (!data.year)    e.year    = 'Select your year.'
@@ -44,7 +47,7 @@ function validate(step, data) {
   }
   if (step === 4) {
     if (!data.utr_number.trim())        e.utr_number = 'UTR number is required.'
-    if (!data.payment_screenshot_url)   e.payment_screenshot_url = 'Please upload the payment screenshot.'
+    if (!data.payment_file)             e.payment_screenshot_url = 'Please upload the payment screenshot.'
   }
   return e
 }
@@ -71,7 +74,23 @@ export default function Registration() {
   }
   const goBack = () => { setErrors({}); setStep(s => s - 1); scrollToSection() }
 
+  const parseInsertError = (error) => {
+    if (error?.code === '23505') {
+      if (error.message?.includes('registration_id')) return 'This Registration ID is already registered.'
+      if (error.message?.includes('utr_number')) return 'This UTR number was already used.'
+      return 'A duplicate entry was detected.'
+    }
+    return error?.message || 'Submission failed. Please try again.'
+  }
+
   const handleSubmit = async () => {
+    const errs = { ...validate(1, data), ...validate(2, data), ...validate(3, data), ...validate(4, data) }
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      setSubmitError('Please complete all required fields before submitting.')
+      return
+    }
+
     setSubmitting(true)
     setSubmitError('')
     try {
@@ -80,7 +99,7 @@ export default function Registration() {
         name:                    data.name.trim(),
         phone:                   data.phone.trim(),
         email:                   data.email.trim().toLowerCase(),
-        photo_url:               data.photo_url || null,
+        photo_url:               null,
         year:                    data.year,
         course:                  data.course,
         branch:                  data.branch,
@@ -90,23 +109,80 @@ export default function Registration() {
         bowling_arm:             data.bowling_arm  || null,
         bowling_type:            data.bowling_type || null,
         utr_number:              data.utr_number.trim() || null,
-        payment_screenshot_url:  data.payment_screenshot_url || null,
+        payment_screenshot_url:  null,
         is_verified:             false,   // always starts unverified
       }
-      const { error } = await supabase.from('vpl_players').insert(payload)
-      if (error) {
-        if (error.code === '23505') {
-          if (error.message.includes('registration_id')) setSubmitError('This Registration ID is already registered.')
-          else if (error.message.includes('utr_number')) setSubmitError('This UTR number was already used.')
-          else setSubmitError('A duplicate entry was detected.')
-        } else {
-          setSubmitError(error.message || 'Submission failed. Please try again.')
-        }
+      const { data: inserted, error: insertError } = await supabase
+        .from('vpl_players')
+        .insert(payload)
+        .select('id')
+        .single()
+
+      if (insertError) {
+        setSubmitError(parseInsertError(insertError))
         return
       }
-      setSuccess(true)
-    } catch {
-      setSubmitError('Unexpected error. Please try again.')
+
+      const insertedId = inserted?.id
+      if (!insertedId) {
+        setSubmitError('Submission failed because registration ID was not returned.')
+        return
+      }
+
+      let photoAsset = null
+      let paymentAsset = null
+
+      try {
+        photoAsset = await uploadToCloudinary(data.photo_file)
+        paymentAsset = await uploadToCloudinary(data.payment_file)
+
+        const { error: updateError } = await supabase
+          .from('vpl_players')
+          .update({
+            photo_url: photoAsset.secureUrl,
+            payment_screenshot_url: paymentAsset.secureUrl,
+          })
+          .eq('id', insertedId)
+
+        if (updateError) throw updateError
+
+        setData(prev => {
+          if (prev.photo_url?.startsWith('blob:')) URL.revokeObjectURL(prev.photo_url)
+          if (prev.payment_screenshot_url?.startsWith('blob:')) URL.revokeObjectURL(prev.payment_screenshot_url)
+          return {
+            ...prev,
+            photo_url: photoAsset.secureUrl,
+            payment_screenshot_url: paymentAsset.secureUrl,
+            photo_file: null,
+            payment_file: null,
+          }
+        })
+        setSuccess(true)
+      } catch (err) {
+        let rollbackError = ''
+
+        if (photoAsset?.deleteToken) {
+          try { await deleteFromCloudinary(photoAsset.deleteToken) } catch { rollbackError = 'cloudinary' }
+        }
+        if (paymentAsset?.deleteToken) {
+          try { await deleteFromCloudinary(paymentAsset.deleteToken) } catch { rollbackError = 'cloudinary' }
+        }
+
+        const { error: deleteError } = await supabase
+          .from('vpl_players')
+          .delete()
+          .eq('id', insertedId)
+
+        if (deleteError) rollbackError = 'database'
+
+        if (rollbackError) {
+          setSubmitError('Submission failed and rollback was partial. Please contact support before retrying.')
+        } else {
+          setSubmitError(err?.message || 'Submission failed. Please try again.')
+        }
+      }
+    } catch (err) {
+      setSubmitError(err?.message || 'Unexpected error. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -115,14 +191,14 @@ export default function Registration() {
   /* ── Success Screen ───────────────────────────────────── */
   if (success) {
     return (
-      <section id="register" style={{ padding:'100px 0', background:'#0c0c14' }}>
+      <section id="register" style={{ padding:'100px 0', background:'#0f0f0f' }}>
         <div className="wrap" style={{ maxWidth:520, margin:'0 auto', textAlign:'center', padding:'0 16px' }}>
           <div style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
             <CheckCircle size={64} color="#ff6b22" strokeWidth={1.5} />
           </div>
           <h2 className="section-heading fire-text" style={{ marginBottom:12 }}>You're In!</h2>
-          <p style={{ fontFamily:'"DM Sans"', color:'#5a5a7a', fontSize:'.95rem', lineHeight:1.8, marginBottom:28 }}>
-            Registration received, <strong style={{ color:'#c0bfd8' }}>{data.name}</strong>! We'll verify your payment and confirm your auction spot.
+          <p style={{ fontFamily:'"DM Sans"', color:'#8b8b8b', fontSize:'.95rem', lineHeight:1.8, marginBottom:28 }}>
+            Registration received, <strong style={{ color:'#d4d4d4' }}>{data.name}</strong>! We'll verify your payment and confirm your auction spot.
           </p>
 
           {/* Player photo */}
@@ -135,7 +211,7 @@ export default function Registration() {
 
           {/* Reg ID */}
           <div style={{ background:'rgba(255,107,34,.05)', border:'1px solid rgba(255,107,34,.15)', borderRadius:12, padding:'16px 20px', marginBottom:24, textAlign:'left' }}>
-            <p style={{ fontFamily:'"DM Sans"', color:'#5a5a7a', fontSize:'.75rem', marginBottom:5, textTransform:'uppercase', letterSpacing:'.1em' }}>Your Registration ID</p>
+            <p style={{ fontFamily:'"DM Sans"', color:'#8b8b8b', fontSize:'.75rem', marginBottom:5, textTransform:'uppercase', letterSpacing:'.1em' }}>Your Registration ID</p>
             <p style={{ fontFamily:'monospace', color:'#ff6b22', fontWeight:800, fontSize:'1.1rem' }}>{data.registration_id.toUpperCase()}</p>
           </div>
 
@@ -160,7 +236,7 @@ export default function Registration() {
 
   /* ── Form ─────────────────────────────────────────────── */
   return (
-    <section id="register" style={{ padding:'80px 0', background:'#0c0c14', position:'relative', overflow:'hidden' }}>
+    <section id="register" style={{ padding:'80px 0', background:'#0f0f0f', position:'relative', overflow:'hidden' }}>
       <div style={{ position:'absolute', bottom:'-20%', left:'50%', transform:'translateX(-50%)', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle, rgba(255,107,34,.04) 0%, transparent 65%)', pointerEvents:'none' }} />
 
       <div className="wrap" style={{ position:'relative', zIndex:10 }}>
@@ -197,7 +273,7 @@ export default function Registration() {
             )}
           </div>
 
-          <p style={{ fontFamily:'"DM Sans"', color:'#2a2a4a', fontSize:'.72rem', textAlign:'center', marginTop:14 }}>
+          <p style={{ fontFamily:'"DM Sans"', color:'#8a8a8a', fontSize:'.72rem', textAlign:'center', marginTop:14 }}>
             Step {step} of 5
           </p>
         </div>

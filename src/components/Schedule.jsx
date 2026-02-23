@@ -36,49 +36,78 @@ export default function Schedule() {
   }, [])
 
   return (
-    <section id="schedule" style={{ padding:'100px 0', background:'#0c0c14' }}>
+    <section id="schedule" style={{ padding:'100px 0', background:'#0f0f0f' }}>
       <div className="wrap">
-        <div style={{ textAlign:'center', marginBottom:56 }}>
-          <h2 className="section-heading fire-text" style={{ marginBottom:8 }}>Schedule & Fixtures</h2>
+        <div style={{ textAlign:'center', marginBottom:52 }}>
+          <h2 className="section-heading fire-text" style={{ marginBottom:8 }}>Schedule &amp; Fixtures</h2>
           <span className="divider" />
-          <p style={{ fontFamily:'"DM Sans",system-ui,sans-serif', color:'#3a3a5a', fontSize:'.8rem', marginTop:14 }}>
-            Dates & teams will be confirmed after the player auction
+          <p style={{ fontFamily:'"DM Sans",system-ui,sans-serif', color:'#8c8c8c', fontSize:'.83rem', marginTop:14 }}>
+            Dates &amp; teams will be confirmed after the player auction
           </p>
         </div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:20, maxWidth:780, margin:'0 auto' }}>
           {stages.map((stage, si) => (
-            <div key={stage.label} ref={el => tableRefs.current[si] = el} className="halo" style={{ overflow:'hidden', opacity:0 }}>
-              <div style={{ padding:'12px 22px', borderBottom:'1px solid rgba(255,255,255,.04)', display:'flex', alignItems:'center', gap:10 }}>
+            <div key={stage.label} ref={el => tableRefs.current[si] = el} className="sched-card" style={{ opacity:0 }}>
+              {/* Stage header */}
+              <div style={{ padding:'12px 20px', borderBottom:'1px solid rgba(255,255,255,.07)', display:'flex', alignItems:'center', gap:10 }}>
                 <span style={{ width:7, height:7, borderRadius:'50%', background:'#ff6b22', flexShrink:0, boxShadow:'0 0 8px rgba(255,107,34,.5)' }}/>
-                <span style={{ fontFamily:'"Syne",system-ui,sans-serif', fontWeight:700, fontSize:'.85rem', color:'#ff6b22' }}>{stage.label}</span>
+                <span style={{ fontFamily:'"Syne",system-ui,sans-serif', fontWeight:700, fontSize:'.88rem', color:'#ff6b22' }}>{stage.label}</span>
               </div>
-              <div style={{ overflowX:'auto' }}>
-                <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:'"DM Sans",system-ui,sans-serif', fontSize:'.85rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom:'1px solid rgba(255,255,255,.04)' }}>
-                      {['Match','Team 1','','Team 2','Date'].map((h, i) => (
-                        <th key={i} style={{ padding:'10px 20px', textAlign:'left', color:'#2a2a4a', fontWeight:600, fontSize:'.7rem', textTransform:'uppercase', letterSpacing:'.1em' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stage.matches.map((m, mi) => (
-                      <tr key={mi} className="tbl-row">
-                        <td style={{ padding:'13px 20px', fontWeight:600, color:'#c0bfd8' }}>{m.m}</td>
-                        <td style={{ padding:'13px 20px', color:'#5a5a7a' }}>{m.t1}</td>
-                        <td style={{ padding:'13px 8px', color:'#ff6b22', fontWeight:800, fontSize:'.72rem', textAlign:'center' }}>VS</td>
-                        <td style={{ padding:'13px 20px', color:'#5a5a7a' }}>{m.t2}</td>
-                        <td style={{ padding:'13px 20px', color:'#f5a100', fontWeight:600 }}>TBD</td>
-                      </tr>
+
+              {/* Desktop table */}
+              <table className="sched-table" style={{ width:'100%', borderCollapse:'collapse', fontFamily:'"DM Sans",system-ui,sans-serif', fontSize:'.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom:'1px solid rgba(255,255,255,.06)' }}>
+                    {['Match','Team 1','','Team 2','Date'].map((h, i) => (
+                      <th key={i} style={{ padding:'10px 18px', textAlign:'left', color:'#8a8a8a', fontWeight:600, fontSize:'.7rem', textTransform:'uppercase', letterSpacing:'.1em' }}>{h}</th>
                     ))}
-                  </tbody>
-                </table>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stage.matches.map((m, mi) => (
+                    <tr key={mi} className="tbl-row">
+                      <td style={{ padding:'13px 18px', fontWeight:600, color:'#d2d2d2' }}>{m.m}</td>
+                      <td style={{ padding:'13px 18px', color:'#aaaaaa' }}>{m.t1}</td>
+                      <td style={{ padding:'8px 6px', color:'#ff6b22', fontWeight:800, fontSize:'.7rem', textAlign:'center' }}>VS</td>
+                      <td style={{ padding:'13px 18px', color:'#aaaaaa' }}>{m.t2}</td>
+                      <td style={{ padding:'13px 18px', color:'#f5a100', fontWeight:600 }}>TBD</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Mobile cards */}
+              <div className="sched-mobile">
+                {stage.matches.map((m, mi) => (
+                  <div key={mi} style={{ padding:'14px 18px', borderBottom: mi < stage.matches.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none' }}>
+                    <p style={{ fontFamily:'"Syne"', fontSize:'.75rem', fontWeight:700, color:'#ff6b22', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:8 }}>{m.m}</p>
+                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                      <span style={{ fontFamily:'"DM Sans"', color:'#b8b8b8', fontWeight:600, flex:1, textAlign:'right' }}>{m.t1}</span>
+                      <span style={{ fontFamily:'"DM Sans"', color:'#ff6b22', fontWeight:800, fontSize:'.72rem', padding:'2px 8px', background:'rgba(255,107,34,.1)', borderRadius:6 }}>VS</span>
+                      <span style={{ fontFamily:'"DM Sans"', color:'#b8b8b8', fontWeight:600, flex:1 }}>{m.t2}</span>
+                    </div>
+                    <p style={{ fontFamily:'"DM Sans"', color:'#f5a100', fontSize:'.75rem', fontWeight:600, marginTop:6 }}>Date: TBD</p>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      <style>{`
+        .sched-card {
+          background: rgba(18,18,18,.92);
+          border: 1px solid rgba(255,255,255,.08);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        .sched-table { display: table; width: 100%; }
+        .sched-mobile { display: none; }
+        .tbl-row:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,.04); }
+        .tbl-row:hover { background: rgba(255,255,255,.02); }
+      `}</style>
     </section>
   )
 }

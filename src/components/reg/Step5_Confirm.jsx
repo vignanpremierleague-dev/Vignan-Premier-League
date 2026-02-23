@@ -11,8 +11,8 @@ function Row({ label, value }) {
   if (!value) return null
   return (
     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,.04)' }}>
-      <span style={{ fontFamily:'"DM Sans"', color:'#3a3a5a', fontSize:'.78rem', textTransform:'uppercase', letterSpacing:'.09em', fontWeight:600, flexShrink:0 }}>{label}</span>
-      <span style={{ fontFamily:'"DM Sans"', color:'#c0bfd8', fontSize:'.875rem', fontWeight:500, textAlign:'right', wordBreak:'break-all' }}>{value}</span>
+      <span style={{ fontFamily:'"DM Sans"', color:'#8a8a8a', fontSize:'.76rem', textTransform:'uppercase', letterSpacing:'.09em', fontWeight:600, flexShrink:0 }}>{label}</span>
+      <span style={{ fontFamily:'"DM Sans"', color:'#d4d4d4', fontSize:'.875rem', fontWeight:500, textAlign:'right', wordBreak:'break-all' }}>{value}</span>
     </div>
   )
 }
@@ -29,7 +29,7 @@ export default function Step5_Confirm({ data, submitting, submitError }) {
           <div style={{ textAlign:'center' }}>
             <img src={data.photo_url} alt="Player"
               style={{ width:80, height:80, borderRadius:'50%', objectFit:'cover', border:'2px solid rgba(255,107,34,.4)', marginBottom:6 }} />
-            <p style={{ fontFamily:'"DM Sans"', color:'#3a3a5a', fontSize:'.7rem', textTransform:'uppercase', letterSpacing:'.1em' }}>Auction Photo</p>
+            <p style={{ fontFamily:'"DM Sans"', color:'#8a8a8a', fontSize:'.72rem', textTransform:'uppercase', letterSpacing:'.1em' }}>Auction Photo</p>
           </div>
         </div>
       )}
@@ -56,14 +56,14 @@ export default function Step5_Confirm({ data, submitting, submitError }) {
         <div style={{ marginBottom:18, borderRadius:12, overflow:'hidden', border:'1px solid rgba(255,107,34,.2)' }}>
           <p style={{ background:'rgba(255,107,34,.06)', padding:'8px 14px', fontFamily:'"DM Sans"', color:'#f5a100', fontSize:'.72rem', fontWeight:600 }}>PAYMENT SCREENSHOT</p>
           <img src={data.payment_screenshot_url} alt="Payment"
-            style={{ width:'100%', maxHeight:140, objectFit:'contain', display:'block', background:'#0c0c14' }} />
+            style={{ width:'100%', maxHeight:140, objectFit:'contain', display:'block', background:'#0f0f0f' }} />
         </div>
       )}
 
       {/* Note */}
       <div style={{ display:'flex', gap:10, padding:'12px 14px', borderRadius:10, background:'rgba(245,161,0,.06)', border:'1px solid rgba(245,161,0,.15)', marginBottom: submitError ? 16 : 0 }}>
         <CheckCircle size={15} color="#f5a100" style={{ flexShrink:0, marginTop:1 }} />
-        <p style={{ fontFamily:'"DM Sans"', color:'#7a7a5a', fontSize:'.8rem', lineHeight:1.65 }}>
+        <p style={{ fontFamily:'"DM Sans"', color:'#9a9a8a', fontSize:'.8rem', lineHeight:1.65 }}>
           Your registration is confirmed after payment verification. You'll be contacted on your phone/email.
         </p>
       </div>
@@ -79,3 +79,4 @@ export default function Step5_Confirm({ data, submitting, submitError }) {
     </div>
   )
 }
+

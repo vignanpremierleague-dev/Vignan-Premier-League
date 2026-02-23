@@ -38,9 +38,9 @@ export default function Hero() {
 
         {/* Season badge */}
         <div className="hero-fade-up" style={{ display: 'flex', justifyContent: 'center', marginBottom: 28, animationDelay: '0.1s' }}>
-          <span className="tag">
+          <span className="tag hero-season-pill">
             <Flame style={{ width: 12, height: 12, animation: 'flicker .8s ease-in-out infinite' }} />
-            Season 1 &middot; 2025
+            Season 1 &middot; 2026
           </span>
         </div>
 
@@ -66,7 +66,7 @@ export default function Hero() {
           className="hero-fade-up"
           style={{
             fontFamily: '"DM Sans",system-ui,sans-serif',
-            color: '#8a8aaa',
+            color: '#9a9a9a',
             fontSize: '1rem',
             maxWidth: 440,
             margin: '0 auto 40px',
@@ -78,19 +78,13 @@ export default function Hero() {
         </p>
 
         {/* Buttons */}
-        <div className="hero-fade-up" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
-          <a href="#register" className="btn-primary">
+        <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
+          <a href="#register" className="btn-primary hero-btn-primary">
             <Flame style={{ width: 16, height: 16 }} /> Register Now
           </a>
-          <a href="#about" className="btn-ghost">
+          <a href="#about" className="btn-ghost hero-btn-ghost">
             <ArrowDown style={{ width: 16, height: 16 }} /> Explore
           </a>
-        </div>
-
-        {/* Scroll hint */}
-        <div className="hero-fade-up" style={{ marginTop: 72, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, animationDelay: '1.1s' }}>
-          <span style={{ color: '#2a2a4a', fontSize: '.68rem', textTransform: 'uppercase', letterSpacing: '.24em' }}>Scroll</span>
-          <div style={{ width: 1, height: 44, background: 'linear-gradient(to bottom, #ff6b22, transparent)' }} />
         </div>
       </div>
 

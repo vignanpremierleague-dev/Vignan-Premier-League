@@ -19,14 +19,14 @@ export default function ProgressBar({ step }) {
                   fontWeight: 700, fontSize: '.8rem',
                   background: done ? 'linear-gradient(135deg,#ff6b22,#e63946)' : active ? 'rgba(255,107,34,.15)' : 'rgba(255,255,255,.04)',
                   border: `2px solid ${done || active ? '#ff6b22' : 'rgba(255,255,255,.08)'}`,
-                  color: done ? '#fff' : active ? '#ff6b22' : '#3a3a5a',
+                  color: done ? '#fff' : active ? '#ff6b22' : '#8a8a8a',
                   transition: 'all .3s ease',
                   flexShrink: 0,
                 }}>
                   {done ? '✓' : num}
                 </div>
                 <span style={{
-                  fontSize: '.65rem', color: active ? '#ff6b22' : '#3a3a5a',
+                  fontSize: '.65rem', color: active ? '#ff6b22' : '#8a8a8a',
                   fontWeight: active ? 700 : 400,
                   fontFamily: '"DM Sans",system-ui,sans-serif',
                   textTransform: 'uppercase', letterSpacing: '.08em',
@@ -51,3 +51,4 @@ export default function ProgressBar({ step }) {
     </div>
   )
 }
+
