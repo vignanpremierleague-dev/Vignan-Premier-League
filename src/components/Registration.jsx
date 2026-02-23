@@ -90,6 +90,10 @@ export default function Registration() {
       setSubmitError('Please complete all required fields before submitting.')
       return
     }
+    if (!supabase) {
+      setSubmitError('Registration service is not configured. Please contact support.')
+      return
+    }
 
     setSubmitting(true)
     setSubmitError('')
