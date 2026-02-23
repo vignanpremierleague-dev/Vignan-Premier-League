@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { uploadToCloudinary, deleteFromCloudinary } from '../lib/cloudinary'
+import { uploadToCloudinary } from '../lib/cloudinary'
 import ProgressBar     from './reg/ProgressBar'
 import Step1_Personal  from './reg/Step1_Personal'
 import Step2_Academic  from './reg/Step2_Academic'
@@ -163,23 +163,12 @@ export default function Registration() {
         })
         setSuccess(true)
       } catch (err) {
-        let rollbackError = ''
-
-        if (photoAsset?.deleteToken) {
-          try { await deleteFromCloudinary(photoAsset.deleteToken) } catch { rollbackError = 'cloudinary' }
-        }
-        if (paymentAsset?.deleteToken) {
-          try { await deleteFromCloudinary(paymentAsset.deleteToken) } catch { rollbackError = 'cloudinary' }
-        }
-
         const { error: deleteError } = await supabase
           .from('vpl_players')
           .delete()
           .eq('id', insertedId)
 
-        if (deleteError) rollbackError = 'database'
-
-        if (rollbackError) {
+        if (deleteError) {
           setSubmitError('Submission failed and rollback was partial. Please contact support before retrying.')
         } else {
           setSubmitError(err?.message || 'Submission failed. Please try again.')
