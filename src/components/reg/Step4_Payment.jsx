@@ -1,21 +1,12 @@
-import { useState, useRef } from 'react'
-import { Copy, Check, Upload, Image } from 'lucide-react'
+ï»¿import { useState, useRef } from 'react'
+import { Upload, Image } from 'lucide-react'
 import { fieldStyle, labelStyle, errorStyle, FocusInput } from './fieldStyles'
 
-const UPI_ID = 'munursaicharan@okaxis'
-
 export default function Step4_Payment({ data, setData, errors }) {
-  const [copied, setCopied] = useState(false)
   const [uploadErr, setUploadErr] = useState('')
   const fileRef = useRef(null)
 
   const set = k => e => setData(prev => ({ ...prev, [k]: e.target.value }))
-
-  const copyUpi = () => {
-    navigator.clipboard.writeText(UPI_ID)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
-  }
 
   const clearScreenshot = () => {
     setData(prev => {
@@ -45,31 +36,43 @@ export default function Step4_Payment({ data, setData, errors }) {
   return (
     <div>
       <h3 className="step-title">Payment</h3>
-      <p className="step-desc">Pay Rs.400 to the UPI below, then enter your UTR and upload the payment screenshot as proof.</p>
+      <p className="step-desc">Pay Rs.200 by scanning the QR below, then enter your UTR and upload the payment screenshot as proof.</p>
 
       <div
-        onClick={copyUpi}
         style={{
-          padding: '18px 22px', borderRadius: 14, marginBottom: 24, cursor: 'pointer',
+          padding: '18px 22px', borderRadius: 14, marginBottom: 24,
           background: 'rgba(255,107,34,.04)',
           border: '1px solid rgba(255,107,34,.18)',
-          transition: 'border-color .25s',
+          textAlign: 'center',
         }}
-        onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,107,34,.4)'}
-        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,107,34,.18)'}
       >
         <p style={{ fontFamily: '"DM Sans"', color: '#8a8a8a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8, fontWeight: 600 }}>
-          Registration Fee - Rs.400 · Click to copy UPI ID
+          Registration Fee - Rs.200
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span style={{ fontFamily: 'monospace', color: '#ff6b22', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '.02em' }}>
-            {UPI_ID}
-          </span>
-          {copied ? <Check size={16} color="#f5a100" /> : <Copy size={15} color="#8a8a8a" />}
-        </div>
-        {copied && (
-          <p style={{ fontFamily: '"DM Sans"', color: '#f5a100', fontSize: '.72rem', marginTop: 6 }}>Copied!</p>
-        )}
+        <img
+          src="/gpay-qr.png"
+          alt="Payment QR"
+          style={{
+            width: '100%',
+            maxWidth: 280,
+            borderRadius: 12,
+            border: '1px solid rgba(255,255,255,.12)',
+            background: '#fff',
+            margin: '8px auto 10px',
+            display: 'block',
+          }}
+        />
+        <a
+          href="/gpay-qr.png"
+          download="vpl-payment-qr.png"
+          className="btn-ghost"
+          style={{ padding: '8px 14px', fontSize: '.72rem', marginBottom: 10 }}
+        >
+          Download QR
+        </a>
+        <p style={{ fontFamily: '"DM Sans"', color: '#a0a0a0', fontSize: '.78rem' }}>
+          Scan with any UPI app and complete payment.
+        </p>
       </div>
 
       <div style={fieldStyle}>

@@ -109,15 +109,15 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  if (req.method === 'PATCH' && /^\/api\/admin\/players\/\d+\/verify$/.test(url.pathname)) {
+  if (req.method === 'PATCH' && /^\/api\/admin\/players\/[^/]+\/verify$/.test(url.pathname)) {
     if (!isAuthorized(req)) {
       sendJson(res, 401, { error: 'Unauthorized' })
       return
     }
 
-    const match = url.pathname.match(/^\/api\/admin\/players\/(\d+)\/verify$/)
-    const id = Number(match?.[1])
-    if (!Number.isInteger(id) || id <= 0) {
+    const match = url.pathname.match(/^\/api\/admin\/players\/([^/]+)\/verify$/)
+    const id = decodeURIComponent(match?.[1] || '')
+    if (!id) {
       sendJson(res, 400, { error: 'Invalid player id.' })
       return
     }

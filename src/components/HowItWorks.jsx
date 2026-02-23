@@ -3,7 +3,7 @@ import { animate, stagger } from 'animejs'
 import { UserPlus, Gavel, Users, Trophy } from 'lucide-react'
 
 const steps = [
-  { n: '01', icon: <UserPlus size={22} />, title: 'Register', desc: 'Register online and pay Rs. 400 to enter the player pool.' },
+  { n: '01', icon: <UserPlus size={22} />, title: 'Register', desc: 'Register online and pay Rs. 200 to enter the player pool.' },
   { n: '02', icon: <Gavel size={22} />, title: 'Auction', desc: 'Faculty team owners bid for players in a live auction.' },
   { n: '03', icon: <Users size={22} />, title: 'Get Drafted', desc: 'Join your team and prepare for the tournament.' },
   { n: '04', icon: <Trophy size={22} />, title: 'Play & Win', desc: 'Compete in T10 format and chase the VPL trophy.' },

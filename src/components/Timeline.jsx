@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+﻿import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ClipboardList, Gavel, Shirt, Swords, Trophy, PartyPopper } from 'lucide-react'
@@ -6,10 +6,10 @@ import { ClipboardList, Gavel, Shirt, Swords, Trophy, PartyPopper } from 'lucide
 gsap.registerPlugin(ScrollTrigger)
 
 const events = [
-  { icon:<ClipboardList size={20}/>, title:'Registrations Open', date:'Coming Soon', desc:'Register online and pay the ₹400 entry fee to join the player pool.' },
+  { icon:<ClipboardList size={20}/>, title:'Registrations Open', date:'Coming Soon', desc:'Register online and pay the Rs.200 entry fee to join the player pool.' },
   { icon:<Gavel         size={20}/>, title:'Player Auction',      date:'Coming Soon', desc:'Faculty team owners bid for players in a high-energy live auction.' },
   { icon:<Shirt         size={20}/>, title:'Team Reveal',         date:'Coming Soon', desc:'Final squads announced and jersey numbers assigned.' },
-  { icon:<Swords        size={20}/>, title:'League Matches',      date:'Coming Soon', desc:'Round-robin T10 league stage — every match, every ball counts.' },
+  { icon:<Swords        size={20}/>, title:'League Matches',      date:'Coming Soon', desc:'Round-robin T10 league stage â€” every match, every ball counts.' },
   { icon:<Trophy        size={20}/>, title:'Knockouts & Finals',  date:'Coming Soon', desc:'Semi-finals and the Grand Finale for the VPL championship.' },
   { icon:<PartyPopper   size={20}/>, title:'Awards Ceremony',     date:'Coming Soon', desc:'Best Batsman, Bowler, and Player of Tournament awarded.' },
 ]
@@ -46,7 +46,7 @@ export default function Timeline() {
           <span className="divider" />
         </div>
 
-        {/* ── Desktop: alternating 2-column ── */}
+        {/* â”€â”€ Desktop: alternating 2-column â”€â”€ */}
         <div className="tl-desktop" style={{ position:'relative', maxWidth:900, margin:'0 auto' }}>
           {/* Center line */}
           <div ref={lineRef} style={{
@@ -86,7 +86,7 @@ export default function Timeline() {
           </div>
         </div>
 
-        {/* ── Mobile: single vertical line on left ── */}
+        {/* â”€â”€ Mobile: single vertical line on left â”€â”€ */}
         <div className="tl-mobile" style={{ position:'relative', maxWidth:520, margin:'0 auto' }}>
           {/* Left vertical line */}
           <div style={{
@@ -143,3 +143,4 @@ function CardContent({ ev }) {
     </div>
   )
 }
+
