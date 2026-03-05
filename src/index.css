@@ -22,6 +22,7 @@
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; background:#070707; color:#efefef; font-family:"DM Sans",system-ui,sans-serif; }
 body { overflow-x:hidden; }
+#root { width:100%; max-width:100%; overflow-x:clip; }
 ::selection { background:rgba(255,107,34,.28); color:#fff; }
 
 /* ── Container ── */
@@ -412,6 +413,7 @@ select option { background:#0f0f0f; color:#efefef; }
 
   /* Progress bar labels */
   .prog-label { font-size:.55rem !important; }
+  .prog-conn { margin-left:5px !important; margin-right:5px !important; }
 }
 
 /* Hero buttons stack on small phones */
@@ -445,4 +447,7 @@ select option { background:#0f0f0f; color:#efefef; }
 @media(max-width:480px) {
   .wrap { padding-left:16px !important; padding-right:16px !important; }
   .reg-card { padding:18px 14px !important; }
+  .prog-node { width:30px !important; height:30px !important; font-size:.72rem !important; }
+  .prog-label { max-width:48px; line-height:1.2; letter-spacing:.05em; }
+  .prog-conn { margin-bottom:26px !important; }
 }

@@ -212,7 +212,17 @@ export default function AdminDashboard() {
 /* ─────────────────────────────────────────────── */
 function PaymentPanel({ players, unverified, onVerify }) {
   const [showAll, setShowAll] = useState(false)
+  const [openScreenshot, setOpenScreenshot] = useState(null)
   const displayed = showAll ? players : unverified
+
+  useEffect(() => {
+    if (!openScreenshot) return
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setOpenScreenshot(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [openScreenshot])
 
   return (
     <div>
@@ -262,10 +272,17 @@ function PaymentPanel({ players, unverified, onVerify }) {
               <div>
                 <p style={{ color: '#6a6a6a', fontSize: '.68rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>Screenshot</p>
                 {p.payment_screenshot_url ? (
-                  <a href={p.payment_screenshot_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#ff6b22', fontSize: '.8rem', textDecoration: 'none', fontWeight: 600 }}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenScreenshot({ url: p.payment_screenshot_url, name: p.name })}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5, color: '#ff6b22',
+                      fontSize: '.8rem', textDecoration: 'none', fontWeight: 600,
+                      background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                    }}
+                  >
                     <ExternalLink size={13} /> View Image
-                  </a>
+                  </button>
                 ) : <span style={{ color: '#3a3a3a', fontSize: '.8rem' }}>No screenshot</span>}
               </div>
             </div>
@@ -295,6 +312,68 @@ function PaymentPanel({ players, unverified, onVerify }) {
           </div>
         ))}
       </div>
+
+      {openScreenshot && (
+        <div
+          onClick={() => setOpenScreenshot(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 600,
+            background: 'rgba(0,0,0,.88)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '28px',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: 'min(920px, 96vw)',
+              maxHeight: '92vh',
+              background: '#111111',
+              border: '1px solid rgba(255,255,255,.12)',
+              borderRadius: 14,
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 14px',
+              borderBottom: '1px solid rgba(255,255,255,.08)',
+            }}>
+              <p style={{ color: '#d2d2d2', fontSize: '.84rem', fontWeight: 600 }}>
+                Payment Screenshot {openScreenshot.name ? `- ${openScreenshot.name}` : ''}
+              </p>
+              <button
+                type="button"
+                onClick={() => setOpenScreenshot(null)}
+                aria-label="Close screenshot dialog"
+                style={{
+                  width: 34, height: 34, borderRadius: 8,
+                  background: 'rgba(255,255,255,.06)',
+                  border: '1px solid rgba(255,255,255,.12)',
+                  color: '#b8b8b8', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <XIcon size={16} />
+              </button>
+            </div>
+            <div style={{ padding: 14 }}>
+              <img
+                src={openScreenshot.url}
+                alt={`Payment screenshot${openScreenshot.name ? ` - ${openScreenshot.name}` : ''}`}
+                style={{
+                  width: '100%',
+                  maxHeight: 'calc(92vh - 110px)',
+                  objectFit: 'contain',
+                  display: 'block',
+                  background: '#0a0a0a',
+                  borderRadius: 10,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

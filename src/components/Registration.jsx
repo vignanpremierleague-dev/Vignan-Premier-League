@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { uploadToCloudinary } from '../lib/cloudinary'
 import ProgressBar     from './reg/ProgressBar'
@@ -59,6 +59,7 @@ export default function Registration() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [success, setSuccess]     = useState(false)
+  const successCardRef = useRef(null)
 
   const scrollToSection = () => {
     const el = document.getElementById('register')
@@ -73,6 +74,13 @@ export default function Registration() {
     scrollToSection()
   }
   const goBack = () => { setErrors({}); setStep(s => s - 1); scrollToSection() }
+
+  useEffect(() => {
+    if (!success || !successCardRef.current) return
+    requestAnimationFrame(() => {
+      successCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }, [success])
 
   const parseInsertError = (error) => {
     if (error?.code === '23505') {
@@ -185,7 +193,7 @@ export default function Registration() {
   if (success) {
     return (
       <section id="register" style={{ padding:'100px 0', background:'#0f0f0f' }}>
-        <div className="wrap" style={{ maxWidth:520, margin:'0 auto', textAlign:'center', padding:'0 16px' }}>
+        <div ref={successCardRef} className="wrap" style={{ maxWidth:520, margin:'0 auto', textAlign:'center', padding:'0 16px' }}>
           <div style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
             <CheckCircle size={64} color="#ff6b22" strokeWidth={1.5} />
           </div>

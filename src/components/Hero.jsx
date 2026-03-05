@@ -79,7 +79,7 @@ export default function Hero() {
 
         {/* Buttons */}
         <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
-          <a href="#register" className="btn-primary hero-btn-primary">
+          <a href="/register" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href='/register' }}>
             <Flame style={{ width: 16, height: 16 }} /> Register Now
           </a>
           <a href="#about" className="btn-ghost hero-btn-ghost">
