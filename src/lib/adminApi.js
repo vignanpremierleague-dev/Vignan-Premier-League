@@ -40,3 +40,16 @@ export function logoutAdmin(token) {
     token,
   })
 }
+
+export async function fetchSiteSettings() {
+  const res = await request('/public/site-settings')
+  return res.content
+}
+
+export function updateSiteSettings(token, content) {
+  return request('/admin/site-settings', {
+    method: 'PUT',
+    token,
+    body: { content },
+  })
+}

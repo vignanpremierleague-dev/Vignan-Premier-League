@@ -43,12 +43,11 @@ export default function AdminLogin() {
         pointerEvents: 'none',
       }} />
 
-      <div style={{
+      <div className="glass-panel" style={{
         width: '100%', maxWidth: 400,
-        background: 'rgba(18,18,18,.96)',
-        border: '1px solid rgba(255,255,255,.1)',
-        borderRadius: 20, padding: '40px 36px',
+        padding: '44px 36px',
         position: 'relative', zIndex: 1,
+        boxShadow: '0 32px 80px rgba(0,0,0,0.8)',
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -119,12 +118,11 @@ export default function AdminLogin() {
             <p style={{ color: '#e63946', fontSize: '.8rem', marginBottom: 16, textAlign: 'center' }}>{error}</p>
           )}
 
-          <button type="submit" disabled={loading} style={{
-            width: '100%', padding: '13px', borderRadius: 12, border: 'none',
-            background: loading ? 'rgba(255,107,34,.5)' : 'linear-gradient(130deg,#ff6b22,#e63946)',
-            color: '#fff', fontFamily: '"DM Sans"', fontWeight: 700, fontSize: '.9rem',
-            cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '.04em',
-            transition: 'all .25s',
+          <button type="submit" disabled={loading} className="btn-primary" style={{
+            width: '100%', padding: '14px', borderRadius: 12,
+            justifyContent: 'center', fontSize: '.95rem',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.7 : 1, marginTop: 8
           }}>
             {loading ? 'Authenticating…' : 'Sign In'}
           </button>

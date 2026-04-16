@@ -132,19 +132,19 @@ export default function ContactPage() {
 
         {/* Info block */}
         <div className="contact-anim" style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,.05)', animationDelay: '0.35s' }}>
-          {info.map(({ Icon, label, value }, i) => (
-            <div key={label} style={{
+          {info.map((item, i) => (
+            <div key={item.label} style={{
               display: 'flex', alignItems: 'flex-start', gap: 14,
               padding: '18px 22px',
               background: i % 2 === 0 ? 'rgba(14,14,14,.95)' : 'rgba(10,10,10,.95)',
               borderBottom: i < info.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none',
             }}>
               <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: 'rgba(255,107,34,.08)', border: '1px solid rgba(255,107,34,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={15} color="#ff6b22" strokeWidth={1.8} />
+                <item.Icon size={15} color="#ff6b22" strokeWidth={1.8} />
               </div>
               <div>
-                <p style={{ fontFamily: '"DM Sans"', fontSize: '.6rem', fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#ff6b22', margin: 0 }}>{label}</p>
-                <p style={{ fontFamily: '"DM Sans"', fontSize: '.82rem', color: '#bbb', margin: '5px 0 0', lineHeight: 1.65 }}>{value}</p>
+                <p style={{ fontFamily: '"DM Sans"', fontSize: '.6rem', fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#ff6b22', margin: 0 }}>{item.label}</p>
+                <p style={{ fontFamily: '"DM Sans"', fontSize: '.82rem', color: '#bbb', margin: '5px 0 0', lineHeight: 1.65 }}>{item.value}</p>
               </div>
             </div>
           ))}

@@ -1,5 +1,22 @@
 import pg from 'pg'
+import { readFileSync, existsSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 const { Client } = pg
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const envPath = path.join(__dirname, '.env')
+
+if (existsSync(envPath)) {
+  const text = readFileSync(envPath, 'utf8')
+  for (const line of text.split(/\r?\n/)) {
+    if (!line || line.trim().startsWith('#')) continue
+    const sep = line.indexOf('=')
+    if (sep > 0) process.env[line.slice(0, sep).trim()] = line.slice(sep + 1).trim()
+  }
+}
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) {
@@ -16,6 +33,12 @@ const SQL = `
 ALTER TABLE public.vpl_players
   ADD COLUMN IF NOT EXISTS photo_url    text,
   ADD COLUMN IF NOT EXISTS is_verified  boolean not null default false;
+
+CREATE TABLE IF NOT EXISTS public.vpl_site_settings (
+  slug text PRIMARY KEY,
+  content jsonb NOT NULL,
+  updated_at timestamp with time zone DEFAULT now()
+);
 `
 
 async function migrate() {

@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react'
 import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
+import { fetchSiteSettings } from '../lib/adminApi'
+import { UserRound, ShieldCheck } from 'lucide-react'
 
 /* ── Data ──────────────────────────────────────────────────────────────────── */
 const patrons = [
   {
     name: 'Dr. Lavu Rathaiah',
     title: 'Chairman',
-    bio: 'The visionary founder and Chairman of Vignan Group of Institutions, Dr. Lavu Rathaiah has dedicated over four decades to transforming higher education across Andhra Pradesh. Under his stewardship, the group has grown into a premier centre of academic excellence, producing thousands of distinguished professionals. His unwavering belief in student-led initiatives and holistic development continues to inspire every endeavour at Vignan, including the Vignan Premier League.',
+    bio: 'Founder and Chairman of Vignan Group of Institutions. His four decades of dedication to higher education and holistic student development perfectly aligns with the vision of VPL.',
     img: '/chairman.jpg',
     accent: '#ffb800',
   },
   {
     name: 'Sri. L Sri Krishna Devarayalu',
     title: 'Vice Chairman',
-    bio: 'A distinguished leader and Vice Chairman of Vignan Group of Institutions, Sri. L Sri Krishna Devarayalu has been instrumental in shaping institutional policies and student welfare initiatives. His deep commitment to fostering discipline, sports, and extracurricular excellence has earned him the admiration of faculty and students alike.',
+    bio: 'Vice Chairman of Vignan Group. His deep commitment to progressive institutional policies and extracurricular excellence drives the spirit of VPL.',
     img: '/vicechairman.png',
     accent: '#ffb800',
   },
@@ -24,14 +26,14 @@ const leadership = [
   {
     name: 'Dr. Poonam Malakondaiah, IAS',
     title: 'Advisor',
-    bio: "A distinguished IAS officer and the institution's Advisor, Dr. Poonam Malakondaiah brings unparalleled administrative expertise and governance acumen to Vignan University. Her support for the VPL reflects her belief in sports as a vehicle for building character, leadership, and camaraderie.",
+    bio: "Distinguished IAS officer and University Advisor. Her administrative expertise and strong belief in sports for building character heavily supports VPL.",
     img: '/advisor.png',
     accent: '#ff6b22',
   },
   {
     name: 'Prof. Y. V. Daseswara Rao',
     title: 'Director',
-    bio: 'Prof. Y. V. Daseswara Rao brings an accomplished record of academic and institutional leadership to Vignan University. With a philosophy centred on sports as a vehicle for discipline and holistic growth, he transformed this tournament from a departmental activity into a college-wide spectacle.',
+    bio: 'Director of Vignan University. His philosophy of sports as a driver for discipline helped transform this tournament into a college-wide spectacle.',
     img: '/director.png',
     accent: '#ff6b22',
   },
@@ -41,21 +43,31 @@ const facultyMembers = [
   {
     name: 'Dr. Baddam Anil Kumar',
     title: 'Faculty Member',
-    bio: "Assistant Professor (Senior Level) at Vignan's Foundation for Science, Technology and Research (VFSTR), Deemed to be University — Off Campus, Hyderabad. His active involvement in the organising committee ensures that the VPL upholds the highest standards of discipline, fair play, and collegiate spirit.",
+    bio: "Senior Assistant Professor. His active involvement in the organising committee ensures that VPL upholds the highest standards of discipline and fair play.",
     img: '/faculty.jpeg',
+    accent: '#ff6b22',
+  },
+  {
+    name: 'Pastham Sreenu',
+    title: 'Sports Coach',
+    bio: 'Sports Coach at VFSTR. Holding PGDs in both Fitness Management and Yoga, his expertise ensures athletes in the VPL are fit, focused, and performing at their peak.',
+    img: '/sportscoach.png',
     accent: '#ff6b22',
   },
 ]
 
-const students = [
-  { name: 'Sai Charan',     branch: 'CSE-DS', section: 'Section A' },
-  { name: 'Aarav Patel',    branch: 'CSE',    section: 'Section B' },
-  { name: 'Sneha Iyer',     branch: 'CSE-DS', section: 'Section A' },
-  { name: 'Rohit Desai',    branch: 'CSE',    section: 'Section A' },
-  { name: 'Meera Krishnan', branch: 'CSE-DS', section: 'Section B' },
-  { name: 'Karan Joshi',    branch: 'CSE',    section: 'Section A' },
-  { name: 'Divya Reddy',    branch: 'CSE-DS', section: 'Section A' },
-  { name: 'Nikhil Sharma',  branch: 'CSE',    section: 'Section B' },
+const fallbackStudents = [
+  { name: 'D. sai suraj', section: 'Student Coordinator' },
+  { name: 'K.Revanth sai', section: 'Student Coordinator' },
+  { name: 'K.Rohith kumar', section: 'Student Coordinator' },
+  { name: 'M.Aravind Reddy', section: 'Student Coordinator' },
+  { name: 'M.Harish', section: 'Student Coordinator' },
+  { name: 'M. Sai Charan', section: 'Student Coordinator' },
+  { name: 'M.v.janardhan', section: 'Student Coordinator' },
+  { name: 'N.gagan', section: 'Student Coordinator' },
+  { name: 'P.Sagar', section: 'Student Coordinator' },
+  { name: 'Sk.Imam', section: 'Student Coordinator' },
+  { name: 'T.Revanth Goud', section: 'Student Coordinator' },
 ]
 
 /* ── Helpers ───────────────────────────────────────────────────────────────── */
@@ -70,10 +82,10 @@ function useFadeIn(delay = 0) {
 
 function SectionDivider({ text }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,transparent,rgba(255,107,34,.3))' }} />
-      <span style={{ fontFamily: '"Syne"', fontSize: '.62rem', fontWeight: 800, letterSpacing: '.22em', textTransform: 'uppercase', color: '#ff6b22', whiteSpace: 'nowrap' }}>{text}</span>
-      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,rgba(255,107,34,.3),transparent)' }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '24px 0 16px' }}>
+      <div style={{ flex: 1, height: 2, background: 'linear-gradient(90deg,transparent,rgba(255,107,34,.5))' }} />
+      <span style={{ fontFamily: '"Syne"', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '.15em', textTransform: 'uppercase', color: '#ff6b22', whiteSpace: 'nowrap' }}>{text}</span>
+      <div style={{ flex: 1, height: 2, background: 'linear-gradient(90deg,rgba(255,107,34,.5),transparent)' }} />
     </div>
   )
 }
@@ -136,21 +148,7 @@ function PersonCard({ person, index, delay = 100, large = false }) {
           <p className="pc-bio" style={{
             fontFamily: '"DM Sans"', fontSize: '.84rem', color: '#bbb',
             lineHeight: 1.6, margin: 0,
-            display: '-webkit-box',
-            WebkitBoxOrient: 'vertical',
-            WebkitLineClamp: expanded ? 'none' : 3,
-            overflow: expanded ? 'visible' : 'hidden',
           }}>{person.bio}</p>
-
-          <button
-            onClick={() => setExpanded(e => !e)}
-            style={{
-              fontFamily: '"DM Sans"', fontSize: '.7rem', fontWeight: 700,
-              letterSpacing: '.04em', border: 'none', background: 'none',
-              cursor: 'pointer', padding: '6px 0 0', color: acc,
-              alignSelf: 'flex-start',
-            }}
-          >{expanded ? 'Read less ↑' : 'Read more ↓'}</button>
         </div>
       </div>
     </div>
@@ -177,11 +175,22 @@ function StudentCard({ student, index }) {
       <div style={{
         width: 32, height: 32, borderRadius: 8, flexShrink: 0,
         background: 'rgba(255,107,34,.09)', border: '1px solid rgba(255,107,34,.2)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-      }}>🏏</div>
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative',
+      }}>
+        <UserRound size={14} color="#ff6b22" strokeWidth={2} />
+        <ShieldCheck
+          size={10}
+          color="#ffb800"
+          strokeWidth={2.1}
+          style={{ position: 'absolute', right: -4, bottom: -4, background: '#141414', borderRadius: 999, padding: 1 }}
+        />
+      </div>
       <div>
         <p style={{ fontFamily: '"Syne"', fontSize: '.83rem', fontWeight: 700, color: '#efefef', margin: 0, lineHeight: 1.25 }}>{student.name}</p>
-        <p style={{ fontFamily: '"DM Sans"', fontSize: '.65rem', fontWeight: 600, color: '#ff6b22', margin: '3px 0 0', letterSpacing: '.05em', textTransform: 'uppercase' }}>{student.branch} · {student.section}</p>
+        <p style={{ fontFamily: '"DM Sans"', fontSize: '.65rem', fontWeight: 600, color: '#ff6b22', margin: '3px 0 0', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+          {student.section || student.role || [student.branch, student.section].filter(Boolean).join(' · ') || 'Student Coordinator'}
+        </p>
       </div>
     </div>
   )
@@ -190,6 +199,19 @@ function StudentCard({ student, index }) {
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 export default function Team() {
   const headVis = useFadeIn(50)
+  const [settings, setSettings] = useState(null)
+
+  useEffect(() => {
+    fetchSiteSettings().then(setSettings).catch(() => {})
+  }, [])
+
+  const students = (settings?.studentCoordinators?.length ? settings.studentCoordinators : fallbackStudents)
+    .map((s) => ({
+      name: s?.name || '',
+      section: s?.section || s?.role || [s?.branch, s?.section].filter(Boolean).join(' · '),
+      role: s?.role || '',
+      branch: s?.branch || '',
+    }))
 
   return (
     <div style={{
@@ -208,7 +230,7 @@ export default function Team() {
           opacity: headVis ? 1 : 0, transform: headVis ? 'none' : 'translateY(-14px)',
           transition: 'all .55s ease', textAlign: 'center', marginBottom: 44,
         }}>
-          <h1 style={{ fontFamily: '"Syne"', fontSize: 'clamp(1.6rem,5vw,2.6rem)', fontWeight: 900, color: '#d4d4d4', margin: '0 0 10px' }}>
+          <h1 className="section-heading" style={{ color: '#d4d4d4', margin: '0 0 10px' }}>
             Dignitaries & Leadership
           </h1>
           <p style={{ color: '#bbb', fontSize: '.85rem', lineHeight: 1.7, maxWidth: 460, margin: '0 auto' }}>
@@ -234,7 +256,7 @@ export default function Team() {
           </section>
 
           <section className="section-item" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <SectionDivider text="Faculty Members" />
+            <SectionDivider text="Faculty & Coaches" />
             <div className="section-cards" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
               {facultyMembers.map((p, i) => <PersonCard key={p.name} person={p} index={i} delay={650} />)}
             </div>

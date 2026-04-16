@@ -7,9 +7,8 @@ import Step2_Academic  from './reg/Step2_Academic'
 import Step3_Role      from './reg/Step3_Role'
 import Step4_Payment   from './reg/Step4_Payment'
 import Step5_Confirm   from './reg/Step5_Confirm'
-import { Flame, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react'
-
-const WA_LINK = 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t'
+import { Flame, ArrowRight, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
+import { fetchSiteSettings } from '../lib/adminApi'
 
 const INIT = {
   registration_id: '', name: '', phone: '', email: '', photo_url: '',
@@ -59,7 +58,16 @@ export default function Registration() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [success, setSuccess]     = useState(false)
+  const [settings, setSettings]   = useState(null)
   const successCardRef = useRef(null)
+  const whatsappLink = settings?.whatsappLink || 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t'
+  const registerSectionTitle = settings?.registerSectionTitle || 'Register Now'
+  const closedTitle = settings?.registrationClosedTitle || 'Registrations Closed'
+  const closedMessage = settings?.registrationClosedMessage || 'Player registrations for the Vignan Premier League are temporarily closed. Please check the WhatsApp group for updates or contact our coordinators.'
+
+  useEffect(() => {
+    fetchSiteSettings().then(setSettings).catch()
+  }, [])
 
   const scrollToSection = () => {
     const el = document.getElementById('register')
@@ -218,7 +226,7 @@ export default function Registration() {
 
           {/* WhatsApp CTA */}
           <a
-            href={WA_LINK}
+            href={whatsappLink}
             target="_blank" rel="noopener noreferrer"
             className="btn-primary"
             style={{ width:'100%', justifyContent:'center', marginBottom:12, fontSize:'.9rem', padding:'15px 24px' }}
@@ -236,13 +244,30 @@ export default function Registration() {
   }
 
   /* ── Form ─────────────────────────────────────────────── */
+  if (settings && !settings.registrationsOpen) {
+    return (
+      <section id="register" style={{ padding:'100px 0', background:'#0f0f0f' }}>
+        <div className="wrap" style={{ maxWidth:520, margin:'0 auto', textAlign:'center', padding:'0 16px' }}>
+          <div style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
+            <XCircle size={64} color="#e63946" strokeWidth={1.5} />
+          </div>
+          <h2 className="section-heading" style={{ marginBottom:12, color: '#efefef' }}>{closedTitle}</h2>
+          <p style={{ fontFamily:'"DM Sans"', color:'#8b8b8b', fontSize:'.95rem', lineHeight:1.8, marginBottom:28 }}>
+            {closedMessage}
+          </p>
+          <a href="/" className="btn-ghost" style={{ width:'100%', justifyContent:'center', display: 'flex' }}>Back to Home</a>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section id="register" style={{ padding:'80px 0', background:'#0f0f0f', position:'relative', overflow:'hidden' }}>
       <div style={{ position:'absolute', bottom:'-20%', left:'50%', transform:'translateX(-50%)', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle, rgba(255,107,34,.04) 0%, transparent 65%)', pointerEvents:'none' }} />
 
       <div className="wrap" style={{ position:'relative', zIndex:10 }}>
         <div style={{ textAlign:'center', marginBottom:48 }}>
-          <h2 className="section-heading fire-text" style={{ marginBottom:8 }}>Register Now</h2>
+          <h2 className="section-heading fire-text" style={{ marginBottom:8 }}>{registerSectionTitle}</h2>
           <span className="divider" />
         </div>
 

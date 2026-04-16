@@ -189,7 +189,7 @@ export default function Navbar({ breadcrumb } = {}) {
 
         .nav-panel {
           position:absolute; top:0; right:0; bottom:0;
-          width:min(300px, 82vw);
+          width:min(260px, 75vw);
           max-width:100vw;
           box-sizing:border-box;
           background:rgba(16,16,16,.98);
@@ -228,7 +228,7 @@ export default function Navbar({ breadcrumb } = {}) {
           }
         }
         @media(max-width:420px) {
-          .nav-panel { width:86vw; padding:20px 18px; }
+          .nav-panel { width:74vw; padding:20px 18px; }
           .mob-nav-link { font-size:1.22rem; }
         }
       `}</style>

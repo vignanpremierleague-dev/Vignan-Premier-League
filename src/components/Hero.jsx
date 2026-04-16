@@ -1,7 +1,17 @@
 import { Flame, ArrowDown } from 'lucide-react'
 import FireParticles from './FireParticles'
 
-export default function Hero() {
+export default function Hero({ settings }) {
+  const seasonLabel = settings?.heroSeasonLabel || 'Season 1 · 2026'
+  const line1 = settings?.heroTitleLine1 || 'VIGNAN'
+  const line2 = settings?.heroTitleLine2 || 'PREMIER'
+  const line3 = settings?.heroTitleLine3 || 'LEAGUE'
+  const subtitle = settings?.heroSubtitle || 'T10 Format · IPL-Style Auction · Faculty Team Owners · Vignan Campus'
+  const primaryLabel = settings?.heroPrimaryCtaLabel || 'Register Now'
+  const primaryHref = settings?.heroPrimaryCtaHref || '/register'
+  const secondaryLabel = settings?.heroSecondaryCtaLabel || 'Explore'
+  const secondaryHref = settings?.heroSecondaryCtaHref || '#about'
+
   return (
     <section
       id="home"
@@ -40,7 +50,7 @@ export default function Hero() {
         <div className="hero-fade-up" style={{ display: 'flex', justifyContent: 'center', marginBottom: 28, animationDelay: '0.1s' }}>
           <span className="tag hero-season-pill">
             <Flame style={{ width: 12, height: 12, animation: 'flicker .8s ease-in-out infinite' }} />
-            Season 1 &middot; 2026
+            {seasonLabel}
           </span>
         </div>
 
@@ -55,9 +65,9 @@ export default function Hero() {
               fontFamily: '"Syne",system-ui,sans-serif',
             }}
           >
-            <span className="hero-line fire-text" style={{ display: 'block', animationDelay: '0.2s' }}>VIGNAN</span>
-            <span className="hero-line fire-text" style={{ display: 'block', animationDelay: '0.35s' }}>PREMIER</span>
-            <span className="hero-line fire-text" style={{ display: 'block', animationDelay: '0.5s' }}>LEAGUE</span>
+            <span className="hero-line fire-text" style={{ display: 'block', animationDelay: '0.2s' }}>{line1}</span>
+            <span className="hero-line fire-text" style={{ display: 'block', animationDelay: '0.35s' }}>{line2}</span>
+            <span className="hero-line fire-text" style={{ display: 'block', animationDelay: '0.5s' }}>{line3}</span>
           </h1>
         </div>
 
@@ -74,16 +84,16 @@ export default function Hero() {
             animationDelay: '0.65s',
           }}
         >
-          T10 Format &middot; IPL-Style Auction &middot; Faculty Team Owners &middot; Vignan Campus
+          {subtitle}
         </p>
 
         {/* Buttons */}
         <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
-          <a href="/register" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href='/register' }}>
-            <Flame style={{ width: 16, height: 16 }} /> Register Now
+          <a href={primaryHref} className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = primaryHref }}>
+            <Flame style={{ width: 16, height: 16 }} /> {primaryLabel}
           </a>
-          <a href="#about" className="btn-ghost hero-btn-ghost">
-            <ArrowDown style={{ width: 16, height: 16 }} /> Explore
+          <a href={secondaryHref} className="btn-ghost hero-btn-ghost">
+            <ArrowDown style={{ width: 16, height: 16 }} /> {secondaryLabel}
           </a>
         </div>
       </div>

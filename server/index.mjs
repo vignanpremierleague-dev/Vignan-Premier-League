@@ -36,6 +36,74 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 
 const sessions = new Map()
 
+const SITE_SETTINGS_SLUG = 'primary'
+const defaultSiteSettings = {
+  registrationsOpen: true,
+  marqueeMessage: '🔥 Welcome to VPL 2025! Registrations are now LIVE! Secure your spot before slots fill up.',
+  contactEmail: 'support@vignanpremierleague.com',
+  contactPhone: '+91 99999 99999',
+  whatsappLink: 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t',
+  winners: [],
+  studentCoordinators: [
+    { name: 'John Doe', phone: '+91 90000 00001', role: 'Head Coordinator' },
+    { name: 'Jane Doe', phone: '+91 90000 00002', role: 'Event Manager' }
+  ],
+  teams: {
+    A: [
+      { name: 'Team 1', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 2', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 3', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 4', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 5', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    ],
+    B: [
+      { name: 'Team 6', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 7', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 8', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 9', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Team 10', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    ]
+  },
+  leagueMatches: [
+    { id: 1, grp: 'A', t1: 'Team 1', t2: 'Team 2', date: 'TBD', time: 'TBD' },
+    { id: 2, grp: 'A', t1: 'Team 3', t2: 'Team 4', date: 'TBD', time: 'TBD' },
+    { id: 3, grp: 'A', t1: 'Team 5', t2: 'Team 1', date: 'TBD', time: 'TBD' },
+    { id: 4, grp: 'A', t1: 'Team 2', t2: 'Team 3', date: 'TBD', time: 'TBD' },
+    { id: 5, grp: 'A', t1: 'Team 4', t2: 'Team 5', date: 'TBD', time: 'TBD' },
+    { id: 6, grp: 'A', t1: 'Team 1', t2: 'Team 3', date: 'TBD', time: 'TBD' },
+    { id: 7, grp: 'A', t1: 'Team 2', t2: 'Team 4', date: 'TBD', time: 'TBD' },
+    { id: 8, grp: 'A', t1: 'Team 3', t2: 'Team 5', date: 'TBD', time: 'TBD' },
+    { id: 9, grp: 'A', t1: 'Team 1', t2: 'Team 4', date: 'TBD', time: 'TBD' },
+    { id: 10, grp: 'A', t1: 'Team 2', t2: 'Team 5', date: 'TBD', time: 'TBD' },
+    { id: 11, grp: 'B', t1: 'Team 6', t2: 'Team 7', date: 'TBD', time: 'TBD' },
+    { id: 12, grp: 'B', t1: 'Team 8', t2: 'Team 9', date: 'TBD', time: 'TBD' },
+    { id: 13, grp: 'B', t1: 'Team 10', t2: 'Team 6', date: 'TBD', time: 'TBD' },
+    { id: 14, grp: 'B', t1: 'Team 7', t2: 'Team 8', date: 'TBD', time: 'TBD' },
+    { id: 15, grp: 'B', t1: 'Team 9', t2: 'Team 10', date: 'TBD', time: 'TBD' },
+    { id: 16, grp: 'B', t1: 'Team 6', t2: 'Team 8', date: 'TBD', time: 'TBD' },
+    { id: 17, grp: 'B', t1: 'Team 7', t2: 'Team 9', date: 'TBD', time: 'TBD' },
+    { id: 18, grp: 'B', t1: 'Team 8', t2: 'Team 10', date: 'TBD', time: 'TBD' },
+    { id: 19, grp: 'B', t1: 'Team 6', t2: 'Team 9', date: 'TBD', time: 'TBD' },
+    { id: 20, grp: 'B', t1: 'Team 7', t2: 'Team 10', date: 'TBD', time: 'TBD' },
+  ]
+}
+
+async function readSiteSettings() {
+  const { data, error } = await supabase
+    .from('vpl_site_settings')
+    .select('content')
+    .eq('slug', SITE_SETTINGS_SLUG)
+    .maybeSingle()
+
+  if (error || !data?.content) {
+    if (!data?.content && !error) {
+       await supabase.from('vpl_site_settings').upsert({ slug: SITE_SETTINGS_SLUG, content: defaultSiteSettings }, { onConflict: 'slug' })
+    }
+    return defaultSiteSettings
+  }
+  return data.content
+}
+
 setInterval(() => {
   const now = Date.now()
   for (const [token, session] of sessions.entries()) {
@@ -57,6 +125,12 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
     sendJson(res, 200, { ok: true })
+    return
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/public/site-settings') {
+    const content = await readSiteSettings()
+    sendJson(res, 200, { content })
     return
   }
 
@@ -106,6 +180,33 @@ const server = http.createServer(async (req, res) => {
     }
 
     sendJson(res, 200, { players: data || [] })
+    return
+  }
+
+  if (req.method === 'PUT' && url.pathname === '/api/admin/site-settings') {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const body = await readJson(req, res)
+    if (!body) return
+
+    const content = body.content || defaultSiteSettings
+    const { error } = await supabase
+      .from('vpl_site_settings')
+      .upsert({
+        slug: SITE_SETTINGS_SLUG,
+        content,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'slug' })
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to save settings.' })
+      return
+    }
+
+    sendJson(res, 200, { content })
     return
   }
 
@@ -175,7 +276,7 @@ function setCorsHeaders(res, origin) {
     res.setHeader('Access-Control-Allow-Origin', origin)
     res.setHeader('Vary', 'Origin')
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 }
 

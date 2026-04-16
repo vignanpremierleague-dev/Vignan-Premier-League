@@ -40,7 +40,7 @@ const awards = [
   { icon: <Star      size={22} />, title: 'Player of Tournament', desc: 'Most impactful player overall',          color: '#ffd700' },
 ]
 
-export default function Prizes() {
+export default function Prizes({ winners = [] }) {
   const sectionRef = useRef(null)
 
   useEffect(() => {
@@ -93,6 +93,23 @@ export default function Prizes() {
             <AwardCard key={a.title} a={a} />
           ))}
         </div>
+
+        {winners?.length > 0 && (
+          <div style={{ marginTop: 72 }}>
+            <div style={{ textAlign: 'center', margin: '0 0 20px' }}>
+              <span style={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '.73rem', color: '#ff6b22', textTransform: 'uppercase', letterSpacing: '.2em' }}>Tournament Winners</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, maxWidth: 860, margin: '0 auto' }}>
+              {winners.map((w, i) => (
+                <div key={i} className="prize-anim" style={{ opacity: 0, background: 'rgba(255,107,34,.08)', border: '1px solid rgba(255,107,34,.2)', borderRadius: 16, padding: '20px', textAlign: 'center' }}>
+                   <p style={{ fontFamily: '"Syne"', fontWeight: 800, color: '#efefef', fontSize: '1.2rem', marginBottom: 6 }}>{w.team}</p>
+                   {w.player && <p style={{ fontFamily: '"DM Sans"', color: '#ff6b22', fontSize: '.85rem', fontWeight: 600 }}>{w.player}</p>}
+                   <p style={{ fontFamily: '"DM Sans"', color: '#a0a0a0', fontSize: '.75rem', marginTop: 10 }}>{w.prize}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`

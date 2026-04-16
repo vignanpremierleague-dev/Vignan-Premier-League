@@ -2,8 +2,11 @@ import { Flame, Trophy, CalendarDays, Users, Swords, Shield, ScrollText, ArrowDo
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
-/* ── Data: 10 Teams, 2 Groups (with dummy stats for Points Table) ── */
-const teams = {
+import { useEffect, useState } from 'react'
+import { fetchSiteSettings } from '../lib/adminApi'
+
+/* ── Default Fallback Data ── */
+const defaultTeams = {
   A: [
     { name: 'Team 1', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
     { name: 'Team 2', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
@@ -20,9 +23,7 @@ const teams = {
   ]
 }
 
-/* ── Data: League Stage (20 matches: 10 per group) ───────────────────────── */
-const leagueMatches = [
-  // Group A
+const defaultLeagueMatches = [
   { id: 1, grp: 'A', t1: 'Team 1', t2: 'Team 2', date: 'TBD', time: 'TBD' },
   { id: 2, grp: 'A', t1: 'Team 3', t2: 'Team 4', date: 'TBD', time: 'TBD' },
   { id: 3, grp: 'A', t1: 'Team 5', t2: 'Team 1', date: 'TBD', time: 'TBD' },
@@ -33,8 +34,6 @@ const leagueMatches = [
   { id: 8, grp: 'A', t1: 'Team 3', t2: 'Team 5', date: 'TBD', time: 'TBD' },
   { id: 9, grp: 'A', t1: 'Team 1', t2: 'Team 4', date: 'TBD', time: 'TBD' },
   { id: 10, grp: 'A', t1: 'Team 2', t2: 'Team 5', date: 'TBD', time: 'TBD' },
-
-  // Group B
   { id: 11, grp: 'B', t1: 'Team 6', t2: 'Team 7', date: 'TBD', time: 'TBD' },
   { id: 12, grp: 'B', t1: 'Team 8', t2: 'Team 9', date: 'TBD', time: 'TBD' },
   { id: 13, grp: 'B', t1: 'Team 10', t2: 'Team 6', date: 'TBD', time: 'TBD' },
@@ -46,40 +45,71 @@ const leagueMatches = [
   { id: 19, grp: 'B', t1: 'Team 6', t2: 'Team 9', date: 'TBD', time: 'TBD' },
   { id: 20, grp: 'B', t1: 'Team 7', t2: 'Team 10', date: 'TBD', time: 'TBD' },
 ]
+const defaultKnockout = {
+  semiFinal1: { label: 'Semi-Final 1', team1Seed: 'A1', team1Name: 'Group A Winner', team2Seed: 'B2', team2Name: 'Group B Runner-up' },
+  semiFinal2: { label: 'Semi-Final 2', team1Seed: 'B1', team1Name: 'Group B Winner', team2Seed: 'A2', team2Name: 'Group A Runner-up' },
+  final: { label: 'Grand Finale', team1Name: 'Winner SF1', team2Name: 'Winner SF2' },
+}
 
-/* ── Component: Match Table (Reverting to original design) ── */
+/* ── Component: Match Cards (IPL Style) ── */
 function MatchTable({ label, accent, matches }) {
+  const statusTone = (status) => {
+    if (status === 'LIVE') return { bg: 'rgba(239,68,68,.16)', color: '#ef4444', border: 'rgba(239,68,68,.45)' }
+    if (status === 'COMPLETED') return { bg: 'rgba(74,222,128,.16)', color: '#4ade80', border: 'rgba(74,222,128,.35)' }
+    if (status === 'ABANDONED') return { bg: 'rgba(248,113,113,.16)', color: '#f87171', border: 'rgba(248,113,113,.35)' }
+    return { bg: 'rgba(245,158,11,.16)', color: '#f5a100', border: 'rgba(245,158,11,.35)' }
+  }
+
   return (
-    <div className="sched-card sched-anim" style={{ marginBottom: 32 }}>
-      {/* Stage header */}
-      <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: accent, flexShrink: 0, boxShadow: `0 0 8px ${accent}80` }} />
-        <span style={{ fontFamily: '"Syne",system-ui,sans-serif', fontWeight: 700, fontSize: '.88rem', color: accent }}>{label}</span>
+    <div style={{ marginBottom: 48 }}>
+      <div style={{ padding: '8px 0 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, flexShrink: 0, boxShadow: `0 0 10px ${accent}80` }} />
+        <span style={{ fontFamily: '"Syne",system-ui,sans-serif', fontWeight: 800, fontSize: '1.05rem', color: accent, textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
       </div>
 
-      {/* Desktop & Mobile Native Table */}
-      <table className="sched-table" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: '"DM Sans",system-ui,sans-serif' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid rgba(255,255,255,.06)' }}>
-            {['Match', 'Team 1', '', 'Team 2', 'Date'].map((h, i) => (
-              <th key={i}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {matches.map((m, mi) => (
-            <tr key={mi} className="tbl-row">
-              <td className="t-match">
-                {m.type === 'final' ? 'Final' : m.type === 'knockout' ? `SF ${m.id}` : `M${m.id}`}
-              </td>
-              <td className="t-team">{m.t1}</td>
-              <td className="t-vs">VS</td>
-              <td className="t-team">{m.t2}</td>
-              <td className="t-dt">TBD</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 16 }}>
+        {matches.map((m, i) => (
+          <div key={i} className="match-card">
+            <div className="match-card-head" style={{ borderBottom: `1px solid ${accent}30` }}>
+              <span className="match-id">{m.type === 'final' ? 'Final' : m.type === 'knockout' ? `SF ${m.id}` : `Match ${m.id}`}</span>
+              <span className="match-status" style={{ background: statusTone(m.status).bg, color: statusTone(m.status).color, borderColor: statusTone(m.status).border }}>
+                {m.status === 'LIVE' && <span className="live-dot" />}
+                {m.status === 'LIVE' ? 'Live' : m.status === 'COMPLETED' ? 'Ended' : m.status === 'ABANDONED' ? 'Abandoned' : 'Upcoming'}
+              </span>
+            </div>
+
+            <div className="match-card-body">
+              <div className="fixture-row">
+                <div className="fixture-team fixture-team-left">
+                  <span className="team-pip" style={{ background: `${accent}20`, borderColor: `${accent}55`, color: accent }}>1</span>
+                  <span className="team-name">{m.t1}</span>
+                </div>
+
+                <span className="vs-pill" style={{ color: accent, borderColor: `${accent}45` }}>VS</span>
+
+                <div className="fixture-team fixture-team-right">
+                  <span className="team-name">{m.t2}</span>
+                  <span className="team-pip" style={{ background: `${accent}20`, borderColor: `${accent}55`, color: accent }}>2</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="match-card-foot">
+              {m.status === 'COMPLETED' || m.status === 'ABANDONED' ? (
+                <p className="match-result">
+                  {m.result || (m.winner ? `${m.winner} won` : 'Match Ended')}
+                </p>
+              ) : (
+                <div className="match-meta">
+                  <span><CalendarDays size={14}/> {m.date}</span>
+                  <span className="meta-dot">•</span>
+                  <span>{m.time}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -125,7 +155,7 @@ function PointsTable({ label, accent, teamData }) {
 }
 
 /* ── Component: Tournament Bracket (Tree) ── */
-function TournamentBracket() {
+function TournamentBracket({ knockout }) {
   return (
     <div className="sched-anim bracket-wrapper">
       <div className="bracket-container">
@@ -134,18 +164,18 @@ function TournamentBracket() {
         <div className="bracket-col">
           {/* SF 1 */}
           <div className="bracket-match">
-            <div className="bm-label" style={{ color: '#ff3366' }}>Semi-Final 1</div>
-            <div className="bm-team"><span className="seed">A1</span> Group A Winner</div>
-            <div className="bm-team"><span className="seed">B2</span> Group B Runner-up</div>
+            <div className="bm-label" style={{ color: '#ff3366' }}>{knockout.semiFinal1.label}</div>
+            <div className="bm-team"><span className="seed">{knockout.semiFinal1.team1Seed}</span> {knockout.semiFinal1.team1Name}</div>
+            <div className="bm-team"><span className="seed">{knockout.semiFinal1.team2Seed}</span> {knockout.semiFinal1.team2Name}</div>
             <div className="connector-h c-h-right" />
             <div className="connector-v c-v-down" />
           </div>
 
           {/* SF 2 */}
           <div className="bracket-match">
-            <div className="bm-label" style={{ color: '#ff3366' }}>Semi-Final 2</div>
-            <div className="bm-team"><span className="seed">B1</span> Group B Winner</div>
-            <div className="bm-team"><span className="seed">A2</span> Group A Runner-up</div>
+            <div className="bm-label" style={{ color: '#ff3366' }}>{knockout.semiFinal2.label}</div>
+            <div className="bm-team"><span className="seed">{knockout.semiFinal2.team1Seed}</span> {knockout.semiFinal2.team1Name}</div>
+            <div className="bm-team"><span className="seed">{knockout.semiFinal2.team2Seed}</span> {knockout.semiFinal2.team2Name}</div>
             <div className="connector-h c-h-right" />
             <div className="connector-v c-v-up" />
           </div>
@@ -155,10 +185,10 @@ function TournamentBracket() {
         <div className="bracket-col bracket-col-center">
           <div className="bracket-match bm-final">
             <div className="bm-label" style={{ color: '#ffb800', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Trophy size={14} color="#ffb800" /> Grand Finale
+              <Trophy size={14} color="#ffb800" /> {knockout.final.label}
             </div>
-            <div className="bm-team">Winner SF1</div>
-            <div className="bm-team">Winner SF2</div>
+            <div className="bm-team">{knockout.final.team1Name}</div>
+            <div className="bm-team">{knockout.final.team2Name}</div>
             <div className="connector-h c-h-final" />
           </div>
         </div>
@@ -170,6 +200,16 @@ function TournamentBracket() {
 
 /* ── Page ─────────────────────────────────────────────────────────────────── */
 export default function SchedulesPage() {
+  const [settings, setSettings] = useState(null)
+
+  useEffect(() => {
+    fetchSiteSettings().then(setSettings).catch(console.error)
+  }, [])
+
+  const teams = settings?.teams || defaultTeams
+  const leagueMatches = settings?.leagueMatches || defaultLeagueMatches
+  const knockout = settings?.knockout || defaultKnockout
+
   return (
     <div style={{
       minHeight: '100vh', background: '#070707',
@@ -182,11 +222,11 @@ export default function SchedulesPage() {
       <div style={{ position: 'fixed', top: '-10%', right: '-5%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle,rgba(255,107,34,.05) 0%,transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'fixed', bottom: '-20%', left: '-10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,130,246,.04) 0%,transparent 70%)', pointerEvents: 'none' }} />
 
-      <main style={{ flex: 1, maxWidth: 960, width: '100%', margin: '0 auto', padding: '60px 20px 80px', position: 'relative', zIndex: 1 }}>
+      <main style={{ flex: 1, maxWidth: 1240, width: '100%', margin: '0 auto', padding: '60px 20px 80px', position: 'relative', zIndex: 1 }}>
 
         {/* ── Header ── */}
         <div className="sched-anim" style={{ textAlign: 'center', marginBottom: 54 }}>
-          <h1 style={{ fontFamily: '"Syne"', fontSize: 'clamp(1.8rem,5vw,2.8rem)', fontWeight: 900, lineHeight: 1.1, color: '#efefef', margin: '0 0 12px' }}>
+          <h1 className="section-heading" style={{ color: '#efefef', margin: '0 0 12px' }}>
             Tournament Fixtures
           </h1>
           <p style={{ color: '#bbb', fontSize: '.9rem', lineHeight: 1.7, maxWidth: 500, margin: '0 auto' }}>
@@ -225,7 +265,7 @@ export default function SchedulesPage() {
             <h2 style={{ fontFamily: '"Syne"', fontSize: '1.8rem', color: '#ffb800', margin: '0 0 10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
               <Trophy size={24} color="#ffb800" /> Knockout Stage
             </h2>
-            <TournamentBracket />
+            <TournamentBracket knockout={knockout} />
           </div>
         </div>
 
@@ -236,8 +276,137 @@ export default function SchedulesPage() {
       {/* ── Styles ── */}
       <style>{`
         /* Animations */
+        @keyframes pulsate { 0% { opacity: .5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } 100% { opacity: .5; transform: scale(1); } }
         .sched-anim {
           animation: schedIn .5s cubic-bezier(.16,1,.3,1) both;
+        }
+        .match-card {
+          background: #111214;
+          border: 1px solid rgba(255,255,255,.08);
+          border-radius: 14px;
+          overflow: hidden;
+          transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+        }
+        .match-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(255,255,255,.14);
+          box-shadow: 0 16px 30px rgba(0,0,0,.28);
+        }
+        .match-card-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 11px 14px;
+          background: rgba(255,255,255,.015);
+        }
+        .match-id {
+          font-size: .72rem;
+          text-transform: uppercase;
+          letter-spacing: .09em;
+          font-weight: 800;
+          color: #9a9a9a;
+        }
+        .match-status {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border: 1px solid;
+          border-radius: 999px;
+          padding: 3px 10px;
+          font-size: .66rem;
+          text-transform: uppercase;
+          letter-spacing: .08em;
+          font-weight: 800;
+        }
+        .live-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: #ef4444;
+          animation: pulsate 1.5s infinite;
+        }
+        .match-card-body {
+          padding: 16px 14px;
+        }
+        .fixture-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .fixture-team {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+          flex: 1;
+        }
+        .fixture-team-right {
+          justify-content: flex-end;
+        }
+        .team-pip {
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          border: 1px solid;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: .68rem;
+          font-weight: 800;
+          flex-shrink: 0;
+        }
+        .team-name {
+          font-family: "Syne",system-ui,sans-serif;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #efefef;
+          line-height: 1.2;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .vs-pill {
+          border: 1px solid;
+          border-radius: 999px;
+          padding: 4px 12px;
+          font-size: .66rem;
+          letter-spacing: .08em;
+          font-weight: 800;
+          flex-shrink: 0;
+        }
+        .match-card-foot {
+          border-top: 1px solid rgba(255,255,255,.06);
+          background: rgba(0,0,0,.16);
+          min-height: 46px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px 12px;
+        }
+        .match-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #8f8f8f;
+          font-size: .78rem;
+          font-weight: 600;
+        }
+        .match-meta span {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .meta-dot {
+          color: #5f5f5f;
+        }
+        .match-result {
+          margin: 0;
+          color: #ffb800;
+          font-size: .83rem;
+          font-weight: 700;
+          line-height: 1.4;
+          text-align: center;
         }
         @keyframes schedIn {
           from { opacity: 0; transform: translateY(15px); }
@@ -392,6 +561,8 @@ export default function SchedulesPage() {
           .t-vs { font-size: 0.7rem; padding: 6px 4px; }
           .pt-team, .t-team, .t-match { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; }
           .t-dt { font-size: 0.9rem; }
+          .team-name { font-size: 1rem; }
+          .match-meta { font-size: .74rem; }
           
           /* Vertical Stack Bracket on Mobile */
           .bracket-wrapper { padding: 20px 0; overflow-x: hidden; }
