@@ -42,17 +42,6 @@ function ContactStrip({ settings }) {
         {supportDescription}
       </p>
 
-      {coordinators.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, maxWidth: 640, margin: '0 auto 32px' }}>
-          {coordinators.map((c, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-              <p style={{ fontFamily: '"Syne"', fontWeight: 700, color: '#efefef', fontSize: '1.05rem', marginBottom: 4 }}>{c.name}</p>
-              <p style={{ fontFamily: '"DM Sans"', color: '#ff6b22', fontSize: '.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>{c.role}</p>
-              <a href={`tel:${c.phone.replace(/\s+/g,'')}`} style={{ color: '#9a9a9a', fontSize: '.85rem', textDecoration: 'none' }}>{c.phone}</a>
-            </div>
-          ))}
-        </div>
-      )}
 
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
         <a
