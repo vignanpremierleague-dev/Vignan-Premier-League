@@ -1,7 +1,7 @@
 import { Flame, ArrowDown } from 'lucide-react'
 import FireParticles from './FireParticles'
 
-export default function Hero({ settings }) {
+export default function Hero({ settings, topOffset = 0 }) {
   const seasonLabel = settings?.heroSeasonLabel || 'Season 1 · 2026'
   const line1 = settings?.heroTitleLine1 || 'VIGNAN'
   const line2 = settings?.heroTitleLine2 || 'PREMIER'
@@ -11,16 +11,18 @@ export default function Hero({ settings }) {
   const primaryHref = settings?.heroPrimaryCtaHref || '/register'
   const secondaryLabel = settings?.heroSecondaryCtaLabel || 'Explore'
   const secondaryHref = settings?.heroSecondaryCtaHref || '#about'
+  const contentPadding = topOffset > 0 ? '64px 0 40px' : '96px 0 64px'
 
   return (
     <section
       id="home"
       style={{
         position: 'relative',
-        minHeight: '100vh',
+        minHeight: `calc(100vh - ${topOffset}px)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        boxSizing: 'border-box',
         overflow: 'hidden',
         background: '#06060a',
       }}
@@ -44,10 +46,10 @@ export default function Hero({ settings }) {
       <FireParticles count={22} />
 
       {/* Content */}
-      <div className="wrap hero-content" style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '120px 0 80px' }}>
+      <div className="wrap hero-content" style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: contentPadding }}>
 
         {/* Season badge */}
-        <div className="hero-fade-up" style={{ display: 'flex', justifyContent: 'center', marginBottom: 28, animationDelay: '0.1s' }}>
+        <div className="hero-fade-up" style={{ display: 'flex', justifyContent: 'center', marginBottom: 20, animationDelay: '0.1s' }}>
           <span className="tag hero-season-pill">
             <Flame style={{ width: 12, height: 12, animation: 'flicker .8s ease-in-out infinite' }} />
             {seasonLabel}
@@ -55,11 +57,11 @@ export default function Hero({ settings }) {
         </div>
 
         {/* Title */}
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 20 }}>
           <h1
             className="display-heading"
             style={{
-              fontSize: 'clamp(3.2rem,8vw,7.5rem)',
+              fontSize: 'clamp(2.6rem,6.6vw,6rem)',
               letterSpacing: '-.02em',
               lineHeight: 1.0,
               fontFamily: '"Syne",system-ui,sans-serif',
@@ -77,10 +79,10 @@ export default function Hero({ settings }) {
           style={{
             fontFamily: '"DM Sans",system-ui,sans-serif',
             color: '#9a9a9a',
-            fontSize: '1rem',
-            maxWidth: 440,
-            margin: '0 auto 40px',
-            lineHeight: 1.75,
+            fontSize: '.95rem',
+            maxWidth: 400,
+            margin: '0 auto 28px',
+            lineHeight: 1.65,
             animationDelay: '0.65s',
           }}
         >
@@ -88,7 +90,7 @@ export default function Hero({ settings }) {
         </p>
 
         {/* Buttons */}
-        <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
+        <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
           <a href={primaryHref} className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = primaryHref }}>
             <Flame style={{ width: 16, height: 16 }} /> {primaryLabel}
           </a>
@@ -102,7 +104,7 @@ export default function Hero({ settings }) {
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, height: 160,
         background: 'linear-gradient(to top, #06060a 0%, transparent 100%)',
-        zIndex: 10, pointerEvents: 'none',
+        zIndex: 1, pointerEvents: 'none',
       }} />
     </section>
   )

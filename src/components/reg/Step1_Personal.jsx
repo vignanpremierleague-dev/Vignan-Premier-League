@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { fieldStyle, labelStyle, errorStyle, FocusInput } from './fieldStyles'
-import { Camera, X } from 'lucide-react'
+import { Upload, Image } from 'lucide-react'
 
 export default function Step1_Personal({ data, setData, errors }) {
   const [uploadErr, setUploadErr] = useState('')
@@ -70,35 +70,51 @@ export default function Step1_Personal({ data, setData, errors }) {
         <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} style={{ display: 'none' }} />
 
         {!data.photo_url ? (
-          <button type="button" onClick={() => photoRef.current?.click()} className="upload-zone">
-            <Camera size={22} color="#8a8a8a" />
+          <button
+            type="button"
+            onClick={() => photoRef.current?.click()}
+            style={{
+              width: '100%', padding: '24px 20px',
+              background: 'rgba(255,255,255,.03)',
+              border: '1.5px dashed rgba(255,255,255,.12)',
+              borderRadius: 12, cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+              transition: 'border-color .25s, background .25s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,107,34,.4)'; e.currentTarget.style.background = 'rgba(255,107,34,.04)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)'; e.currentTarget.style.background = 'rgba(255,255,255,.03)' }}
+          >
+            <Upload size={22} color="#8a8a8a" />
             <span style={{ fontFamily: '"DM Sans"', color: '#9a9a9a', fontSize: '.85rem', fontWeight: 500 }}>
               Click to select photo
             </span>
             <span style={{ fontFamily: '"DM Sans"', color: '#8a8a8a', fontSize: '.73rem' }}>JPG or PNG, max 5 MB</span>
           </button>
         ) : (
-          <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,107,34,.3)' }}>
             <img
               src={data.photo_url}
               alt="Player"
-              style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 14, border: '2px solid rgba(255,107,34,.4)', display: 'block' }}
+              style={{ width: '100%', maxHeight: 220, objectFit: 'contain', display: 'block', background: '#0f0f0f' }}
             />
             <button
               type="button"
               onClick={clearPhoto}
               style={{
-                position: 'absolute', top: -8, right: -8,
-                width: 24, height: 24, borderRadius: '50%',
-                background: '#e63946', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'absolute', top: 8, right: 8,
+                background: 'rgba(230,57,70,.85)', border: 'none', borderRadius: 8,
+                padding: '6px 12px', cursor: 'pointer',
+                fontFamily: '"DM Sans"', fontSize: '.75rem', color: '#fff', fontWeight: 600,
               }}
             >
-              <X size={12} color="#fff" />
+              Remove
             </button>
-            <p style={{ fontFamily: '"DM Sans"', color: '#f5a100', fontSize: '.72rem', marginTop: 6, fontWeight: 600 }}>
-              Photo selected (uploads on submit)
-            </p>
+            <div style={{ padding: '8px 14px', background: 'rgba(255,107,34,.06)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Image size={13} color="#f5a100" />
+              <span style={{ fontFamily: '"DM Sans"', color: '#f5a100', fontSize: '.75rem' }}>
+                Photo selected (uploads on submit)
+              </span>
+            </div>
           </div>
         )}
         {uploadErr && <span style={errorStyle}>{uploadErr}</span>}

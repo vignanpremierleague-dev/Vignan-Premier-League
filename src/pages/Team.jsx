@@ -26,14 +26,14 @@ const leadership = [
   {
     name: 'Dr. Poonam Malakondaiah, IAS',
     title: 'Advisor',
-    bio: "Distinguished IAS officer and University Advisor. Her administrative expertise and strong belief in sports for building character heavily supports VPL.",
+    bio: 'Retired IAS officer and University Advisor. Her guidance and support continue to strengthen the vision of VPL.',
     img: '/advisor.png',
     accent: '#ff6b22',
   },
   {
-    name: 'Prof. Y. V. Daseswara Rao',
+    name: 'Dr. Y. V. Daseswara Rao',
     title: 'Director',
-    bio: 'Director of Vignan University. His philosophy of sports as a driver for discipline helped transform this tournament into a college-wide spectacle.',
+    bio: 'Director of Vignan University. His encouragement and leadership continue to support sports and student development through VPL.',
     img: '/director.png',
     accent: '#ff6b22',
   },
@@ -42,15 +42,22 @@ const leadership = [
 const facultyMembers = [
   {
     name: 'Dr. Baddam Anil Kumar',
-    title: 'Faculty Member',
-    bio: "Senior Assistant Professor. His active involvement in the organising committee ensures that VPL upholds the highest standards of discipline and fair play.",
+    title: 'Assistant Professor',
+    bio: 'Department of CSE. Provides valuable leadership and support for the successful conduct of VPL.',
     img: '/faculty.jpeg',
+    accent: '#ff6b22',
+  },
+  {
+    name: 'Dr. T.H. Lalrokhawma',
+    title: 'Assistant Professor',
+    bio: 'Department of Commerce & Management Studies. He supports the smooth conduct and success of VPL.',
+    img: '/Lalrokhawma.jpeg',
     accent: '#ff6b22',
   },
   {
     name: 'Pastham Sreenu',
     title: 'Sports Coach',
-    bio: 'Sports Coach at VFSTR. Holding PGDs in both Fitness Management and Yoga, his expertise ensures athletes in the VPL are fit, focused, and performing at their peak.',
+    bio: 'Sports Coach at VFSTR. He trains and guides players for VPL.',
     img: '/sportscoach.png',
     accent: '#ff6b22',
   },

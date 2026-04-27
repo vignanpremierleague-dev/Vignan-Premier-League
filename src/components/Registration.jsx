@@ -10,6 +10,8 @@ import Step5_Confirm   from './reg/Step5_Confirm'
 import { Flame, ArrowRight, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 import { fetchSiteSettings } from '../lib/adminApi'
 
+const REGISTRATION_DRAFT_KEY = 'vpl-registration-draft-v1'
+
 const INIT = {
   registration_id: '', name: '', phone: '', email: '', photo_url: '',
   photo_file: null,
@@ -20,6 +22,33 @@ const INIT = {
 }
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('Failed to read file.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function buildFileDraft(file) {
+  if (!file) return null
+  return {
+    name: file.name,
+    type: file.type,
+    dataUrl: await fileToDataUrl(file),
+  }
+}
+
+function dataUrlToFile(dataUrl, name, type) {
+  const parts = dataUrl.split(',')
+  if (parts.length < 2) return null
+  const binary = atob(parts[1])
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
+  return new File([bytes], name || 'upload', { type: type || 'application/octet-stream' })
+}
 
 function validate(step, data) {
   const e = {}
@@ -59,6 +88,8 @@ export default function Registration() {
   const [submitError, setSubmitError] = useState('')
   const [success, setSuccess]     = useState(false)
   const [settings, setSettings]   = useState(null)
+  const [draftLoaded, setDraftLoaded] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const successCardRef = useRef(null)
   const whatsappLink = settings?.whatsappLink || 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t'
   const registerSectionTitle = settings?.registerSectionTitle || 'Register Now'
@@ -68,6 +99,99 @@ export default function Registration() {
   useEffect(() => {
     fetchSiteSettings().then(setSettings).catch()
   }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const restoreDraft = async () => {
+      try {
+        const rawDraft = localStorage.getItem(REGISTRATION_DRAFT_KEY)
+        if (!rawDraft) return
+
+        const draft = JSON.parse(rawDraft)
+        const nextData = {
+          ...INIT,
+          ...draft.data,
+          photo_url: '',
+          photo_file: null,
+          payment_screenshot_url: '',
+          payment_file: null,
+        }
+
+        if (draft.photoDraft?.dataUrl) {
+          nextData.photo_url = draft.photoDraft.dataUrl
+          nextData.photo_file = dataUrlToFile(draft.photoDraft.dataUrl, draft.photoDraft.name, draft.photoDraft.type)
+        }
+
+        if (draft.paymentDraft?.dataUrl) {
+          nextData.payment_screenshot_url = draft.paymentDraft.dataUrl
+          nextData.payment_file = dataUrlToFile(draft.paymentDraft.dataUrl, draft.paymentDraft.name, draft.paymentDraft.type)
+        }
+
+        if (!active) return
+        setData(nextData)
+        if (Number.isInteger(draft.step) && draft.step >= 1 && draft.step <= 5) setStep(draft.step)
+        setTermsAccepted(Boolean(draft.termsAccepted))
+      } catch {}
+      finally {
+        if (active) setDraftLoaded(true)
+      }
+    }
+
+    restoreDraft()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!draftLoaded || success) return
+
+    let cancelled = false
+
+    const persistDraft = async () => {
+      try {
+        const photoDraft = await buildFileDraft(data.photo_file)
+        const paymentDraft = await buildFileDraft(data.payment_file)
+        if (cancelled) return
+
+        const draft = {
+          step,
+          termsAccepted,
+          data: {
+            registration_id: data.registration_id,
+            name: data.name,
+            phone: data.phone,
+            email: data.email,
+            year: data.year,
+            course: data.course,
+            branch: data.branch,
+            section: data.section,
+            role: data.role,
+            batting_side: data.batting_side,
+            bowling_arm: data.bowling_arm,
+            bowling_type: data.bowling_type,
+            utr_number: data.utr_number,
+          },
+          photoDraft,
+          paymentDraft,
+        }
+
+        localStorage.setItem(REGISTRATION_DRAFT_KEY, JSON.stringify(draft))
+      } catch {}
+    }
+
+    persistDraft()
+
+    return () => {
+      cancelled = true
+    }
+  }, [data, draftLoaded, step, success, termsAccepted])
+
+  useEffect(() => {
+    if (success) localStorage.removeItem(REGISTRATION_DRAFT_KEY)
+  }, [success])
 
   const scrollToSection = () => {
     const el = document.getElementById('register')
@@ -237,7 +361,7 @@ export default function Registration() {
             </svg>
             Join VPL WhatsApp Group
           </a>
-          <a href="#home" className="btn-ghost" style={{ width:'100%', justifyContent:'center' }}>Back to Home</a>
+          <a href="/" className="btn-ghost" style={{ width:'100%', justifyContent:'center' }}>Back to Home</a>
         </div>
       </section>
     )
@@ -246,16 +370,67 @@ export default function Registration() {
   /* ── Form ─────────────────────────────────────────────── */
   if (settings && !settings.registrationsOpen) {
     return (
-      <section id="register" style={{ padding:'100px 0', background:'#0f0f0f' }}>
-        <div className="wrap" style={{ maxWidth:520, margin:'0 auto', textAlign:'center', padding:'0 16px' }}>
+      <section
+        id="register"
+        style={{
+          minHeight: 'calc(100vh - 60px)',
+          padding: '100px 0',
+          background: '#0f0f0f',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div
+          className="wrap"
+          style={{
+            width: '100%',
+            maxWidth: 640,
+            margin: '0 auto',
+            textAlign: 'center',
+            padding: '0 16px',
+          }}
+        >
           <div style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
             <XCircle size={64} color="#e63946" strokeWidth={1.5} />
           </div>
-          <h2 className="section-heading" style={{ marginBottom:12, color: '#efefef' }}>{closedTitle}</h2>
-          <p style={{ fontFamily:'"DM Sans"', color:'#8b8b8b', fontSize:'.95rem', lineHeight:1.8, marginBottom:28 }}>
+          <h2
+            style={{
+              margin: '0 auto 12px',
+              width: '100%',
+              color: '#efefef',
+              textAlign: 'center',
+              fontFamily: '"Syne",system-ui,sans-serif',
+              fontWeight: 800,
+              fontSize: 'clamp(1.2rem, 5.2vw, 1.85rem)',
+              lineHeight: 1.05,
+              letterSpacing: '0.01em',
+              textTransform: 'uppercase',
+            }}
+          >
+            <span style={{ display: 'block' }}>Registrations</span>
+            <span style={{ display: 'block' }}>Closed</span>
+          </h2>
+          <p
+            style={{
+              fontFamily: '"DM Sans"',
+              color: '#8b8b8b',
+              fontSize: '.95rem',
+              lineHeight: 1.8,
+              margin: '0 auto 28px',
+              maxWidth: 560,
+              overflowWrap: 'anywhere',
+            }}
+          >
             {closedMessage}
           </p>
-          <a href="/" className="btn-ghost" style={{ width:'100%', justifyContent:'center', display: 'flex' }}>Back to Home</a>
+          <a
+            href="/"
+            className="btn-ghost"
+            style={{ width: '100%', maxWidth: 320, justifyContent: 'center', display: 'flex', margin: '0 auto' }}
+          >
+            Back to Home
+          </a>
         </div>
       </section>
     )
@@ -267,7 +442,18 @@ export default function Registration() {
 
       <div className="wrap" style={{ position:'relative', zIndex:10 }}>
         <div style={{ textAlign:'center', marginBottom:48 }}>
-          <h2 className="section-heading fire-text" style={{ marginBottom:8 }}>{registerSectionTitle}</h2>
+          <h2
+            className="section-heading fire-text"
+            style={{
+              margin: '0 auto 8px',
+              maxWidth: 420,
+              overflowWrap: 'anywhere',
+              wordBreak: 'break-word',
+              textWrap: 'balance',
+            }}
+          >
+            {registerSectionTitle}
+          </h2>
           <span className="divider" />
         </div>
 
@@ -278,7 +464,15 @@ export default function Registration() {
           {step === 2 && <Step2_Academic data={data} setData={setData} errors={errors} />}
           {step === 3 && <Step3_Role     data={data} setData={setData} errors={errors} />}
           {step === 4 && <Step4_Payment  data={data} setData={setData} errors={errors} />}
-          {step === 5 && <Step5_Confirm  data={data} submitting={submitting} submitError={submitError} />}
+          {step === 5 && (
+            <Step5_Confirm
+              data={data}
+              submitting={submitting}
+              submitError={submitError}
+              termsAccepted={termsAccepted}
+              setTermsAccepted={setTermsAccepted}
+            />
+          )}
 
           <div className="reg-nav">
             {step > 1 && (
@@ -293,7 +487,7 @@ export default function Registration() {
             )}
             {step === 5 && (
               <button type="button" onClick={handleSubmit} className="btn-primary"
-                disabled={submitting} style={{ marginLeft:'auto', opacity: submitting ? .7 : 1, cursor: submitting ? 'not-allowed' : 'pointer' }}>
+                disabled={submitting || !termsAccepted} style={{ marginLeft:'auto', opacity: (submitting || !termsAccepted) ? .7 : 1, cursor: (submitting || !termsAccepted) ? 'not-allowed' : 'pointer' }}>
                 <Flame size={16} /> {submitting ? 'Submitting…' : 'Submit Registration'}
               </button>
             )}

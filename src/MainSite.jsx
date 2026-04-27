@@ -9,6 +9,10 @@ import EmberParticles  from './components/EmberParticles'
 import { useEffect, useState } from 'react'
 import { fetchSiteSettings } from './lib/adminApi'
 
+const DEFAULT_MARQUEE_MESSAGE = '🔥 Welcome to VPL 2025! Registrations are now LIVE! Secure your spot before slots fill up.'
+const NAVBAR_HEIGHT = 60
+const MARQUEE_HEIGHT = 49
+
 function ContactStrip({ settings }) {
   const whatsappLink = settings?.whatsappLink || "https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t";
   const coordinators = settings?.studentCoordinators || [];
@@ -132,6 +136,8 @@ function MarqueeAnnouncements({ text }) {
 
 export default function MainSite() {
   const [settings, setSettings] = useState(null)
+  const marqueeText = settings === null ? DEFAULT_MARQUEE_MESSAGE : settings?.marqueeMessage
+  const heroOffset = NAVBAR_HEIGHT + (marqueeText ? MARQUEE_HEIGHT : 0)
 
   useEffect(() => {
     fetchSiteSettings().then(setSettings).catch(console.error)
@@ -142,10 +148,10 @@ export default function MainSite() {
       <EmberParticles />
       <Navbar />
       {/* 60px spacer so content clears the fixed navbar */}
-      <div style={{ height: 60 }} />
-      {settings?.marqueeMessage && <MarqueeAnnouncements text={settings.marqueeMessage} />}
+      <div style={{ height: NAVBAR_HEIGHT }} />
+      {marqueeText && <MarqueeAnnouncements text={marqueeText} />}
       <main>
-        <Hero settings={settings} />
+        <Hero settings={settings} topOffset={heroOffset} />
         <About />
         <HowItWorks />
         <Timeline />

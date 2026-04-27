@@ -2,6 +2,8 @@
 import { Upload, Image } from 'lucide-react'
 import { fieldStyle, labelStyle, errorStyle, FocusInput } from './fieldStyles'
 
+const UPI_PAYMENT_LINK = 'upi://pay?pa=revanthkotamraju-4@okhdfcbank&am=200.00&cu=INR'
+
 export default function Step4_Payment({ data, setData, errors }) {
   const [uploadErr, setUploadErr] = useState('')
   const fileRef = useRef(null)
@@ -62,16 +64,15 @@ export default function Step4_Payment({ data, setData, errors }) {
             display: 'block',
           }}
         />
-        <a
-          href="/gpay-qr.png"
-          download="vpl-payment-qr.png"
-          className="btn-ghost"
-          style={{ padding: '8px 14px', fontSize: '.72rem', marginBottom: 10 }}
-        >
-          Download QR
+          <a
+            href={UPI_PAYMENT_LINK}
+            className="btn-ghost"
+            style={{ padding: '8px 14px', fontSize: '.72rem', marginBottom: 10 }}
+          >
+          Open UPI App
         </a>
         <p style={{ fontFamily: '"DM Sans"', color: '#a0a0a0', fontSize: '.78rem' }}>
-          Scan with any UPI app and complete payment.
+          Scan the QR or tap above to pay with a UPI app.
         </p>
       </div>
 
