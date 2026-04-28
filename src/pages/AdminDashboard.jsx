@@ -36,6 +36,14 @@ const DEFAULT_STUDENT_COORDINATORS = [
   { name: 'Sk.Imam', section: 'Student Coordinator', phone: '' },
   { name: 'T.Revanth Goud', section: 'Student Coordinator', phone: '' },
 ]
+const DEFAULT_TIMELINE_EVENTS = [
+  { title: 'Registrations Open', date: 'Coming Soon', desc: 'Register online and pay the Rs.300 entry fee to join the player pool.' },
+  { title: 'Player Auction', date: 'Coming Soon', desc: 'Faculty team owners bid for players in a high-energy live auction.' },
+  { title: 'Team Reveal', date: 'Coming Soon', desc: 'Final squads announced and jersey numbers assigned.' },
+  { title: 'League Matches', date: 'Coming Soon', desc: 'Round-robin T10 league stage where every match and every ball counts.' },
+  { title: 'Knockouts & Finals', date: 'Coming Soon', desc: 'Semi-finals and the Grand Finale for the VPL championship.' },
+  { title: 'Awards Ceremony', date: 'Coming Soon', desc: 'Best Batsman, Bowler, and Player of the Tournament will be recognized.' },
+]
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -449,10 +457,18 @@ function buildCMSForm(settings) {
   const sourceCoordinators = Array.isArray(source.studentCoordinators) && source.studentCoordinators.length
     ? source.studentCoordinators
     : DEFAULT_STUDENT_COORDINATORS
+  const sourceTimelineEvents = Array.isArray(source.timelineEvents) && source.timelineEvents.length
+    ? source.timelineEvents
+    : DEFAULT_TIMELINE_EVENTS
   const normalizedCoordinators = sourceCoordinators.map((c) => ({
     name: c?.name || '',
     section: c?.section || c?.role || '',
     phone: c?.phone || '',
+  }))
+  const normalizedTimelineEvents = sourceTimelineEvents.map((event, index) => ({
+    title: event?.title || DEFAULT_TIMELINE_EVENTS[index]?.title || '',
+    date: event?.date || 'Coming Soon',
+    desc: event?.desc || DEFAULT_TIMELINE_EVENTS[index]?.desc || '',
   }))
   return {
     ...source,
@@ -472,6 +488,9 @@ function buildCMSForm(settings) {
     registerSectionTitle: source.registerSectionTitle || 'Register Now',
     registrationClosedTitle: source.registrationClosedTitle || 'Registrations Closed',
     registrationClosedMessage: source.registrationClosedMessage || 'Player registrations for the Vignan Premier League are temporarily closed. Please check the WhatsApp group for updates or contact our coordinators.',
+    timelineSectionTitle: source.timelineSectionTitle || 'Tournament Timeline',
+    timelineWindow: source.timelineWindow || 'July - August',
+    timelineEvents: normalizedTimelineEvents,
     studentCoordinators: normalizedCoordinators,
     winners: Array.isArray(source.winners) ? source.winners : [],
   }
@@ -669,6 +688,59 @@ function CMSPanel({ settings, onSave, saving, isCompact }) {
                <input value={form.whatsappLink} onChange={e => updateForm('whatsappLink', e.target.value)}
                   style={{ width: '100%', padding: 12, background: '#1a1a1a', borderRadius: 8, color: '#fff', fontSize: '.95rem' }} />
             </label>
+         </div>
+      </div>
+
+      {/* Timeline Controls */}
+      <div style={{ background: '#111', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,.08)', marginBottom: 24 }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12 }}>
+           <div>
+             <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>Timeline Content</h3>
+             <p style={{ color: '#8a8a8a', fontSize: '.8rem', marginTop: 4 }}>Edit the timeline section title, season window, and each event card shown on the home page.</p>
+           </div>
+           <button
+             type="button"
+             onClick={() => updateForm('timelineEvents', DEFAULT_TIMELINE_EVENTS.map((event) => ({ ...event })))}
+             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'rgba(245,158,11,.12)', color: '#f5a100', border: '1px solid rgba(245,158,11,.25)', borderRadius: 8, cursor: 'pointer', fontSize: '.8rem' }}
+           >
+             Load Defaults
+           </button>
+         </div>
+
+         <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
+           <label>
+             <span style={{ display: 'block', color: '#8a8a8a', fontSize: '.85rem', marginBottom: 6 }}>Timeline Section Title</span>
+             <input value={form.timelineSectionTitle || ''} onChange={e => updateForm('timelineSectionTitle', e.target.value)}
+               style={{ width: '100%', padding: 12, background: '#1a1a1a', borderRadius: 8, color: '#fff', fontSize: '.95rem' }} />
+           </label>
+           <label>
+             <span style={{ display: 'block', color: '#8a8a8a', fontSize: '.85rem', marginBottom: 6 }}>Timeline Window</span>
+             <input value={form.timelineWindow || ''} onChange={e => updateForm('timelineWindow', e.target.value)}
+               style={{ width: '100%', padding: 12, background: '#1a1a1a', borderRadius: 8, color: '#fff', fontSize: '.95rem' }} />
+           </label>
+         </div>
+
+         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {form.timelineEvents.map((event, i) => (
+              <div key={i} style={{ background: '#1a1a1a', padding: 14, borderRadius: 10, border: '1px solid rgba(255,255,255,.05)' }}>
+                 <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1.4fr .8fr', gap: 12, marginBottom: 12 }}>
+                   <label>
+                     <span style={{ display: 'block', color: '#8a8a8a', fontSize: '.8rem', marginBottom: 6 }}>Event Title</span>
+                     <input value={event.title} onChange={e => handleArrayUpdate('timelineEvents', i, 'title', e.target.value)} style={{ width: '100%', padding: 10, background: '#222', border: 'none', color: '#fff', borderRadius: 6 }} />
+                   </label>
+                   <label>
+                     <span style={{ display: 'block', color: '#8a8a8a', fontSize: '.8rem', marginBottom: 6 }}>Event Date Label</span>
+                     <input value={event.date} onChange={e => handleArrayUpdate('timelineEvents', i, 'date', e.target.value)} style={{ width: '100%', padding: 10, background: '#222', border: 'none', color: '#fff', borderRadius: 6 }} />
+                   </label>
+                 </div>
+                 <label>
+                   <span style={{ display: 'block', color: '#8a8a8a', fontSize: '.8rem', marginBottom: 6 }}>Description</span>
+                   <textarea value={event.desc} onChange={e => handleArrayUpdate('timelineEvents', i, 'desc', e.target.value)}
+                     rows={2}
+                     style={{ width: '100%', padding: 10, background: '#222', border: 'none', color: '#fff', borderRadius: 6, resize: 'vertical' }} />
+                 </label>
+              </div>
+            ))}
          </div>
       </div>
 

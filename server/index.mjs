@@ -43,6 +43,16 @@ const defaultSiteSettings = {
   contactEmail: 'support@vignanpremierleague.com',
   contactPhone: '+91 99999 99999',
   whatsappLink: 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t',
+  timelineSectionTitle: 'Tournament Timeline',
+  timelineWindow: 'July - August',
+  timelineEvents: [
+    { title: 'Registrations Open', date: 'Coming Soon', desc: 'Register online and pay the Rs.300 entry fee to join the player pool.' },
+    { title: 'Player Auction', date: 'Coming Soon', desc: 'Faculty team owners bid for players in a high-energy live auction.' },
+    { title: 'Team Reveal', date: 'Coming Soon', desc: 'Final squads announced and jersey numbers assigned.' },
+    { title: 'League Matches', date: 'Coming Soon', desc: 'Round-robin T10 league stage where every match and every ball counts.' },
+    { title: 'Knockouts & Finals', date: 'Coming Soon', desc: 'Semi-finals and the Grand Finale for the VPL championship.' },
+    { title: 'Awards Ceremony', date: 'Coming Soon', desc: 'Best Batsman, Bowler, and Player of the Tournament will be recognized.' },
+  ],
   winners: [],
   studentCoordinators: [
     { name: 'John Doe', phone: '+91 90000 00001', role: 'Head Coordinator' },

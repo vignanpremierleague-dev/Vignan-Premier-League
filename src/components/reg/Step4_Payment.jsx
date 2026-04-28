@@ -2,7 +2,7 @@
 import { Upload, Image } from 'lucide-react'
 import { fieldStyle, labelStyle, errorStyle, FocusInput } from './fieldStyles'
 
-const UPI_PAYMENT_LINK = 'upi://pay?pa=revanthkotamraju-4@okhdfcbank&am=200.00&cu=INR'
+const UPI_PAYMENT_LINK = 'upi://pay?pa=revanthkotamraju-4@okhdfcbank&am=300.00&cu=INR'
 
 export default function Step4_Payment({ data, setData, errors }) {
   const [uploadErr, setUploadErr] = useState('')
@@ -38,7 +38,7 @@ export default function Step4_Payment({ data, setData, errors }) {
   return (
     <div>
       <h3 className="step-title">Payment</h3>
-      <p className="step-desc">Pay Rs.200 by scanning the QR below, then enter your UTR and upload the payment screenshot as proof.</p>
+      <p className="step-desc">Pay Rs.300 by scanning the QR below, then enter your UTR and upload the payment screenshot as proof.</p>
 
       <div
         style={{
@@ -49,7 +49,7 @@ export default function Step4_Payment({ data, setData, errors }) {
         }}
       >
         <p style={{ fontFamily: '"DM Sans"', color: '#8a8a8a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8, fontWeight: 600 }}>
-          Registration Fee - Rs.200
+          Registration Fee - Rs.300
         </p>
         <img
           src="/gpay-qr.png"

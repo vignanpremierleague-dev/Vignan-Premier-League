@@ -230,7 +230,7 @@ export default function SchedulesPage() {
             Tournament Fixtures
           </h1>
           <p style={{ color: '#bbb', fontSize: '.9rem', lineHeight: 1.7, maxWidth: 500, margin: '0 auto' }}>
-            10 Teams. 2 Groups. 23 Matches. One Champions Trophy. Check back after the auction for finalized dates and team names.
+            10 Teams. 2 Groups. 23 Matches. One Champions Trophy. The tournament runs across July - August, with finalized fixture dates and team names updated here.
           </p>
           <div style={{ width: 40, height: 3, background: 'linear-gradient(90deg,#ff6b22,#ffb800)', borderRadius: 2, margin: '20px auto 0' }} />
         </div>

@@ -15,7 +15,6 @@ const MARQUEE_HEIGHT = 49
 
 function ContactStrip({ settings }) {
   const whatsappLink = settings?.whatsappLink || "https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t";
-  const coordinators = settings?.studentCoordinators || [];
   const supportTitle = settings?.supportTitle || 'Need help?'
   const supportDescription = settings?.supportDescription || 'Reach out for registration queries, rule clarifications, or anything about VPL 2025.'
   const supportWhatsappLabel = settings?.supportWhatsappLabel || 'WhatsApp Group'
@@ -154,7 +153,7 @@ export default function MainSite() {
         <Hero settings={settings} topOffset={heroOffset} />
         <About />
         <HowItWorks />
-        <Timeline />
+        <Timeline settings={settings} />
         <Prizes winners={settings?.winners} />
         <ContactStrip settings={settings} />
       </main>

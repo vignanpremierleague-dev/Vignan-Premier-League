@@ -2,7 +2,7 @@ import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronDown, Ban, Calendar, AlertOctagon, CalendarClock, Gavel } from 'lucide-react'
 
 const terms = [
-  { icon:<Ban size={13} color="#ff6b22"/>,          title:'Fee Policy',         body:'The ₹200 registration fee is non-refundable under any circumstances.' },
+  { icon:<Ban size={13} color="#ff6b22"/>,          title:'Fee Policy',         body:'The ₹300 registration fee is non-refundable under any circumstances.' },
   { icon:<Calendar size={13} color="#ff6b22"/>,     title:'Auction Attendance', body:'All registered players must attend the auction ceremony or forfeit their fee.' },
   { icon:<AlertOctagon size={13} color="#ff6b22"/>, title:'Code of Conduct',    body:'Misconduct of any kind leads to immediate disqualification.' },
   { icon:<CalendarClock size={13} color="#ff6b22"/>,title:'Schedule Changes',   body:'Tournament dates may change. All schedule changes communicated in advance.' },

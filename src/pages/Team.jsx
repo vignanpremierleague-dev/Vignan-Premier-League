@@ -100,7 +100,6 @@ function SectionDivider({ text }) {
 /* ── Person Card ───────────────────────────────────────────────────────────── */
 function PersonCard({ person, index, delay = 100, large = false }) {
   const visible = useFadeIn(delay + index * 120)
-  const [expanded, setExpanded] = useState(false)
   const acc = person.accent
 
   return (

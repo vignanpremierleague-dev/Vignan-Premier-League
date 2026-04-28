@@ -93,7 +93,6 @@ export default function Registration() {
   const successCardRef = useRef(null)
   const whatsappLink = settings?.whatsappLink || 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t'
   const registerSectionTitle = settings?.registerSectionTitle || 'Register Now'
-  const closedTitle = settings?.registrationClosedTitle || 'Registrations Closed'
   const closedMessage = settings?.registrationClosedMessage || 'Player registrations for the Vignan Premier League are temporarily closed. Please check the WhatsApp group for updates or contact our coordinators.'
 
   useEffect(() => {
@@ -132,7 +131,9 @@ export default function Registration() {
         setData(nextData)
         if (Number.isInteger(draft.step) && draft.step >= 1 && draft.step <= 5) setStep(draft.step)
         setTermsAccepted(Boolean(draft.termsAccepted))
-      } catch {}
+      } catch {
+        // Ignore malformed local draft data and continue with a fresh form state.
+      }
       finally {
         if (active) setDraftLoaded(true)
       }
@@ -179,7 +180,9 @@ export default function Registration() {
         }
 
         localStorage.setItem(REGISTRATION_DRAFT_KEY, JSON.stringify(draft))
-      } catch {}
+      } catch {
+        // Draft persistence is best-effort and should not block registration.
+      }
     }
 
     persistDraft()
