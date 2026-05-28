@@ -415,6 +415,59 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  if (req.method === 'PATCH' && /^\/api\/admin\/players\/[^/]+\/unblock-device$/.test(url.pathname)) {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const match = url.pathname.match(/^\/api\/admin\/players\/([^/]+)\/unblock-device$/)
+    const id = decodeURIComponent(match?.[1] || '')
+    if (!id) {
+      sendJson(res, 400, { error: 'Invalid player id.' })
+      return
+    }
+
+    const { data: player, error: playerError } = await supabase
+      .from('vpl_players')
+      .select('id, device_fingerprint')
+      .eq('id', id)
+      .single()
+
+    if (playerError || !player) {
+      sendJson(res, 404, { error: 'Player not found.' })
+      return
+    }
+
+    const fingerprint = normalizeFingerprint(player.device_fingerprint)
+    if (fingerprint) {
+      const { error: unblockError } = await supabase
+        .from('vpl_device_blocks')
+        .delete()
+        .eq('device_fingerprint', fingerprint)
+
+      if (unblockError) {
+        sendJson(res, 500, { error: unblockError.message || 'Failed to remove device block.' })
+        return
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('vpl_players')
+      .update({ device_blocked_at: null })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to update player block state.' })
+      return
+    }
+
+    sendJson(res, 200, { player: data })
+    return
+  }
+
   sendJson(res, 404, { error: 'Not found' })
 })
 

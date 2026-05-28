@@ -41,6 +41,13 @@ export function blockAdminPlayerDevice(token, id) {
   })
 }
 
+export function unblockAdminPlayerDevice(token, id) {
+  return request(`/admin/players/${id}/unblock-device`, {
+    method: 'PATCH',
+    token,
+  })
+}
+
 export function logoutAdmin(token) {
   return request('/admin/logout', {
     method: 'POST',

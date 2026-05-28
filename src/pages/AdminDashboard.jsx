@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchAdminPlayers, verifyAdminPlayer, blockAdminPlayerDevice, logoutAdmin, updateSiteSettings, fetchSiteSettings } from '../lib/adminApi'
+import { fetchAdminPlayers, verifyAdminPlayer, blockAdminPlayerDevice, unblockAdminPlayerDevice, logoutAdmin, updateSiteSettings, fetchSiteSettings } from '../lib/adminApi'
 import {
   Flame, LogOut, ShieldCheck, Users, CreditCard,
   RefreshCw, CheckCircle, XCircle, ExternalLink, Search,
@@ -136,6 +136,16 @@ export default function AdminDashboard() {
     }
   }
 
+  const unblockPlayerDevice = async (id) => {
+    try {
+      const { player } = await unblockAdminPlayerDevice(token, id)
+      setPlayers(prev => prev.map((p) => p.id === id ? player : p))
+    } catch (err) {
+      if (err.message === 'Unauthorized') handleUnauthorized()
+      else alert('Unblock failed: ' + (err.message || 'Request failed.'))
+    }
+  }
+
   const handleSaveCMS = async (newSettings) => {
     setSavingCMS(true)
     try {
@@ -250,7 +260,7 @@ export default function AdminDashboard() {
 
           {/* Tab Content Mapping */}
           {!loading && tab === 'payments' && (
-            <PaymentPanel players={players} unverified={unverified} onVerify={verifyPlayer} onBlockDevice={blockPlayerDevice} isCompact={isCompact} />
+            <PaymentPanel players={players} unverified={unverified} onVerify={verifyPlayer} onBlockDevice={blockPlayerDevice} onUnblockDevice={unblockPlayerDevice} isCompact={isCompact} />
           )}
 
           {!loading && tab === 'auction' && (
@@ -295,7 +305,7 @@ export default function AdminDashboard() {
 /* ─────────────────────────────────────────────── */
 /*  Payment Verification Panel                     */
 /* ─────────────────────────────────────────────── */
-function PaymentPanel({ players, unverified, onVerify, onBlockDevice }) {
+function PaymentPanel({ players, unverified, onVerify, onBlockDevice, onUnblockDevice }) {
   const [showAll, setShowAll] = useState(false)
   const [openScreenshotIndex, setOpenScreenshotIndex] = useState(null)
   const displayed = showAll ? players : unverified
@@ -399,9 +409,32 @@ function PaymentPanel({ players, unverified, onVerify, onBlockDevice }) {
                 </>
               )}
               {p.device_blocked_at ? (
-                <span style={{ color: '#e63946', fontSize: '.8rem', fontWeight: 700, textAlign: 'right' }}>
-                  Device Blocked
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                  <span style={{ color: '#e63946', fontSize: '.8rem', fontWeight: 700, textAlign: 'right' }}>
+                    Device Blocked
+                  </span>
+                  <button
+                    onClick={() => onUnblockDevice(p.id)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 6,
+                      border: '1px solid rgba(34,197,94,.28)',
+                      cursor: 'pointer',
+                      background: 'rgba(34,197,94,.08)',
+                      color: '#22c55e',
+                      fontFamily: '"DM Sans"',
+                      fontWeight: 700,
+                      fontSize: '.78rem',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <CheckCircle size={12} />
+                    Unblock Device
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={() => onBlockDevice(p.id)}
