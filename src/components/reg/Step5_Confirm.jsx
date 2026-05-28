@@ -10,7 +10,7 @@ const ROLE_LABELS = {
 }
 
 const COURSE_LABELS = { btech: 'B.Tech', mtech: 'M.Tech', mba: 'MBA', bba: 'BBA', pharma: 'Pharma' }
-const BRANCH_LABELS = { cse: 'CSE', ece: 'ECE', bt_bi: 'BT & BI', ds: 'Data Science', aiml: 'AI & ML' }
+const BRANCH_LABELS = { cse: 'CSE', ece: 'ECE', bt_bi: 'BT & BI', ds: 'Data Science', aiml: 'AI & ML', cs: 'Cybersecurity', bt: 'Biotechnology', bi: 'Bioinformatics' }
 
 function Row({ label, value }) {
   if (!value) return null

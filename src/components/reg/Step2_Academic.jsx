@@ -2,7 +2,7 @@ import { fieldStyle, labelStyle, errorStyle, FocusSelect } from './fieldStyles'
 
 const YEARS   = [{ v:'1', l:'1st Year' }, { v:'2', l:'2nd Year' }, { v:'3', l:'3rd Year' }, { v:'4', l:'4th Year' }]
 const COURSES = [{ v:'btech', l:'B.Tech' }, { v:'mtech', l:'M.Tech' }, { v:'mba', l:'MBA' }, { v:'bba', l:'BBA' }, { v:'pharma', l:'Pharma' }]
-const BRANCHES= [{ v:'cse', l:'CSE' }, { v:'ece', l:'ECE' }, { v:'bt_bi', l:'BT & BI' }, { v:'ds', l:'Data Science' }, { v:'aiml', l:'AI & ML' }]
+const BRANCHES= [{ v:'cse', l:'CSE' }, { v:'ece', l:'ECE' }, { v:'ds', l:'Data Science' }, { v:'aiml', l:'AI & ML' }, { v:'cs', l:'Cybersecurity' }, { v:'bt', l:'Biotechnology' }, { v:'bi', l:'Bioinformatics' }]
 const SECS    = ['A','B','C','D']
 
 export default function Step2_Academic({ data, setData, errors }) {
