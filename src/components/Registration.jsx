@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from '../lib/supabase'
 import { uploadToCloudinary } from '../lib/cloudinary'
 import ProgressBar     from './reg/ProgressBar'
 import Step1_Personal  from './reg/Step1_Personal'
@@ -9,6 +8,8 @@ import Step4_Payment   from './reg/Step4_Payment'
 import Step5_Confirm   from './reg/Step5_Confirm'
 import { Flame, ArrowRight, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 import { fetchSiteSettings } from '../lib/adminApi'
+import { getOrCreateDeviceFingerprint } from '../lib/deviceFingerprint'
+import { submitPlayerRegistration } from '../lib/publicApi'
 
 const REGISTRATION_DRAFT_KEY = 'vpl-registration-draft-v1'
 
@@ -233,92 +234,48 @@ export default function Registration() {
       setSubmitError('Please complete all required fields before submitting.')
       return
     }
-    if (!supabase) {
-      setSubmitError('Registration service is not configured. Please contact support.')
-      return
-    }
-
     setSubmitting(true)
     setSubmitError('')
     try {
-      const payload = {
-        registration_id:         data.registration_id.trim().toUpperCase(),
-        name:                    data.name.trim(),
-        phone:                   data.phone.trim(),
-        email:                   data.email.trim().toLowerCase(),
-        photo_url:               null,
-        year:                    data.year,
-        course:                  data.course,
-        branch:                  data.branch,
-        section:                 data.section,
-        role:                    data.role,
-        batting_side:            data.batting_side || null,
-        bowling_arm:             data.bowling_arm  || null,
-        bowling_type:            data.bowling_type || null,
-        utr_number:              data.utr_number.trim() || null,
-        payment_screenshot_url:  null,
-        is_verified:             false,   // always starts unverified
-      }
-      const { data: inserted, error: insertError } = await supabase
-        .from('vpl_players')
-        .insert(payload)
-        .select('id')
-        .single()
+      const [photoAsset, paymentAsset, deviceFingerprint] = await Promise.all([
+        uploadToCloudinary(data.photo_file),
+        uploadToCloudinary(data.payment_file),
+        getOrCreateDeviceFingerprint(),
+      ])
 
-      if (insertError) {
-        setSubmitError(parseInsertError(insertError))
-        return
-      }
+      await submitPlayerRegistration({
+        registration_id: data.registration_id.trim().toUpperCase(),
+        name: data.name.trim(),
+        phone: data.phone.trim(),
+        email: data.email.trim().toLowerCase(),
+        photo_url: photoAsset.secureUrl,
+        year: data.year,
+        course: data.course,
+        branch: data.branch,
+        section: data.section,
+        role: data.role,
+        batting_side: data.batting_side || null,
+        bowling_arm: data.bowling_arm || null,
+        bowling_type: data.bowling_type || null,
+        utr_number: data.utr_number.trim() || null,
+        payment_screenshot_url: paymentAsset.secureUrl,
+        device_fingerprint: deviceFingerprint,
+      })
 
-      const insertedId = inserted?.id
-      if (!insertedId) {
-        setSubmitError('Submission failed because registration ID was not returned.')
-        return
-      }
-
-      let photoAsset = null
-      let paymentAsset = null
-
-      try {
-        photoAsset = await uploadToCloudinary(data.photo_file)
-        paymentAsset = await uploadToCloudinary(data.payment_file)
-
-        const { error: updateError } = await supabase
-          .from('vpl_players')
-          .update({
-            photo_url: photoAsset.secureUrl,
-            payment_screenshot_url: paymentAsset.secureUrl,
-          })
-          .eq('id', insertedId)
-
-        if (updateError) throw updateError
-
-        setData(prev => {
-          if (prev.photo_url?.startsWith('blob:')) URL.revokeObjectURL(prev.photo_url)
-          if (prev.payment_screenshot_url?.startsWith('blob:')) URL.revokeObjectURL(prev.payment_screenshot_url)
-          return {
-            ...prev,
-            photo_url: photoAsset.secureUrl,
-            payment_screenshot_url: paymentAsset.secureUrl,
-            photo_file: null,
-            payment_file: null,
-          }
-        })
-        setSuccess(true)
-      } catch (err) {
-        const { error: deleteError } = await supabase
-          .from('vpl_players')
-          .delete()
-          .eq('id', insertedId)
-
-        if (deleteError) {
-          setSubmitError('Submission failed and rollback was partial. Please contact support before retrying.')
-        } else {
-          setSubmitError(err?.message || 'Submission failed. Please try again.')
+      setData(prev => {
+        if (prev.photo_url?.startsWith('blob:')) URL.revokeObjectURL(prev.photo_url)
+        if (prev.payment_screenshot_url?.startsWith('blob:')) URL.revokeObjectURL(prev.payment_screenshot_url)
+        return {
+          ...prev,
+          photo_url: photoAsset.secureUrl,
+          payment_screenshot_url: paymentAsset.secureUrl,
+          photo_file: null,
+          payment_file: null,
         }
-      }
+      })
+      setSuccess(true)
     } catch (err) {
-      setSubmitError(err?.message || 'Unexpected error. Please try again.')
+      setSubmitError(parseInsertError(err))
     } finally {
       setSubmitting(false)
     }

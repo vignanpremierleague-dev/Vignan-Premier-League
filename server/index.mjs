@@ -56,7 +56,7 @@ const defaultSiteSettings = {
   winners: [],
   studentCoordinators: [
     { name: 'John Doe', phone: '+91 90000 00001', role: 'Head Coordinator' },
-    { name: 'Jane Doe', phone: '+91 90000 00002', role: 'Event Manager' }
+    { name: 'Jane Doe', phone: '+91 90000 00002', role: 'Event Manager' },
   ],
   teams: {
     A: [
@@ -72,7 +72,7 @@ const defaultSiteSettings = {
       { name: 'Team 8', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
       { name: 'Team 9', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
       { name: 'Team 10', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-    ]
+    ],
   },
   leagueMatches: [
     { id: 1, grp: 'A', t1: 'Team 1', t2: 'Team 2', date: 'TBD', time: 'TBD' },
@@ -95,7 +95,7 @@ const defaultSiteSettings = {
     { id: 18, grp: 'B', t1: 'Team 8', t2: 'Team 10', date: 'TBD', time: 'TBD' },
     { id: 19, grp: 'B', t1: 'Team 6', t2: 'Team 9', date: 'TBD', time: 'TBD' },
     { id: 20, grp: 'B', t1: 'Team 7', t2: 'Team 10', date: 'TBD', time: 'TBD' },
-  ]
+  ],
 }
 
 async function readSiteSettings() {
@@ -107,7 +107,9 @@ async function readSiteSettings() {
 
   if (error || !data?.content) {
     if (!data?.content && !error) {
-       await supabase.from('vpl_site_settings').upsert({ slug: SITE_SETTINGS_SLUG, content: defaultSiteSettings }, { onConflict: 'slug' })
+      await supabase
+        .from('vpl_site_settings')
+        .upsert({ slug: SITE_SETTINGS_SLUG, content: defaultSiteSettings }, { onConflict: 'slug' })
     }
     return defaultSiteSettings
   }
@@ -141,6 +143,105 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/public/site-settings') {
     const content = await readSiteSettings()
     sendJson(res, 200, { content })
+    return
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/public/access-status') {
+    const body = await readJson(req, res)
+    if (!body) return
+
+    const fingerprint = normalizeFingerprint(body.fingerprint)
+    if (!fingerprint) {
+      sendJson(res, 400, { error: 'Device fingerprint is required.' })
+      return
+    }
+
+    const block = await findDeviceBlock(fingerprint)
+    sendJson(res, 200, {
+      allowed: !block,
+      blocked: Boolean(block),
+      reason: block?.blocked_reason || 'This device has been blocked from accessing this website.',
+    })
+    return
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/public/register') {
+    const body = await readJson(req, res)
+    if (!body) return
+
+    const settings = await readSiteSettings()
+    if (settings && settings.registrationsOpen === false) {
+      sendJson(res, 403, { error: 'Registrations are currently closed.' })
+      return
+    }
+
+    const fingerprint = normalizeFingerprint(body.device_fingerprint)
+    if (!fingerprint) {
+      sendJson(res, 400, { error: 'Device fingerprint is required.' })
+      return
+    }
+
+    const block = await findDeviceBlock(fingerprint)
+    if (block) {
+      sendJson(res, 403, { error: block.blocked_reason || 'This device has been blocked from registering.' })
+      return
+    }
+
+    const { ip, userAgent } = getRequestContext(req)
+    const payload = {
+      registration_id: typeof body.registration_id === 'string' ? body.registration_id.trim().toUpperCase() : '',
+      name: typeof body.name === 'string' ? body.name.trim() : '',
+      phone: typeof body.phone === 'string' ? body.phone.trim() : '',
+      email: typeof body.email === 'string' ? body.email.trim().toLowerCase() : '',
+      photo_url: typeof body.photo_url === 'string' ? body.photo_url.trim() : '',
+      year: body.year || '',
+      course: body.course || '',
+      branch: body.branch || '',
+      section: body.section || '',
+      role: body.role || '',
+      batting_side: body.batting_side || null,
+      bowling_arm: body.bowling_arm || null,
+      bowling_type: body.bowling_type || null,
+      utr_number: typeof body.utr_number === 'string' ? body.utr_number.trim() : '',
+      payment_screenshot_url: typeof body.payment_screenshot_url === 'string' ? body.payment_screenshot_url.trim() : '',
+      is_verified: false,
+      device_fingerprint: fingerprint,
+      registration_ip: ip,
+      registration_user_agent: userAgent,
+    }
+
+    const missingRequired = [
+      'registration_id',
+      'name',
+      'phone',
+      'email',
+      'photo_url',
+      'year',
+      'course',
+      'branch',
+      'section',
+      'role',
+      'utr_number',
+      'payment_screenshot_url',
+    ].find((key) => !payload[key])
+
+    if (missingRequired) {
+      sendJson(res, 400, { error: `Missing required field: ${missingRequired}` })
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('vpl_players')
+      .insert(payload)
+      .select('id')
+      .single()
+
+    if (error) {
+      sendJson(res, 400, { error: mapPlayerWriteError(error) })
+      return
+    }
+
+    sendJson(res, 200, { id: data?.id })
     return
   }
 
@@ -249,6 +350,71 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  if (req.method === 'PATCH' && /^\/api\/admin\/players\/[^/]+\/block-device$/.test(url.pathname)) {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const match = url.pathname.match(/^\/api\/admin\/players\/([^/]+)\/block-device$/)
+    const id = decodeURIComponent(match?.[1] || '')
+    if (!id) {
+      sendJson(res, 400, { error: 'Invalid player id.' })
+      return
+    }
+
+    const { data: player, error: playerError } = await supabase
+      .from('vpl_players')
+      .select('id, registration_id, device_fingerprint, registration_ip, registration_user_agent')
+      .eq('id', id)
+      .single()
+
+    if (playerError || !player) {
+      sendJson(res, 404, { error: 'Player not found.' })
+      return
+    }
+
+    const fingerprint = normalizeFingerprint(player.device_fingerprint)
+    if (!fingerprint) {
+      sendJson(res, 400, { error: 'No device fingerprint is available for this player.' })
+      return
+    }
+
+    const blockedAt = new Date().toISOString()
+    const reason = 'Blocked by admin'
+
+    const { error: blockError } = await supabase
+      .from('vpl_device_blocks')
+      .upsert({
+        device_fingerprint: fingerprint,
+        blocked_player_id: String(player.id),
+        blocked_registration_id: player.registration_id || null,
+        blocked_ip: player.registration_ip || null,
+        blocked_user_agent: player.registration_user_agent || null,
+        blocked_reason: reason,
+      }, { onConflict: 'device_fingerprint' })
+
+    if (blockError) {
+      sendJson(res, 500, { error: blockError.message || 'Failed to block device.' })
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('vpl_players')
+      .update({ device_blocked_at: blockedAt })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to update player block state.' })
+      return
+    }
+
+    sendJson(res, 200, { player: data })
+    return
+  }
+
   sendJson(res, 404, { error: 'Not found' })
 })
 
@@ -326,7 +492,6 @@ function loadEnvFile(envPath) {
   const buffer = readFileSync(envPath)
   let text = buffer.toString('utf8')
 
-  // Handle UTF-16LE .env files created by Windows tooling.
   if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
     text = buffer.toString('utf16le')
   }
@@ -348,4 +513,37 @@ function stripQuotes(value) {
   if (value.startsWith('"') && value.endsWith('"')) return value.slice(1, -1)
   if (value.startsWith("'") && value.endsWith("'")) return value.slice(1, -1)
   return value
+}
+
+function normalizeFingerprint(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function getRequestContext(req) {
+  const forwarded = req.headers['x-forwarded-for']
+  const ip = typeof forwarded === 'string'
+    ? forwarded.split(',')[0].trim()
+    : req.socket.remoteAddress || ''
+  const userAgent = typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : ''
+  return { ip, userAgent }
+}
+
+async function findDeviceBlock(fingerprint) {
+  const { data, error } = await supabase
+    .from('vpl_device_blocks')
+    .select('device_fingerprint, blocked_reason, created_at')
+    .eq('device_fingerprint', fingerprint)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return data
+}
+
+function mapPlayerWriteError(error) {
+  if (error?.code === '23505') {
+    if (error.message?.includes('registration_id')) return 'This Registration ID is already registered.'
+    if (error.message?.includes('utr_number')) return 'This UTR number was already used.'
+    return 'A duplicate entry was detected.'
+  }
+  return error?.message || 'Registration failed.'
 }

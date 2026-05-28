@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchAdminPlayers, verifyAdminPlayer, logoutAdmin, updateSiteSettings, fetchSiteSettings } from '../lib/adminApi'
+import { fetchAdminPlayers, verifyAdminPlayer, blockAdminPlayerDevice, logoutAdmin, updateSiteSettings, fetchSiteSettings } from '../lib/adminApi'
 import {
   Flame, LogOut, ShieldCheck, Users, CreditCard,
   RefreshCw, CheckCircle, XCircle, ExternalLink, Search,
@@ -126,6 +126,16 @@ export default function AdminDashboard() {
     }
   }
 
+  const blockPlayerDevice = async (id) => {
+    try {
+      const { player } = await blockAdminPlayerDevice(token, id)
+      setPlayers(prev => prev.map((p) => p.id === id ? player : p))
+    } catch (err) {
+      if (err.message === 'Unauthorized') handleUnauthorized()
+      else alert('Block failed: ' + (err.message || 'Request failed.'))
+    }
+  }
+
   const handleSaveCMS = async (newSettings) => {
     setSavingCMS(true)
     try {
@@ -142,7 +152,9 @@ export default function AdminDashboard() {
 
   const unverified = players.filter(p => !p.is_verified)
 
-  const rosteredPlayers = players.filter(p => {
+  const verifiedPlayers = players.filter(p => p.is_verified)
+
+  const rosteredPlayers = verifiedPlayers.filter(p => {
     const matchRole = roleFilter === 'all' || p.role === roleFilter
     const matchSearch = search === '' ||
       p.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -238,11 +250,11 @@ export default function AdminDashboard() {
 
           {/* Tab Content Mapping */}
           {!loading && tab === 'payments' && (
-            <PaymentPanel players={players} unverified={unverified} onVerify={verifyPlayer} isCompact={isCompact} />
+            <PaymentPanel players={players} unverified={unverified} onVerify={verifyPlayer} onBlockDevice={blockPlayerDevice} isCompact={isCompact} />
           )}
 
           {!loading && tab === 'auction' && (
-            <AuctionPanel players={rosteredPlayers} allCount={players.length}
+            <AuctionPanel players={rosteredPlayers} allCount={verifiedPlayers.length}
               roleFilter={roleFilter} setRoleFilter={setRoleFilter}
               search={search} setSearch={setSearch}
               onSelect={(idx) => setSpotlight(idx)} isCompact={isCompact} />
@@ -283,7 +295,7 @@ export default function AdminDashboard() {
 /* ─────────────────────────────────────────────── */
 /*  Payment Verification Panel                     */
 /* ─────────────────────────────────────────────── */
-function PaymentPanel({ players, unverified, onVerify }) {
+function PaymentPanel({ players, unverified, onVerify, onBlockDevice }) {
   const [showAll, setShowAll] = useState(false)
   const [openScreenshotIndex, setOpenScreenshotIndex] = useState(null)
   const displayed = showAll ? players : unverified
@@ -338,6 +350,10 @@ function PaymentPanel({ players, unverified, onVerify }) {
                 <p style={{ color: '#b0b0b0', fontSize: '.9rem' }}>{p.phone}</p>
               </div>
               <div>
+                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>IP Address</p>
+                <p style={{ color: '#b0b0b0', fontSize: '.9rem', fontFamily: 'monospace' }}>{p.registration_ip || '—'}</p>
+              </div>
+              <div>
                 <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>UTR Number</p>
                 <p style={{ fontFamily: 'monospace', color: '#ff6b22', fontSize: '1rem', fontWeight: 700 }}>{p.utr_number || '—'}</p>
               </div>
@@ -356,6 +372,10 @@ function PaymentPanel({ players, unverified, onVerify }) {
                     <ExternalLink size={14} /> Full View
                   </button>
                 ) : <span style={{ color: '#4a4a4a', fontSize: '.85rem' }}>Missing</span>}
+              </div>
+              <div>
+                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>Device Fingerprint</p>
+                <p style={{ color: '#b0b0b0', fontSize: '.8rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>{p.device_fingerprint || '—'}</p>
               </div>
             </div>
 
@@ -377,6 +397,31 @@ function PaymentPanel({ players, unverified, onVerify }) {
                     Verify
                   </button>
                 </>
+              )}
+              {p.device_blocked_at ? (
+                <span style={{ color: '#e63946', fontSize: '.8rem', fontWeight: 700, textAlign: 'right' }}>
+                  Device Blocked
+                </span>
+              ) : (
+                <button
+                  onClick={() => onBlockDevice(p.id)}
+                  disabled={!p.device_fingerprint}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(230,57,70,.28)',
+                    cursor: p.device_fingerprint ? 'pointer' : 'not-allowed',
+                    background: 'rgba(230,57,70,.08)',
+                    color: p.device_fingerprint ? '#e63946' : '#6a6a6a',
+                    fontFamily: '"DM Sans"',
+                    fontWeight: 700,
+                    fontSize: '.8rem',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <ShieldCheck size={14} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />
+                  Block Device
+                </button>
               )}
             </div>
           </div>
@@ -841,7 +886,7 @@ function AuctionPanel({ players, allCount, roleFilter, setRoleFilter, search, se
       </div>
 
       <p style={{ color: '#6a6a6a', fontSize: '.85rem', marginBottom: 20 }}>
-        Showing {players.length} of {allCount} players &mdash; <span style={{ color: '#ff6b22' }}>click to view detail</span>
+        Showing {players.length} of {allCount} verified players &mdash; <span style={{ color: '#ff6b22' }}>click to view detail</span>
       </p>
 
       {players.length === 0 && (

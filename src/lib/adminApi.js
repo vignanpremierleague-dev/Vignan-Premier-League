@@ -34,6 +34,13 @@ export function verifyAdminPlayer(token, id) {
   })
 }
 
+export function blockAdminPlayerDevice(token, id) {
+  return request(`/admin/players/${id}/block-device`, {
+    method: 'PATCH',
+    token,
+  })
+}
+
 export function logoutAdmin(token) {
   return request('/admin/logout', {
     method: 'POST',
