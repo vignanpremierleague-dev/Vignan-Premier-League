@@ -10,7 +10,7 @@ import MainSite       from './MainSite'
 import SiteBlockGate  from './components/SiteBlockGate'
 
 function ProtectedAdmin() {
-  if (!sessionStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
+  if (!localStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
   return <AdminDashboard />
 }
 

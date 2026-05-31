@@ -1,15 +1,18 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchAdminPlayers, verifyAdminPlayer, blockAdminPlayerDevice, unblockAdminPlayerDevice, logoutAdmin, updateSiteSettings, fetchSiteSettings } from '../lib/adminApi'
+import { fetchAdminPlayers, verifyAdminPlayer, blockAdminPlayerDevice, unblockAdminPlayerDevice, logoutAdmin, updateSiteSettings, fetchSiteSettings, updatePlayerDetails } from '../lib/adminApi'
+import { uploadToCloudinary } from '../lib/cloudinary'
 import {
   Flame, LogOut, ShieldCheck, Users, CreditCard,
   RefreshCw, CheckCircle, XCircle, ExternalLink, Search,
-  User as UserIcon, X as XIcon, ChevronLeft, ChevronRight, Settings, Plus, Trash2
+  User as UserIcon, X as XIcon, ChevronLeft, ChevronRight, Settings, Plus, Trash2, Upload
 } from 'lucide-react'
 
 const TABS = [
   { id: 'payments', label: 'Payments', icon: <CreditCard size={18} /> },
   { id: 'auction',  label: 'Players',  icon: <Users size={18} />      },
+  { id: 'edit_players', label: 'Edit Details', icon: <Settings size={18} /> },
+  { id: 'qr_setup', label: 'Payment QR Setup', icon: <ExternalLink size={18} /> },
   { id: 'cms',      label: 'Site Data', icon: <Settings size={18} />   },
   { id: 'schedule', label: 'Tournament', icon: <span style={{ transform: 'rotate(90deg)' }}><Users size={18} /></span> },
 ]
@@ -47,9 +50,9 @@ const DEFAULT_TIMELINE_EVENTS = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const token = sessionStorage.getItem('vpl_admin_token')
+  const token = localStorage.getItem('vpl_admin_token')
   const [tab, setTab]               = useState(() => {
-    const saved = sessionStorage.getItem(TAB_STORAGE_KEY)
+    const saved = localStorage.getItem(TAB_STORAGE_KEY)
     return TABS.some(t => t.id === saved) ? saved : 'payments'
   })
   const [players, setPlayers]       = useState([])
@@ -65,8 +68,8 @@ export default function AdminDashboard() {
   const [savingCMS, setSavingCMS] = useState(false)
 
   const handleUnauthorized = useCallback(() => {
-    sessionStorage.removeItem('vpl_admin_token')
-    sessionStorage.removeItem('vpl_admin')
+    localStorage.removeItem('vpl_admin_token')
+    localStorage.removeItem('vpl_admin')
     navigate('/admin')
   }, [navigate])
 
@@ -102,12 +105,12 @@ export default function AdminDashboard() {
   }, [handleUnauthorized, token])
 
   useEffect(() => {
-    if (!sessionStorage.getItem('vpl_admin_token')) { navigate('/admin'); return }
+    if (!localStorage.getItem('vpl_admin_token')) { navigate('/admin'); return }
     fetchData()
   }, [fetchData, navigate])
 
   useEffect(() => {
-    sessionStorage.setItem(TAB_STORAGE_KEY, tab)
+    localStorage.setItem(TAB_STORAGE_KEY, tab)
   }, [tab])
 
   useEffect(() => {
@@ -268,6 +271,14 @@ export default function AdminDashboard() {
               roleFilter={roleFilter} setRoleFilter={setRoleFilter}
               search={search} setSearch={setSearch}
               onSelect={(idx) => setSpotlight(idx)} isCompact={isCompact} />
+          )}
+
+          {!loading && tab === 'edit_players' && (
+            <EditPlayersPanel players={players} setPlayers={setPlayers} token={token} handleUnauthorized={handleUnauthorized} isCompact={isCompact} />
+          )}
+
+          {!loading && tab === 'qr_setup' && siteSettings && (
+            <PaymentQRPanel settings={siteSettings} onSave={handleSaveCMS} saving={savingCMS} isCompact={isCompact} />
           )}
 
           {!loading && tab === 'cms' && siteSettings && (
@@ -1476,6 +1487,374 @@ function SchedulePanel({ settings, onSave, saving, isCompact }) {
             <input value={form.knockout.final.team1Name} onChange={e => updateKnockout('final', 'team1Name', e.target.value)} placeholder="Finalist 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
             <input value={form.knockout.final.team2Name} onChange={e => updateKnockout('final', 'team2Name', e.target.value)} placeholder="Finalist 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────── */
+/*  Edit Players Panel                             */
+/* ─────────────────────────────────────────────── */
+function EditPlayersPanel({ players, setPlayers, token, handleUnauthorized, isCompact }) {
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
+  const [editingPlayer, setEditingPlayer] = useState(null)
+  
+  const filtered = players.filter(p => {
+    const matchRole = roleFilter === 'all' || p.role === roleFilter
+    const matchSearch = search === '' ||
+      p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.registration_id?.toLowerCase().includes(search.toLowerCase())
+    return matchRole && matchSearch
+  })
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: isCompact ? 'column' : 'row', gap: 16, marginBottom: 24, justifyContent: 'space-between', alignItems: isCompact ? 'stretch' : 'center' }}>
+        <div style={{ display: 'flex', flex: 1, gap: 12 }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#5a5a5a' }} />
+            <input
+              type="text" placeholder="Search by name or Reg ID..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '12px 14px 12px 40px', background: '#111', border: '1px solid rgba(255,255,255,.08)', borderRadius: 10, color: '#fff', fontSize: '.9rem' }}
+            />
+          </div>
+          <select
+            value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
+            style={{ padding: '0 16px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,.08)', borderRadius: 10, fontSize: '.9rem', cursor: 'pointer' }}
+          >
+            {ROLE_OPTIONS.map(opt => <option key={opt.v} value={opt.v}>{opt.l}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, overflow: 'hidden' }}>
+        {filtered.length === 0 ? (
+          <p style={{ textAlign: 'center', padding: '60px 0', color: '#5a5a5a' }}>No players found.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 600 }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,.02)', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+                  <th style={{ padding: '16px 20px', color: '#8a8a8a', fontSize: '.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Player</th>
+                  <th style={{ padding: '16px 20px', color: '#8a8a8a', fontSize: '.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Reg ID</th>
+                  <th style={{ padding: '16px 20px', color: '#8a8a8a', fontSize: '.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Phone</th>
+                  <th style={{ padding: '16px 20px', color: '#8a8a8a', fontSize: '.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Role</th>
+                  <th style={{ padding: '16px 20px', color: '#8a8a8a', fontSize: '.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Status</th>
+                  <th style={{ padding: '16px 20px', color: '#8a8a8a', fontSize: '.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', textAlign: 'right' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(p => (
+                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,.05)', transition: 'background .15s' }}>
+                    <td style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {p.photo_url ? (
+                        <img src={p.photo_url} alt={p.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,.1)' }} />
+                      ) : (
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserIcon size={16} color="#8a8a8a" /></div>
+                      )}
+                      <span style={{ fontWeight: 600, color: '#efefef' }}>{p.name}</span>
+                    </td>
+                    <td style={{ padding: '14px 20px', fontFamily: 'monospace', color: '#a0a0a0' }}>{p.registration_id}</td>
+                    <td style={{ padding: '14px 20px', color: '#a0a0a0' }}>{p.phone}</td>
+                    <td style={{ padding: '14px 20px' }}>
+                      <span style={{ fontSize: '.75rem', fontWeight: 700, color: ROLE_COLOR[p.role] || '#ff6b22', background: `${ROLE_COLOR[p.role] || '#ff6b22'}15`, padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase' }}>
+                        {ROLE_LABEL[p.role] || p.role}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 20px' }}>
+                      {p.is_verified ? (
+                        <span style={{ color: '#22c55e', fontSize: '.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><CheckCircle size={14} /> Verified</span>
+                      ) : (
+                        <span style={{ color: '#f5a100', fontSize: '.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><XCircle size={14} /> Unverified</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                      <button
+                        onClick={() => setEditingPlayer(p)}
+                        style={{ padding: '6px 14px', background: 'rgba(255,107,34,.1)', color: '#ff6b22', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: '.8rem' }}
+                      >
+                        Modify
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {editingPlayer && (
+        <PlayerEditorModal
+          player={editingPlayer}
+          token={token}
+          onClose={() => setEditingPlayer(null)}
+          handleUnauthorized={handleUnauthorized}
+          setPlayers={setPlayers}
+          isCompact={isCompact}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────── */
+/*  Player Editor Modal                            */
+/* ─────────────────────────────────────────────── */
+function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlayers, isCompact }) {
+  const [form, setForm] = useState({ ...player })
+  const [saving, setSaving] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [uploadingScreen, setUploadingScreen] = useState(false)
+  
+  const photoFileRef = useRef(null)
+  const screenFileRef = useRef(null)
+
+  const handleFieldChange = (field, val) => {
+    setForm(prev => ({ ...prev, [field]: val }))
+  }
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      const asset = await uploadToCloudinary(file)
+      handleFieldChange('photo_url', asset.secureUrl)
+    } catch (err) {
+      alert('Upload failed: ' + err.message)
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  const handleScreenUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingScreen(true)
+    try {
+      const asset = await uploadToCloudinary(file)
+      handleFieldChange('payment_screenshot_url', asset.secureUrl)
+    } catch (err) {
+      alert('Upload failed: ' + err.message)
+    } finally {
+      setUploadingScreen(false)
+    }
+  }
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const { player: updated } = await updatePlayerDetails(token, player.id, {
+        phone: form.phone,
+        registration_id: form.registration_id,
+        photo_url: form.photo_url,
+      })
+      
+      setPlayers(prev => prev.map(p => p.id === player.id ? updated : p))
+      alert('Player details updated successfully.')
+      onClose()
+    } catch (err) {
+      if (err.message === 'Unauthorized') handleUnauthorized()
+      else alert('Failed to update details: ' + err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, width: '100%', maxWidth: 650, maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        
+        {/* Modal Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+          <h2 style={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>Edit Player Details</h2>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,.05)', border: 'none', borderRadius: 8, padding: 8, color: '#fff', cursor: 'pointer', display: 'flex' }}><XIcon size={16} /></button>
+        </div>
+
+        {/* Modal Form */}
+        <form onSubmit={handleSave} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          
+          {/* Editable Section */}
+          <div style={{ background: 'rgba(255,107,34,.03)', padding: 20, borderRadius: 12, border: '1px solid rgba(255,107,34,.2)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <span style={{ display: 'block', color: '#ff6b22', fontSize: '.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em' }}>Editable Details</span>
+            
+            {/* Editable Player Photo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
+                {form.photo_url ? (
+                  <img src={form.photo_url} alt="Photo" style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', border: '1.5px solid rgba(255,107,34,.3)' }} />
+                ) : (
+                  <div style={{ width: 80, height: 80, borderRadius: 12, background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserIcon size={28} color="#8a8a8a" /></div>
+                )}
+                {uploadingPhoto && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff6b22', fontSize: '.7rem', fontWeight: 700 }}>Uploading...</div>}
+              </div>
+              <div>
+                <input ref={photoFileRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                <button type="button" onClick={() => photoFileRef.current?.click()} style={{ padding: '8px 14px', background: 'rgba(255,107,34,.1)', border: '1px solid rgba(255,107,34,.25)', color: '#ff6b22', borderRadius: 8, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700 }}>Upload New Player Photo</button>
+                <p style={{ color: '#6a6a6a', fontSize: '.72rem', marginTop: 6 }}>This image will be used during the live player auction.</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: 14 }}>
+              <label>
+                <span style={{ display: 'block', color: '#efefef', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Registration Number / ID *</span>
+                <input value={form.registration_id} onChange={e => handleFieldChange('registration_id', e.target.value.toUpperCase())} required style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(255,107,34,.3)', borderRadius: 8, color: '#fff', fontSize: '.9rem', fontFamily: 'monospace', outline: 'none' }} />
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#efefef', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Phone Number *</span>
+                <input value={form.phone} onChange={e => handleFieldChange('phone', e.target.value)} required style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(255,107,34,.3)', borderRadius: 8, color: '#fff', fontSize: '.9rem', outline: 'none' }} />
+              </label>
+            </div>
+          </div>
+
+          {/* Read-Only Informational Section */}
+          <div style={{ background: 'rgba(255,255,255,.01)', padding: 20, borderRadius: 12, border: '1px solid rgba(255,255,255,.04)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <span style={{ display: 'block', color: '#8a8a8a', fontSize: '.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Read-Only Player Info</span>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: 14 }}>
+              <label>
+                <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>Full Name</span>
+                <input value={form.name} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: '#7a7a7a', fontSize: '.9rem', cursor: 'not-allowed' }} />
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>Email Address</span>
+                <input value={form.email} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: '#7a7a7a', fontSize: '.9rem', cursor: 'not-allowed' }} />
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>Academic Branch / Class</span>
+                <input value={`Year ${form.year} • ${form.branch?.toUpperCase?.()} • Sec ${form.section?.toUpperCase?.()}`} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: '#7a7a7a', fontSize: '.9rem', cursor: 'not-allowed' }} />
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>Playing Role & Styles</span>
+                <input value={`${ROLE_LABEL[form.role] || form.role} ${form.batting_side ? `• Bat: ${form.batting_side}-hand` : ''} ${form.bowling_arm ? `• Bowl: ${form.bowling_arm} arm` : ''}`} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: '#7a7a7a', fontSize: '.9rem', cursor: 'not-allowed' }} />
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>UTR Number (Payment)</span>
+                <input value={form.utr_number || '—'} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: '#7a7a7a', fontSize: '.9rem', cursor: 'not-allowed', fontFamily: 'monospace' }} />
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>Verification Status</span>
+                <input value={form.is_verified ? 'Verified (Player Pool)' : 'Pending Verification'} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: form.is_verified ? '#22c55e' : '#f5a100', fontSize: '.9rem', cursor: 'not-allowed', fontWeight: 600 }} />
+              </label>
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, borderTop: '1px solid rgba(255,255,255,.05)', paddingTop: 20 }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 20px', background: 'rgba(255,255,255,.05)', border: 'none', color: '#efefef', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+            <button type="submit" disabled={saving || uploadingPhoto} style={{ padding: '10px 24px', background: '#ff6b22', border: 'none', color: '#fff', borderRadius: 8, cursor: 'pointer', fontWeight: 700, opacity: (saving || uploadingPhoto) ? 0.7 : 1 }}>{saving ? 'Saving...' : 'Save Changes'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────── */
+/*  Payment QR Setup Panel                         */
+/* ─────────────────────────────────────────────── */
+function PaymentQRPanel({ settings, onSave, saving, isCompact }) {
+  const [form, setForm] = useState({ ...settings })
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef(null)
+
+  const handleQrUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const asset = await uploadToCloudinary(file)
+      setForm(prev => ({ ...prev, paymentQrUrl: asset.secureUrl }))
+    } catch (err) {
+      alert('Upload failed: ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSave = () => {
+    onSave(form)
+  }
+
+  return (
+    <div style={{ width: '100%', maxWidth: 'none' }}>
+      <div style={{
+        position: 'sticky',
+        top: isCompact ? 64 : 72,
+        zIndex: 50,
+        marginBottom: 24,
+        background: 'rgba(12,12,12,.96)',
+        border: '1px solid rgba(255,255,255,.08)',
+        borderRadius: 12,
+        padding: isCompact ? '10px 12px' : '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+      }}>
+        <div>
+          <p style={{ color: '#efefef', fontWeight: 700, fontSize: '.92rem' }}>Payment QR Code Setup</p>
+          <p style={{ color: '#7a7a7a', fontSize: '.78rem' }}>Upload or reset the UPI Payment QR code dynamically.</p>
+        </div>
+        <button onClick={handleSave} disabled={saving || uploading} style={{ background: '#ff6b22', color: '#fff', border: 'none', padding: '10px 20px', fontSize: '.9rem', fontWeight: 700, borderRadius: 10, cursor: (saving || uploading) ? 'not-allowed' : 'pointer', opacity: (saving || uploading) ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+          {saving ? 'Saving...' : 'Save QR Setup'}
+        </button>
+      </div>
+
+      <div style={{ background: '#111', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,.08)', display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1.5fr', gap: 24 }}>
+        
+        {/* QR Code Preview */}
+        <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12, border: '1px solid rgba(255,255,255,.05)', textAlign: 'center' }}>
+          <span style={{ display: 'block', color: '#8a8a8a', fontSize: '.8rem', marginBottom: 16, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Current Active QR</span>
+          <div style={{ position: 'relative', width: '100%', maxWidth: 260, margin: '0 auto' }}>
+            <img
+              src={form.paymentQrUrl || '/gpay-qr.jpeg'}
+              alt="Payment QR"
+              style={{ width: '100%', borderRadius: 12, border: '1px solid rgba(255,255,255,.12)', background: '#fff', display: 'block' }}
+            />
+            {uploading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.75)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff6b22', fontWeight: 700 }}>Uploading Image...</div>}
+          </div>
+        </div>
+
+        {/* Upload Action Card */}
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>Change Payment QR Code</h3>
+          <p style={{ color: '#8a8a8a', fontSize: '.9rem', lineHeight: 1.6 }}>
+            Upload a fresh UPI payment QR code generated from your GPay, PhonePe, Paytm, or other banking apps. It will instantly update across the public player registration form.
+          </p>
+          
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleQrUpload} style={{ display: 'none' }} />
+          
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading || saving}
+            style={{
+              padding: '16px 24px',
+              background: 'rgba(255,107,34,.05)',
+              border: '1.5px dashed rgba(255,107,34,.3)',
+              borderRadius: 12,
+              cursor: 'pointer',
+              color: '#ff6b22',
+              fontWeight: 700,
+              fontSize: '.95rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all .2s'
+            }}
+          >
+            <Upload size={18} />
+            {uploading ? 'Processing Image...' : 'Upload QR Code from System'}
+          </button>
+          
+          <span style={{ color: '#5a5a5a', fontSize: '.75rem', textAlign: 'center' }}>Supported formats: PNG, JPG, JPEG (Max size: 5 MB)</span>
         </div>
       </div>
     </div>

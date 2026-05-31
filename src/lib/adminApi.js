@@ -67,3 +67,11 @@ export function updateSiteSettings(token, content) {
     body: { content },
   })
 }
+
+export function updatePlayerDetails(token, id, payload) {
+  return request(`/admin/players/${id}`, {
+    method: 'PATCH',
+    token,
+    body: payload,
+  })
+}

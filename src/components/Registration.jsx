@@ -423,7 +423,7 @@ export default function Registration() {
           {step === 1 && <Step1_Personal data={data} setData={setData} errors={errors} />}
           {step === 2 && <Step2_Academic data={data} setData={setData} errors={errors} />}
           {step === 3 && <Step3_Role     data={data} setData={setData} errors={errors} />}
-          {step === 4 && <Step4_Payment  data={data} setData={setData} errors={errors} />}
+          {step === 4 && <Step4_Payment  data={data} setData={setData} errors={errors} settings={settings} />}
           {step === 5 && (
             <Step5_Confirm
               data={data}

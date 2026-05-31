@@ -19,8 +19,8 @@ export default function AdminLogin() {
     try {
       const { token } = await loginAdmin(user, pass)
       if (!token) throw new Error('Missing session token.')
-      sessionStorage.setItem('vpl_admin', '1')
-      sessionStorage.setItem('vpl_admin_token', token)
+      localStorage.setItem('vpl_admin', '1')
+      localStorage.setItem('vpl_admin_token', token)
       navigate('/admin/dashboard')
     } catch (err) {
       setError(err.message || 'Invalid username or password.')

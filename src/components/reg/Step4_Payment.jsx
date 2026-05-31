@@ -1,8 +1,9 @@
-﻿import { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Upload, Image } from 'lucide-react'
 import { fieldStyle, labelStyle, errorStyle, FocusInput } from './fieldStyles'
 
-export default function Step4_Payment({ data, setData, errors }) {
+export default function Step4_Payment({ data, setData, errors, settings }) {
+  const qrSrc = settings?.paymentQrUrl || '/gpay-qr.jpeg'
   const [uploadErr, setUploadErr] = useState('')
   const fileRef = useRef(null)
 
@@ -50,7 +51,7 @@ export default function Step4_Payment({ data, setData, errors }) {
           Registration Fee - Rs.300
         </p>
         <img
-          src="/gpay-qr.png"
+          src={qrSrc}
           alt="Payment QR"
           style={{
             width: '100%',
@@ -63,7 +64,7 @@ export default function Step4_Payment({ data, setData, errors }) {
           }}
         />
         <a
-          href="/gpay-qr.png"
+          href={qrSrc}
           download="payment-qr.png"
           className="btn-ghost"
           style={{ padding: '8px 14px', fontSize: '.72rem', marginBottom: 10 }}

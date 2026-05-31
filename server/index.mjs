@@ -1,7 +1,7 @@
 import http from 'node:http'
 import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
-import { randomBytes, timingSafeEqual } from 'node:crypto'
+import { randomBytes, timingSafeEqual, createHmac } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 
@@ -34,7 +34,58 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
-const sessions = new Map()
+const revokedTokens = new Set()
+
+// Base64URL encoding/decoding helpers for HS256 JWT
+function base64urlEncode(strOrBuffer) {
+  const buf = Buffer.isBuffer(strOrBuffer) ? strOrBuffer : Buffer.from(strOrBuffer)
+  return buf.toString('base64url')
+}
+
+function base64urlDecode(str) {
+  return Buffer.from(str, 'base64url').toString('utf8')
+}
+
+const JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.SUPABASE_SERVICE_KEY || 'vpl_admin_secret_key_2026'
+
+function signJwt(payload) {
+  const header = { alg: 'HS256', typ: 'JWT' }
+  const encodedHeader = base64urlEncode(JSON.stringify(header))
+  const encodedPayload = base64urlEncode(JSON.stringify(payload))
+  
+  const hmac = createHmac('sha256', JWT_SECRET)
+  hmac.update(`${encodedHeader}.${encodedPayload}`)
+  const signature = base64urlEncode(hmac.digest())
+  
+  return `${encodedHeader}.${encodedPayload}.${signature}`
+}
+
+function verifyJwt(token) {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    
+    const [encodedHeader, encodedPayload, signature] = parts
+    const hmac = createHmac('sha256', JWT_SECRET)
+    hmac.update(`${encodedHeader}.${encodedPayload}`)
+    const expectedSignature = base64urlEncode(hmac.digest())
+    
+    const sigBuf = Buffer.from(signature)
+    const expectedBuf = Buffer.from(expectedSignature)
+    if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
+      return null
+    }
+    
+    const payload = JSON.parse(base64urlDecode(encodedPayload))
+    if (payload.exp && Date.now() > payload.exp) {
+      return null // Expired
+    }
+    
+    return payload
+  } catch (err) {
+    return null
+  }
+}
 
 const SITE_SETTINGS_SLUG = 'primary'
 const defaultSiteSettings = {
@@ -43,6 +94,7 @@ const defaultSiteSettings = {
   contactEmail: 'support@vignanpremierleague.com',
   contactPhone: '+91 99999 99999',
   whatsappLink: 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t',
+  paymentQrUrl: '/gpay-qr.jpeg',
   timelineSectionTitle: 'Tournament Timeline',
   timelineWindow: 'July - August',
   timelineEvents: [
@@ -117,9 +169,12 @@ async function readSiteSettings() {
 }
 
 setInterval(() => {
-  const now = Date.now()
-  for (const [token, session] of sessions.entries()) {
-    if (session.expiresAt <= now) sessions.delete(token)
+  for (const token of revokedTokens) {
+    const payload = verifyJwt(token)
+    if (!payload) {
+      // Token is expired or invalid, we can safely prune it from the revoked list
+      revokedTokens.delete(token)
+    }
   }
 }, 60_000).unref()
 
@@ -261,15 +316,15 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    const token = randomBytes(32).toString('hex')
-    sessions.set(token, { expiresAt: Date.now() + TOKEN_TTL_MS })
-    sendJson(res, 200, { token, expiresAt: Date.now() + TOKEN_TTL_MS })
+    const expiresAt = Date.now() + TOKEN_TTL_MS
+    const token = signJwt({ user: username, exp: expiresAt })
+    sendJson(res, 200, { token, expiresAt })
     return
   }
 
   if (req.method === 'POST' && url.pathname === '/api/admin/logout') {
     const token = extractBearerToken(req)
-    if (token) sessions.delete(token)
+    if (token) revokedTokens.add(token)
     sendJson(res, 200, { ok: true })
     return
   }
@@ -468,6 +523,58 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  if (req.method === 'PATCH' && /^\/api\/admin\/players\/[^/]+$/.test(url.pathname)) {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const match = url.pathname.match(/^\/api\/admin\/players\/([^/]+)$/)
+    const id = decodeURIComponent(match?.[1] || '')
+    if (!id) {
+      sendJson(res, 400, { error: 'Invalid player id.' })
+      return
+    }
+
+    const body = await readJson(req, res)
+    if (!body) return
+
+    // Sanitization & Extraction of only allowed player fields
+    const allowedFields = [
+      'name', 'phone', 'email', 'photo_url',
+      'year', 'course', 'branch', 'section',
+      'role', 'batting_side', 'bowling_arm', 'bowling_type',
+      'utr_number', 'payment_screenshot_url', 'is_verified'
+    ]
+
+    const updatePayload = {}
+    for (const key of allowedFields) {
+      if (body[key] !== undefined) {
+        updatePayload[key] = body[key]
+      }
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      sendJson(res, 400, { error: 'No fields to update.' })
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('vpl_players')
+      .update(updatePayload)
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to update player.' })
+      return
+    }
+
+    sendJson(res, 200, { player: data })
+    return
+  }
+
   sendJson(res, 404, { error: 'Not found' })
 })
 
@@ -491,12 +598,9 @@ function extractBearerToken(req) {
 function isAuthorized(req) {
   const token = extractBearerToken(req)
   if (!token) return false
-  const session = sessions.get(token)
-  if (!session) return false
-  if (session.expiresAt <= Date.now()) {
-    sessions.delete(token)
-    return false
-  }
+  if (revokedTokens.has(token)) return false
+  const payload = verifyJwt(token)
+  if (!payload) return false
   return true
 }
 
