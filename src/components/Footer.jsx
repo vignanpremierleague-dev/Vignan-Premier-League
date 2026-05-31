@@ -1,8 +1,8 @@
 import { Flame, Instagram, Phone, Mail, ArrowUp } from 'lucide-react'
 
 const quickLinks = [
-  ['Home','#home'], ['About','#about'], ['Rules','#rules'],
-  ['Schedule','#schedule'], ['Prizes','#prizes'], ['Register','#register'], ['Contact','#contact'],
+  ['Home','/'], ['About','/#about'], ['Rules','/rules'],
+  ['Schedule','/schedule'], ['Prizes','/#prizes'], ['Register','/register'], ['Contact','/contact'],
 ]
 const socials = [
   { icon:<Instagram size={15}/>, href:'https://instagram.com/vignanpremierleague', label:'Instagram' },
@@ -11,6 +11,29 @@ const socials = [
 ]
 
 export default function Footer() {
+  const handleLinkClick = (e, href) => {
+    const targetPath = href.split('#')[0] || '/';
+    const targetHash = href.split('#')[1];
+
+    if (window.location.pathname === targetPath) {
+      if (targetHash) {
+        e.preventDefault();
+        const el = document.getElementById(targetHash);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.location.hash = targetHash;
+        }
+      } else {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      e.preventDefault();
+      window.location.href = href;
+    }
+  };
+
   return (
     <footer style={{ background:'#06060a', borderTop:'1px solid rgba(255,255,255,.07)' }}>
       <div className="wrap footer-inner">
@@ -18,7 +41,11 @@ export default function Footer() {
         <div className="footer-grid">
           {/* Brand */}
           <div>
-            <a href="#home" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none', marginBottom:14 }}>
+            <a 
+              href="/" 
+              onClick={(e) => handleLinkClick(e, '/')}
+              style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none', marginBottom:14 }}
+            >
               <Flame style={{ width:18, height:18, color:'#ff6b22', animation:'flicker 1s ease-in-out infinite' }} />
               <span className="fire-text" style={{ fontFamily:'"Syne"', fontSize:'1.1rem', fontWeight:800 }}>VPL</span>
             </a>
@@ -33,7 +60,13 @@ export default function Footer() {
             <ul className="footer-nav-list">
               {quickLinks.map(([label, href]) => (
                 <li key={href}>
-                  <a href={href} className="footer-link">{label}</a>
+                  <a 
+                    href={href} 
+                    className="footer-link"
+                    onClick={(e) => handleLinkClick(e, href)}
+                  >
+                    {label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -57,10 +90,25 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div style={{ borderTop:'1px solid rgba(255,255,255,.06)', paddingTop:22, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-          <p style={{ fontFamily:'"DM Sans"', color:'#7a7a7a', fontSize:'.78rem' }}>
-            &copy; 2025 Vignan Premier League &mdash; All Rights Reserved.
-          </p>
+        <div style={{ borderTop:'1px solid rgba(255,255,255,.06)', paddingTop:22, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            <p style={{ fontFamily:'"DM Sans"', color:'#9a9a9a', fontSize:'.95rem', margin:0 }}>
+              &copy; 2025 Vignan Premier League &mdash; All Rights Reserved.
+            </p>
+            <p style={{ fontFamily:'"DM Sans"', color:'#8a8a8a', fontSize:'.95rem', margin:0 }}>
+              Developed by{' '}
+              <a 
+                href="https://www.charanmunur.in/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ color:'#ff6b22', textDecoration:'none', fontWeight: 600, transition:'color .2s' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                onMouseLeave={e => e.currentTarget.style.color = '#ff6b22'}
+              >
+                charanmunur
+              </a>
+            </p>
+          </div>
           <button
             onClick={() => window.scrollTo({ top:0, behavior:'smooth' })}
             aria-label="Back to top"

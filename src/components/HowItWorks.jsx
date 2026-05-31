@@ -34,7 +34,7 @@ export default function HowItWorks() {
   }, [])
 
   return (
-    <section id="how-it-works" ref={sectionRef} style={{ padding: '100px 0', background: '#0f0f0f' }}>
+    <section id="how-it-works" ref={sectionRef} style={{ padding: '100px 0', background: '#06060a' }}>
       <div className="wrap">
         <div style={{ textAlign: 'center', marginBottom: 60 }}>
           <h2 className="section-heading fire-text" style={{ marginBottom: 8 }}>How It Works</h2>

@@ -88,17 +88,13 @@ body { overflow-x:hidden; }
 
 /* ── Glass Nav ── */
 .nav-glass {
-  background:rgba(7,7,7,.82);
-  backdrop-filter:blur(8px) saturate(180%);
-  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  background:#070707;
   border-bottom:1px solid rgba(255,107,34,.08);
 }
 
 /* ── Glass panel ── */
 .glass-panel {
-  background:rgba(16,16,16,.88);
-  backdrop-filter:blur(16px) saturate(140%);
-  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  background:#121214;
   border:1px solid rgba(255,255,255,.08);
   border-radius:16px;
 }
@@ -106,7 +102,7 @@ body { overflow-x:hidden; }
 /* ── Moving Halo card ── */
 .halo {
   position:relative;
-  background:rgba(18,18,18,.92);
+  background:#121214;
   border:1px solid rgba(255,255,255,.08);
   border-radius:16px;
   transition:transform .3s cubic-bezier(.16,1,.3,1), border-color .3s ease;

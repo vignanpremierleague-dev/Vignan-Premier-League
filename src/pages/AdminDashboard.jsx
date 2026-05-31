@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [search, setSearch]         = useState('')
   const [spotlight, setSpotlight]   = useState(null)
   const [isCompact, setIsCompact]   = useState(() => window.innerWidth < 1024)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   
   // CMS State
   const [siteSettings, setSiteSettings] = useState(null)
@@ -188,71 +189,175 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* ── Sidebar ── */}
-      <aside className="admin-sidebar" style={{
-        width: isCompact ? '100%' : 260, flexShrink: 0,
-        background: '#111111', borderRight: '1px solid rgba(255,255,255,.08)',
-        borderBottom: isCompact ? '1px solid rgba(255,255,255,.08)' : 'none',
-        display: 'flex', flexDirection: 'column',
-      }}>
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Flame size={20} color="#ff6b22" />
-            <span style={{ fontFamily: '"Syne"', fontWeight: 800, color: '#efefef', fontSize: '1.2rem' }}>VPL Admin</span>
+      {/* ── Sidebar (Desktop) / Bottom Bar (Mobile) ── */}
+      {!isCompact ? (
+        <aside className="admin-sidebar" style={{
+          width: sidebarCollapsed ? 76 : 260, flexShrink: 0,
+          background: '#111111', borderRight: '1px solid rgba(255,255,255,.08)',
+          display: 'flex', flexDirection: 'column',
+          transition: 'width .2s ease',
+          overflow: 'hidden'
+        }}>
+          <div style={{ padding: sidebarCollapsed ? '24px 10px' : '24px 20px', borderBottom: '1px solid rgba(255,255,255,.08)', display: 'flex', justifyContent: 'center' }}>
+            <button 
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                margin: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                width: '100%',
+                justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                outline: 'none'
+              }}
+            >
+              <Flame size={20} color="#ff6b22" style={{ flexShrink: 0 }} />
+              {!sidebarCollapsed && (
+                <span style={{ fontFamily: '"Syne"', fontWeight: 800, color: '#efefef', fontSize: '1.2rem', whiteSpace: 'nowrap' }}>
+                  VPL Admin
+                </span>
+              )}
+            </button>
           </div>
-        </div>
 
-        <nav className="admin-nav" style={{ flex: 1, padding: isCompact ? '12px' : '20px 12px', display: 'flex', flexDirection: isCompact ? 'row' : 'column', gap: 8, overflowX: isCompact ? 'auto' : 'visible' }}>
+          <nav className="admin-nav" style={{ flex: 1, padding: sidebarCollapsed ? '20px 8px' : '20px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: sidebarCollapsed ? '12px' : '12px 16px', borderRadius: 10, cursor: 'pointer',
+                fontFamily: '"DM Sans"', fontWeight: 600, fontSize: '.9rem',
+                border: 'none',
+                background: tab === t.id ? 'rgba(255,107,34,.1)' : 'transparent',
+                color: tab === t.id ? '#ff6b22' : '#8a8a8a',
+                transition: 'all .2s', textAlign: 'left',
+                justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                position: 'relative'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                  {t.icon}
+                </div>
+                {!sidebarCollapsed && <span style={{ flex: 1 }}>{t.label}</span>}
+                
+                {t.id === 'payments' && unverified.length > 0 && (
+                  sidebarCollapsed ? (
+                    <span style={{
+                      position: 'absolute', top: 4, right: 4,
+                      background: '#ff6b22', color: '#fff', fontSize: '.55rem', fontWeight: 900,
+                      borderRadius: 99, padding: '1px 4px', minWidth: 12, textAlign: 'center'
+                    }}>
+                      {unverified.length}
+                    </span>
+                  ) : (
+                    <span style={{ background: '#ff6b22', color: '#fff', fontSize: '.65rem', fontWeight: 800, borderRadius: 99, padding: '2px 8px' }}>
+                      {unverified.length}
+                    </span>
+                  )
+                )}
+              </button>
+            ))}
+          </nav>
+
+          <div style={{ padding: sidebarCollapsed ? '20px 8px' : '20px', borderTop: '1px solid rgba(255,255,255,.08)' }}>
+            <button onClick={logout} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: sidebarCollapsed ? 0 : 8, width: '100%',
+              background: 'transparent', border: '1px solid rgba(230,57,70,.25)',
+              borderRadius: 8, padding: '10px 14px', cursor: 'pointer',
+              color: '#e63946', fontSize: '.85rem', fontWeight: 600,
+            }}>
+              <LogOut size={16} style={{ flexShrink: 0 }} />
+              {!sidebarCollapsed && <span>Sign Out</span>}
+            </button>
+          </div>
+        </aside>
+      ) : (
+        // Mobile bottom navigation bar
+        <nav className="admin-nav-mobile" style={{
+          position: 'fixed', bottom: 10, left: 10, right: 10, height: 62,
+          background: 'rgba(14,14,14,.92)', backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,.08)', borderRadius: 16,
+          display: 'flex', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
+          padding: '0 4px', zIndex: 500, boxShadow: '0 12px 40px rgba(0,0,0,.75)'
+        }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 16px', borderRadius: 10, cursor: 'pointer', minWidth: isCompact ? 'max-content' : 0,
-              fontFamily: '"DM Sans"', fontWeight: 600, fontSize: '.9rem',
-              border: 'none',
-              background: tab === t.id ? 'rgba(255,107,34,.1)' : 'transparent',
-              color: tab === t.id ? '#ff6b22' : '#8a8a8a',
-              transition: 'all .2s', textAlign: 'left'
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 3, padding: '4px 6px', borderRadius: 8, cursor: 'pointer', flex: 1,
+              fontFamily: '"DM Sans"', fontWeight: 700, fontSize: '.63rem',
+              border: 'none', background: 'transparent',
+              color: tab === t.id ? '#ff6b22' : '#7a7a7a',
+              transition: 'all .2s', position: 'relative'
             }}>
-              {t.icon} <span style={{ flex: 1 }}>{t.label}</span>
+              <div style={{ transform: tab === t.id ? 'scale(1.1) translateY(-1px)' : 'scale(1)', transition: 'transform .2s', color: tab === t.id ? '#ff6b22' : '#7a7a7a' }}>
+                {t.icon}
+              </div>
+              <span style={{ fontSize: '.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.02em', display: 'block' }}>
+                {t.label.split(' ')[0]}
+              </span>
               {t.id === 'payments' && unverified.length > 0 && (
-                <span style={{ background: '#ff6b22', color: '#fff', fontSize: '.65rem', fontWeight: 800, borderRadius: 99, padding: '2px 8px' }}>
+                <span style={{
+                  position: 'absolute', top: 2, right: '18%',
+                  background: '#ff6b22', color: '#fff', fontSize: '.55rem', fontWeight: 900,
+                  borderRadius: 99, padding: '1px 5px', minWidth: 14, textAlign: 'center'
+                }}>
                   {unverified.length}
                 </span>
               )}
             </button>
           ))}
         </nav>
-
-        <div style={{ padding: isCompact ? '12px' : '20px', borderTop: '1px solid rgba(255,255,255,.08)' }}>
-          <button onClick={logout} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
-            background: 'transparent', border: '1px solid rgba(230,57,70,.25)',
-            borderRadius: 8, padding: '10px 14px', cursor: 'pointer',
-            color: '#e63946', fontSize: '.85rem', fontWeight: 600,
-          }}>
-            <LogOut size={16} /> Sign Out
-          </button>
-        </div>
-      </aside>
+      )}
 
       {/* ── Main Content ── */}
-      <main className="admin-main" style={{ flex: 1, height: isCompact ? 'auto' : '100vh', overflowY: 'auto', minWidth: 0 }}>
-        <header className="admin-topbar" style={{
-          position: 'sticky', top: 0, zIndex: 100,
-          background: 'rgba(10,10,10,.9)', backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255,255,255,.08)',
-          padding: isCompact ? '12px 16px' : '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-        }}>
-          <h1 style={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '1.4rem' }}>
-            {TABS.find(t=>t.id===tab)?.label}
-          </h1>
-          <button onClick={fetchData} title="Refresh"
-            style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, cursor: 'pointer', color: '#a0a0a0', padding: 8, display: 'flex' }}>
-            <RefreshCw size={16} />
-          </button>
-        </header>
+      <main className="admin-main" style={{ flex: 1, height: isCompact ? 'auto' : '100vh', overflowY: 'auto', minWidth: 0, paddingBottom: isCompact ? 90 : 0 }}>
+        {isCompact ? (
+          // Mobile Topbar
+          <header className="admin-topbar-mobile" style={{
+            position: 'sticky', top: 0, zIndex: 100,
+            background: 'rgba(10,10,10,.85)', backdropFilter: 'blur(16px)',
+            borderBottom: '1px solid rgba(255,255,255,.08)',
+            padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Flame size={18} color="#ff6b22" />
+              <span style={{ fontFamily: '"Syne"', fontWeight: 800, color: '#efefef', fontSize: '1.05rem' }}>VPL Admin</span>
+              <span style={{ fontSize: '.68rem', fontWeight: 800, background: 'rgba(255,107,34,.12)', color: '#ff6b22', padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                {TABS.find(t=>t.id===tab)?.label.split(' ')[0]}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={fetchData} title="Refresh"
+                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 8, cursor: 'pointer', color: '#a0a0a0', padding: 8, display: 'flex' }}>
+                <RefreshCw size={14} />
+              </button>
+              <button onClick={logout} title="Sign Out"
+                style={{ background: 'rgba(230,57,70,.08)', border: '1px solid rgba(230,57,70,.25)', borderRadius: 8, cursor: 'pointer', color: '#e63946', padding: 8, display: 'flex' }}>
+                <LogOut size={14} />
+              </button>
+            </div>
+          </header>
+        ) : (
+          // Desktop Topbar
+          <header className="admin-topbar" style={{
+            position: 'sticky', top: 0, zIndex: 100,
+            background: 'rgba(10,10,10,.9)', backdropFilter: 'blur(16px)',
+            borderBottom: '1px solid rgba(255,255,255,.08)',
+            padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+          }}>
+            <h1 style={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '1.4rem' }}>
+              {TABS.find(t=>t.id===tab)?.label}
+            </h1>
+            <button onClick={fetchData} title="Refresh"
+              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, cursor: 'pointer', color: '#a0a0a0', padding: 8, display: 'flex' }}>
+              <RefreshCw size={16} />
+            </button>
+          </header>
+        )}
 
-        <div className="admin-content" style={{ padding: isCompact ? '16px' : '32px' }}>
+        <div className="admin-content" style={{ padding: isCompact ? '16px 12px' : '32px' }}>
           {error && (
             <div style={{ padding: '14px 18px', background: 'rgba(230,57,70,.08)', border: '1px solid rgba(230,57,70,.25)', borderRadius: 12, marginBottom: 20, color: '#e63946', fontSize: '.85rem' }}>
               ⚠️ {error}
@@ -316,7 +421,7 @@ export default function AdminDashboard() {
 /* ─────────────────────────────────────────────── */
 /*  Payment Verification Panel                     */
 /* ─────────────────────────────────────────────── */
-function PaymentPanel({ players, unverified, onVerify, onBlockDevice, onUnblockDevice }) {
+function PaymentPanel({ players, unverified, onVerify, onBlockDevice, onUnblockDevice, isCompact }) {
   const [showAll, setShowAll] = useState(false)
   const [openScreenshotIndex, setOpenScreenshotIndex] = useState(null)
   const displayed = showAll ? players : unverified
@@ -353,123 +458,320 @@ function PaymentPanel({ players, unverified, onVerify, onBlockDevice, onUnblockD
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {displayed.map((p, idx) => (
-          <div key={p.id} style={{
-            background: '#141414', border: `1px solid ${p.is_verified ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.08)'}`,
-            borderRadius: 12, padding: '20px',
-            display: 'grid', gridTemplateColumns: '1fr auto', gap: 20, alignItems: 'center',
-          }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 16 }}>
-              <div>
-                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>Player</p>
-                <p style={{ fontFamily: '"Syne"', fontWeight: 700, color: '#efefef', fontSize: '1rem' }}>{p.name}</p>
-                <p style={{ color: '#8a8a8a', fontSize: '.8rem', fontFamily: 'monospace' }}>{p.registration_id}</p>
-              </div>
-              <div>
-                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>Phone</p>
-                <p style={{ color: '#b0b0b0', fontSize: '.9rem' }}>{p.phone}</p>
-              </div>
-              <div>
-                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>IP Address</p>
-                <p style={{ color: '#b0b0b0', fontSize: '.9rem', fontFamily: 'monospace' }}>{p.registration_ip || '—'}</p>
-              </div>
-              <div>
-                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>UTR Number</p>
-                <p style={{ fontFamily: 'monospace', color: '#ff6b22', fontSize: '1rem', fontWeight: 700 }}>{p.utr_number || '—'}</p>
-              </div>
-              <div>
-                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>Screenshot</p>
-                {p.payment_screenshot_url ? (
-                  <button
-                    type="button"
-                    onClick={() => setOpenScreenshotIndex(idx)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 6, color: '#3b82f6',
-                      fontSize: '.85rem', fontWeight: 600,
-                      background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                    }}
-                  >
-                    <ExternalLink size={14} /> Full View
-                  </button>
-                ) : <span style={{ color: '#4a4a4a', fontSize: '.85rem' }}>Missing</span>}
-              </div>
-              <div>
-                <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em' }}>Device Fingerprint</p>
-                <p style={{ color: '#b0b0b0', fontSize: '.8rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>{p.device_fingerprint || '—'}</p>
-              </div>
-            </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {displayed.map((p, idx) => {
+          if (isCompact) {
+            return (
+              <div key={p.id} style={{
+                background: '#111113',
+                border: `1.5px solid ${p.is_verified ? 'rgba(34,197,94,.35)' : 'rgba(255,255,255,.06)'}`,
+                borderRadius: 16,
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                position: 'relative',
+                boxShadow: '0 8px 24px rgba(0,0,0,.3)'
+              }}>
+                {/* Header: Player Info and Status Badge */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  borderBottom: '1px solid rgba(255,255,255,.06)',
+                  paddingBottom: 12
+                }}>
+                  <div>
+                    <p style={{ color: '#ff6b22', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', margin: 0 }}>Player Profile</p>
+                    <h4 style={{ fontFamily: '"Syne"', fontWeight: 800, color: '#efefef', fontSize: '1.05rem', margin: '4px 0 2px 0', textTransform: 'capitalize' }}>{p.name}</h4>
+                    <p style={{ color: '#8a8a8a', fontSize: '.75rem', fontFamily: 'monospace', margin: 0 }}>{p.registration_id}</p>
+                  </div>
+                  <div>
+                    {p.is_verified ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#22c55e', fontSize: '.75rem', fontWeight: 800, background: 'rgba(34,197,94,.1)', padding: '4px 10px', borderRadius: 20 }}>
+                        <CheckCircle size={12} /> VERIFIED
+                      </span>
+                    ) : (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#f5a100', fontSize: '.75rem', fontWeight: 800, background: 'rgba(245,161,0,.1)', padding: '4px 10px', borderRadius: 20 }}>
+                        <XCircle size={12} /> PENDING
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 140 }}>
-              {p.is_verified ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#22c55e', fontSize: '.9rem', fontWeight: 700 }}>
-                  <CheckCircle size={16} /> Verified
-                </span>
-              ) : (
-                <>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f5a100', fontSize: '.85rem' }}>
-                    <XCircle size={15} /> Pending
+                {/* Middle Grid: Payment Details */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px 16px'
+                }}>
+                  <div>
+                    <p style={{ color: '#6a6a6a', fontSize: '.6rem', textTransform: 'uppercase', letterSpacing: '.08em', margin: '0 0 2px 0' }}>Phone</p>
+                    <p style={{ color: '#b0b0b0', fontSize: '.82rem', margin: 0, fontWeight: 600 }}>{p.phone}</p>
+                  </div>
+                  
+                  <div>
+                    <p style={{ color: '#6a6a6a', fontSize: '.6rem', textTransform: 'uppercase', letterSpacing: '.08em', margin: '0 0 2px 0' }}>UTR Number</p>
+                    <p style={{ fontFamily: 'monospace', color: '#ff6b22', fontSize: '.9rem', fontWeight: 800, margin: 0 }}>{p.utr_number || '—'}</p>
+                  </div>
+
+                  <div>
+                    <p style={{ color: '#6a6a6a', fontSize: '.6rem', textTransform: 'uppercase', letterSpacing: '.08em', margin: '0 0 2px 0' }}>IP Address</p>
+                    <p style={{ color: '#b0b0b0', fontSize: '.8rem', fontFamily: 'monospace', margin: 0 }}>{p.registration_ip || '—'}</p>
+                  </div>
+
+                  <div>
+                    <p style={{ color: '#6a6a6a', fontSize: '.6rem', textTransform: 'uppercase', letterSpacing: '.08em', margin: '0 0 2px 0' }}>Screenshot</p>
+                    {p.payment_screenshot_url ? (
+                      <button
+                        type="button"
+                        onClick={() => setOpenScreenshotIndex(idx)}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3b82f6',
+                          fontSize: '.82rem', fontWeight: 700,
+                          background: 'none', border: 'none', padding: 0, cursor: 'pointer', margin: 0
+                        }}
+                      >
+                        <ExternalLink size={12} /> View Slip
+                      </button>
+                    ) : <span style={{ color: '#4a4a4a', fontSize: '.82rem', fontWeight: 600 }}>Missing</span>}
+                  </div>
+                </div>
+
+                {/* Bottom Row: Fingerprint & Security */}
+                <div style={{
+                  background: 'rgba(10,10,10,.5)',
+                  borderRadius: 8,
+                  padding: '8px 10px',
+                  border: '1px solid rgba(255,255,255,.03)'
+                }}>
+                  <p style={{ color: '#6a6a6a', fontSize: '.6rem', textTransform: 'uppercase', letterSpacing: '.08em', margin: '0 0 2px 0' }}>Device Fingerprint</p>
+                  <p style={{ color: '#9a9a9a', fontSize: '.72rem', fontFamily: 'monospace', wordBreak: 'break-all', margin: 0 }}>
+                    {p.device_fingerprint || '—'}
+                  </p>
+                </div>
+
+                {/* Footer Actions: verify, block, unblock */}
+                <div style={{
+                  display: 'flex',
+                  gap: 10,
+                  marginTop: 4,
+                  borderTop: '1px solid rgba(255,255,255,.06)',
+                  paddingTop: 12
+                }}>
+                  {!p.is_verified && (
+                    <button 
+                      onClick={() => onVerify(p.id)} 
+                      style={{
+                        flex: 1.5,
+                        padding: '10px 14px', 
+                        borderRadius: 8, 
+                        border: 'none', 
+                        cursor: 'pointer',
+                        background: '#22c55e', 
+                        color: '#fff', 
+                        fontFamily: '"DM Sans"', 
+                        fontWeight: 800, 
+                        fontSize: '.8rem',
+                        boxShadow: '0 4px 12px rgba(34,197,94,.2)'
+                      }}
+                    >
+                      Verify Payment
+                    </button>
+                  )}
+
+                  {p.device_blocked_at ? (
+                    <button
+                      onClick={() => onUnblockDevice(p.id)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(34,197,94,.28)',
+                        cursor: 'pointer',
+                        background: 'rgba(34,197,94,.08)',
+                        color: '#22c55e',
+                        fontFamily: '"DM Sans"',
+                        fontWeight: 800,
+                        fontSize: '.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <CheckCircle size={12} /> Unblock
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onBlockDevice(p.id)}
+                      disabled={!p.device_fingerprint}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(230,57,70,.28)',
+                        cursor: p.device_fingerprint ? 'pointer' : 'not-allowed',
+                        background: 'rgba(230,57,70,.08)',
+                        color: p.device_fingerprint ? '#e63946' : '#6a6a6a',
+                        fontFamily: '"DM Sans"',
+                        fontWeight: 800,
+                        fontSize: '.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <ShieldCheck size={12} /> Block Device
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          }
+
+          // Desktop view
+          return (
+            <div key={p.id} style={{
+              background: '#111113',
+              border: `1.5px solid ${p.is_verified ? 'rgba(34,197,94,.35)' : 'rgba(255,255,255,.08)'}`,
+              borderRadius: 16,
+              padding: '24px',
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              gap: 24,
+              alignItems: 'center',
+              boxShadow: '0 8px 24px rgba(0,0,0,.3)',
+              transition: 'all .25s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = p.is_verified ? 'rgba(34,197,94,.6)' : 'rgba(255,107,34,.3)';
+              e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,.5), 0 0 12px ${p.is_verified ? 'rgba(34,197,94,.1)' : 'rgba(255,107,34,.05)'}`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = p.is_verified ? 'rgba(34,197,94,.35)' : 'rgba(255,255,255,.08)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,.3)';
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 20 }}>
+                <div>
+                  <p style={{ color: '#ff6b22', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.12em', fontWeight: 800, marginBottom: 4 }}>Player</p>
+                  <p style={{ fontFamily: '"Syne"', fontWeight: 800, color: '#efefef', fontSize: '1.05rem', margin: 0, textTransform: 'capitalize' }}>{p.name}</p>
+                  <p style={{ color: '#8a8a8a', fontSize: '.8rem', fontFamily: 'monospace', marginTop: 2, marginBottom: 0 }}>{p.registration_id}</p>
+                </div>
+                <div>
+                  <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700, marginBottom: 4 }}>Phone</p>
+                  <p style={{ color: '#b0b0b0', fontSize: '.9rem', fontWeight: 600, margin: 0 }}>{p.phone}</p>
+                </div>
+                <div>
+                  <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700, marginBottom: 4 }}>IP Address</p>
+                  <p style={{ color: '#b0b0b0', fontSize: '.9rem', fontFamily: 'monospace', margin: 0 }}>{p.registration_ip || '—'}</p>
+                </div>
+                <div>
+                  <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700, marginBottom: 4 }}>UTR Number</p>
+                  <p style={{ fontFamily: 'monospace', color: '#ff6b22', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>{p.utr_number || '—'}</p>
+                </div>
+                <div>
+                  <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700, marginBottom: 4 }}>Screenshot</p>
+                  {p.payment_screenshot_url ? (
+                    <button
+                      type="button"
+                      onClick={() => setOpenScreenshotIndex(idx)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6, color: '#3b82f6',
+                        fontSize: '.88rem', fontWeight: 700,
+                        background: 'none', border: 'none', padding: 0, cursor: 'pointer', margin: 0
+                      }}
+                    >
+                      <ExternalLink size={14} /> Full View
+                    </button>
+                  ) : <span style={{ color: '#4a4a4a', fontSize: '.85rem', fontWeight: 600 }}>Missing</span>}
+                </div>
+                <div>
+                  <p style={{ color: '#6a6a6a', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700, marginBottom: 4 }}>Device Fingerprint</p>
+                  <p style={{ color: '#b0b0b0', fontSize: '.8rem', fontFamily: 'monospace', wordBreak: 'break-all', margin: 0 }}>{p.device_fingerprint || '—'}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, minWidth: 160, borderLeft: '1px solid rgba(255,255,255,.05)', paddingLeft: 24 }}>
+                {p.is_verified ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#22c55e', fontSize: '.95rem', fontWeight: 800, background: 'rgba(34,197,94,.1)', padding: '6px 14px', borderRadius: 20 }}>
+                    <CheckCircle size={16} /> Verified
                   </span>
-                  <button onClick={() => onVerify(p.id)} style={{
-                    padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: '#22c55e', color: '#fff', fontFamily: '"DM Sans"', fontWeight: 700, fontSize: '.85rem',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    Verify
-                  </button>
-                </>
-              )}
-              {p.device_blocked_at ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                  <span style={{ color: '#e63946', fontSize: '.8rem', fontWeight: 700, textAlign: 'right' }}>
-                    Device Blocked
-                  </span>
+                ) : (
+                  <>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f5a100', fontSize: '.85rem', fontWeight: 700 }}>
+                      <XCircle size={15} /> Pending Action
+                    </span>
+                    <button onClick={() => onVerify(p.id)} style={{
+                      padding: '10px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#22c55e', color: '#fff', fontFamily: '"DM Sans"', fontWeight: 800, fontSize: '.85rem',
+                      whiteSpace: 'nowrap', width: '100%', textAlign: 'center',
+                      boxShadow: '0 4px 12px rgba(34,197,94,.2)'
+                    }}>
+                      Verify Payment
+                    </button>
+                  </>
+                )}
+                {p.device_blocked_at ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, width: '100%' }}>
+                    <span style={{ color: '#e63946', fontSize: '.8rem', fontWeight: 800, textAlign: 'right' }}>
+                      Device Blocked
+                    </span>
+                    <button
+                      onClick={() => onUnblockDevice(p.id)}
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(34,197,94,.28)',
+                        cursor: 'pointer',
+                        background: 'rgba(34,197,94,.08)',
+                        color: '#22c55e',
+                        fontFamily: '"DM Sans"',
+                        fontWeight: 800,
+                        fontSize: '.8rem',
+                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                        width: '100%',
+                      }}
+                    >
+                      <CheckCircle size={12} />
+                      Unblock Device
+                    </button>
+                  </div>
+                ) : (
                   <button
-                    onClick={() => onUnblockDevice(p.id)}
+                    onClick={() => onBlockDevice(p.id)}
+                    disabled={!p.device_fingerprint}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: 6,
-                      border: '1px solid rgba(34,197,94,.28)',
-                      cursor: 'pointer',
-                      background: 'rgba(34,197,94,.08)',
-                      color: '#22c55e',
+                      padding: '10px 16px',
+                      borderRadius: 8,
+                      border: '1px solid rgba(230,57,70,.28)',
+                      cursor: p.device_fingerprint ? 'pointer' : 'not-allowed',
+                      background: 'rgba(230,57,70,.08)',
+                      color: p.device_fingerprint ? '#e63946' : '#6a6a6a',
                       fontFamily: '"DM Sans"',
-                      fontWeight: 700,
-                      fontSize: '.78rem',
+                      fontWeight: 800,
+                      fontSize: '.8rem',
                       whiteSpace: 'nowrap',
+                      width: '100%',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 4,
+                      justifyContent: 'center',
+                      gap: 6
                     }}
                   >
-                    <CheckCircle size={12} />
-                    Unblock Device
+                    <ShieldCheck size={14} />
+                    Block Device
                   </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => onBlockDevice(p.id)}
-                  disabled={!p.device_fingerprint}
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(230,57,70,.28)',
-                    cursor: p.device_fingerprint ? 'pointer' : 'not-allowed',
-                    background: 'rgba(230,57,70,.08)',
-                    color: p.device_fingerprint ? '#e63946' : '#6a6a6a',
-                    fontFamily: '"DM Sans"',
-                    fontWeight: 700,
-                    fontSize: '.8rem',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  <ShieldCheck size={14} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />
-                  Block Device
-                </button>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Fullscreen Overlay with Prev/Next Navigation */}
@@ -966,52 +1268,103 @@ const ROLE_COLOR = {
 }
 
 function PlayerCard({ player: p, onSelect }) {
-  const roleColor = ROLE_COLOR[p.role] || '#9a9a9a'
+  const roleColor = ROLE_COLOR[p.role] || '#ff6b22'
 
   return (
     <div
       onClick={() => onSelect?.(p)}
       style={{
-        background: '#111', border: `1px solid ${roleColor}25`,
-        borderRadius: 16, overflow: 'hidden', cursor: 'pointer',
-        transition: 'transform .2s, border-color .2s', display: 'flex', flexDirection: 'column'
+        background: '#111113',
+        border: `1.5px solid ${roleColor}30`,
+        borderRadius: 20,
+        overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'all .25s ease',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        boxShadow: '0 8px 24px rgba(0,0,0,.3)'
       }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = `${roleColor}80` }}
-      onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.borderColor = `${roleColor}25` }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = `${roleColor}a0`;
+        e.currentTarget.style.boxShadow = `0 8px 24px rgba(0,0,0,.45), 0 0 12px ${roleColor}20`;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = `${roleColor}30`;
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,.3)';
+      }}
     >
-      <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-        {p.photo_url ? (
-          <img src={p.photo_url} alt={p.name}
-            style={{ width: 90, height: 90, borderRadius: 16, objectFit: 'cover', border: `2px solid ${roleColor}60` }} />
-        ) : (
-          <div style={{ width: 90, height: 90, borderRadius: 16, background: 'rgba(255,255,255,.05)', border: '2px solid rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <UserIcon size={36} color="#4a4a4a" />
-          </div>
-        )}
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontFamily: '"Inter", "DM Sans", sans-serif', fontWeight: 600, color: '#fff', fontSize: '1.05rem', letterSpacing: '-0.3px' }}>{p.name}</p>
-          <p style={{ fontFamily: 'monospace', color: '#ff6b22', fontSize: '.8rem', marginTop: 4 }}>{p.registration_id}</p>
+      {/* Main card body */}
+      <div style={{ padding: '24px 20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, position: 'relative', zIndex: 1 }}>
+        {/* Dual-Ring Photo Frame */}
+        <div style={{
+          position: 'relative',
+          padding: 4,
+          borderRadius: 20,
+          background: '#18181a',
+          border: '1.5px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: `0 0 12px ${roleColor}15`
+        }}>
+          {p.photo_url ? (
+            <img src={p.photo_url} alt={p.name}
+              style={{ width: 84, height: 84, borderRadius: 16, objectFit: 'cover', display: 'block', border: `1.5px solid ${roleColor}80` }} />
+          ) : (
+            <div style={{ width: 84, height: 84, borderRadius: 16, background: 'rgba(255,255,255,.03)', border: `1.5px solid rgba(255,255,255,.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <UserIcon size={32} color="#5a5a5a" />
+            </div>
+          )}
         </div>
-        <span style={{ fontSize: '.75rem', fontWeight: 700, background: `${roleColor}15`, color: roleColor, padding: '4px 12px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+
+        {/* Slanted Sporty Role Banner (Solid Color) */}
+        <div style={{
+          transform: 'skewX(-10deg)',
+          background: roleColor,
+          borderRadius: 4,
+          padding: '3px 12px',
+          color: '#fff',
+          fontSize: '.68rem',
+          fontWeight: 800,
+          textTransform: 'uppercase',
+          letterSpacing: '.06em',
+          marginTop: -6
+        }}>
           {ROLE_LABEL[p.role] || p.role}
-        </span>
+        </div>
+
+        {/* Athlete Name & Identity */}
+        <div style={{ textAlign: 'center', marginTop: 4, minHeight: 48, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ fontFamily: '"DM Sans", system-ui, sans-serif', fontWeight: 600, color: '#fff', fontSize: '1.15rem', lineHeight: '1.3', letterSpacing: 'normal', textTransform: 'capitalize', margin: 0 }}>{p.name}</p>
+          <p style={{ fontFamily: 'monospace', color: '#ff6b22', fontSize: '.78rem', marginTop: 4, fontWeight: 700, margin: '4px 0 0 0' }}>{p.registration_id}</p>
+        </div>
       </div>
 
-      <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8, background: '#0a0a0a', flex: 1 }}>
-        <Detail label="Year" value={`Year ${p.year}`} />
-        <Detail label="Branch" value={`${p.branch?.toUpperCase?.()} — Sec ${p.section?.toUpperCase?.()}`} />
-        {p.batting_side && <Detail label="Batting" value={`${p.batting_side}-handed`} />}
-        {p.bowling_arm  && <Detail label="Bowling" value={`${p.bowling_arm} arm`} />}
+      {/* Structured Stats Grid */}
+      <div style={{ padding: '0 16px 18px 16px', display: 'flex', flexDirection: 'column', flex: 1, position: 'relative', zIndex: 1 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '10px 14px',
+          padding: '12px 14px',
+          background: 'rgba(10,10,10,.6)',
+          borderRadius: 14,
+          border: '1px solid rgba(255,255,255,.03)',
+          marginTop: 'auto'
+        }}>
+          <MiniStat label="CLASS" value={`${p.year}Yr • ${p.branch?.toUpperCase()}-${p.section?.toUpperCase()}`} />
+          <MiniStat label="ROLE" value={ROLE_LABEL[p.role]?.split(' ')[0]} color={roleColor} />
+          <MiniStat label="BATS" value={p.batting_side ? `${p.batting_side?.toUpperCase()} Hand` : '—'} />
+          <MiniStat label="BOWLS" value={p.bowling_arm ? `${p.bowling_arm?.toUpperCase()} Arm` : '—'} />
+        </div>
       </div>
     </div>
   )
 }
 
-function Detail({ label, value }) {
+function MiniStat({ label, value, color }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ color: '#6a6a6a', fontSize: '.75rem' }}>{label}</span>
-      <span style={{ color: '#d0d0d0', fontSize: '.85rem', fontWeight: 500, textAlign: 'right' }}>{value || '—'}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <span style={{ color: '#555', fontSize: '.6rem', fontWeight: 800, letterSpacing: '.08em' }}>{label}</span>
+      <span style={{ color: color || '#d8d8d8', fontSize: '.78rem', fontWeight: 700, fontFamily: '"DM Sans", sans-serif' }}>{value || '—'}</span>
     </div>
   )
 }
@@ -1040,8 +1393,8 @@ function PlayerSpotlight({ players, index, onNavigate, onClose }) {
 
   const navBtn = (enabled) => ({
     width: 50, height: 50, borderRadius: '50%',
-    background: enabled ? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.02)',
-    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: enabled ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.01)',
+    border: '1px solid rgba(255,255,255,.05)', display: 'flex', alignItems: 'center', justifyContent: 'center',
     cursor: enabled ? 'pointer' : 'not-allowed', color: enabled ? '#fff' : '#444',
     transition: 'all .2s', position: 'absolute', top: '50%', transform: 'translateY(-50%)', zIndex: 10,
   })
@@ -1059,19 +1412,35 @@ function PlayerSpotlight({ players, index, onNavigate, onClose }) {
         <ChevronRight size={28} />
       </button>
 
-      <div onClick={e => e.stopPropagation()} style={{ background: '#111', border: `1px solid ${roleColor}40`, borderRadius: 16, width: '100%', maxWidth: 480, overflow: 'hidden', position: 'relative' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#121214', border: `2px solid ${roleColor}80`, borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', position: 'relative', boxShadow: '0 24px 48px rgba(0,0,0,0.8)' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,.1)', border: 'none', borderRadius: 8, padding: 8, color: '#fff', cursor: 'pointer' }}><XIcon size={20} /></button>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 24px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 24px 24px 24px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
           {p.photo_url ? (
-             <img src={p.photo_url} alt={p.name} style={{ width: 140, height: 140, borderRadius: 20, objectFit: 'cover', border: `2px solid ${roleColor}` }} />
+             <img src={p.photo_url} alt={p.name} style={{ width: 140, height: 140, borderRadius: 24, objectFit: 'cover', border: `3px solid ${roleColor}`, padding: 4, background: '#18181b' }} />
           ) : (
-             <div style={{ width: 140, height: 140, borderRadius: 20, background: 'rgba(255,255,255,.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserIcon size={56} color="#4a4a4a" /></div>
+             <div style={{ width: 140, height: 140, borderRadius: 24, background: '#18181b', border: `3px solid rgba(255,255,255,.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserIcon size={56} color="#4a4a4a" /></div>
           )}
-          <h2 style={{ fontSize: '1.6rem', color: '#fff', marginTop: 16, fontFamily: '"Inter", sans-serif', fontWeight: 700 }}>{p.name}</h2>
-          <p style={{ color: '#ff6b22', fontFamily: 'monospace', fontSize: '1rem', marginTop: 4 }}>{p.registration_id}</p>
-          <span style={{ marginTop: 12, background: `${roleColor}15`, color: roleColor, padding: '6px 16px', borderRadius: 8, fontSize: '.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{ROLE_LABEL[p.role] || p.role}</span>
+          <h2 style={{ fontSize: '1.85rem', color: '#fff', marginTop: 16, fontFamily: '"DM Sans", "Inter", sans-serif', fontWeight: 600, lineHeight: '1.3', letterSpacing: 'normal', textTransform: 'capitalize', textAlign: 'center', margin: '16px 0 0 0' }}>{p.name}</h2>
+          <p style={{ color: '#ff6b22', fontFamily: 'monospace', fontSize: '1rem', marginTop: 6, fontWeight: 700, margin: '6px 0 0 0' }}>{p.registration_id}</p>
+          
+          {/* Solid Color Role Tag */}
+          <span style={{ 
+            marginTop: 14, 
+            background: roleColor, 
+            color: '#fff', 
+            padding: '6px 18px', 
+            borderRadius: 8, 
+            fontSize: '.8rem', 
+            fontWeight: 800, 
+            textTransform: 'uppercase', 
+            letterSpacing: '0.05em' 
+          }}>
+            {ROLE_LABEL[p.role] || p.role}
+          </span>
         </div>
-        <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+        <div style={{ padding: '24px 24px 32px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <SpotDetail label="Academic Details" value={`Year ${p.year} • ${p.branch?.toUpperCase?.()} • Sec ${p.section?.toUpperCase?.()}`} />
           <SpotDetail label="Phone Number" value={p.phone} />
           {p.batting_side && <SpotDetail label="Batting Style" value={`${p.batting_side}-handed`} color={roleColor} />}
@@ -1084,9 +1453,17 @@ function PlayerSpotlight({ players, index, onNavigate, onClose }) {
 
 function SpotDetail({ label, value, color }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,.05)', paddingBottom: 12 }}>
-      <p style={{ color: '#8a8a8a', fontSize: '.85rem' }}>{label}</p>
-      <p style={{ color: color || '#fff', fontSize: '.95rem', fontWeight: 600 }}>{value}</p>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center',
+      background: '#18181b',
+      borderRadius: 12,
+      border: '1.5px solid rgba(255,255,255,0.03)',
+      padding: '12px 18px'
+    }}>
+      <p style={{ color: '#6a6a6f', fontSize: '.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{label}</p>
+      <p style={{ color: color || '#fff', fontSize: '.92rem', fontWeight: 700, margin: 0, fontFamily: '"DM Sans", sans-serif' }}>{value}</p>
     </div>
   )
 }

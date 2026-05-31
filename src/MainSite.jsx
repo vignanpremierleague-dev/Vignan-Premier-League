@@ -142,6 +142,20 @@ export default function MainSite() {
     fetchSiteSettings().then(setSettings).catch(console.error)
   }, [])
 
+  useEffect(() => {
+    if (window.location.hash) {
+      // Delay slightly to let components mount and DOM settle
+      const timer = setTimeout(() => {
+        const id = window.location.hash.substring(1)
+        const el = document.getElementById(id)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   return (
     <div className="relative min-h-screen bg-dark text-text-primary font-outfit">
       <EmberParticles />
