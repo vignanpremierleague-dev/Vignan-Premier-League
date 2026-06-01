@@ -23,7 +23,7 @@ const ALLOWED_ORIGINS = new Set(
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_SERVICE_KEY
 const ADMIN_USER = process.env.ADMIN_USER || 'admin'
-const ADMIN_PASS = process.env.ADMIN_PASS || 'vpl@admin2025'
+const ADMIN_PASS = process.env.ADMIN_PASS || 'vpl@admin@99'
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('Missing required backend env vars (SUPABASE_URL, SUPABASE_SERVICE_KEY).')

@@ -29,8 +29,3 @@ Create a `.env` from `.env.example` and set backend variables:
 - `SUPABASE_SERVICE_KEY`
 - `ADMIN_USER`
 - `ADMIN_PASS`
-
-If you want to keep the old admin login, set:
-
-- `ADMIN_USER=admin`
-- `ADMIN_PASS=vpl@admin2025`
