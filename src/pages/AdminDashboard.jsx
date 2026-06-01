@@ -2030,6 +2030,7 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
         phone: form.phone,
         registration_id: form.registration_id,
         photo_url: form.photo_url,
+        is_verified: form.is_verified,
       })
       
       setPlayers(prev => prev.map(p => p.id === player.id ? updated : p))
@@ -2077,7 +2078,7 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr 1fr', gap: 14 }}>
               <label>
                 <span style={{ display: 'block', color: '#efefef', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Registration Number / ID *</span>
                 <input value={form.registration_id} onChange={e => handleFieldChange('registration_id', e.target.value.toUpperCase())} required style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(255,107,34,.3)', borderRadius: 8, color: '#fff', fontSize: '.9rem', fontFamily: 'monospace', outline: 'none' }} />
@@ -2085,6 +2086,17 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
               <label>
                 <span style={{ display: 'block', color: '#efefef', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Phone Number *</span>
                 <input value={form.phone} onChange={e => handleFieldChange('phone', e.target.value)} required style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(255,107,34,.3)', borderRadius: 8, color: '#fff', fontSize: '.9rem', outline: 'none' }} />
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#efefef', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Verification Status *</span>
+                <select
+                  value={form.is_verified ? 'verified' : 'unverified'}
+                  onChange={e => handleFieldChange('is_verified', e.target.value === 'verified')}
+                  style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(255,107,34,.3)', borderRadius: 8, color: form.is_verified ? '#22c55e' : '#f5a100', fontSize: '.9rem', outline: 'none', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  <option value="unverified" style={{ color: '#f5a100', background: '#111' }}>Pending / Unverified</option>
+                  <option value="verified" style={{ color: '#22c55e', background: '#111' }}>Verified</option>
+                </select>
               </label>
             </div>
           </div>
@@ -2113,10 +2125,6 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
               <label>
                 <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>UTR Number (Payment)</span>
                 <input value={form.utr_number || '—'} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: '#7a7a7a', fontSize: '.9rem', cursor: 'not-allowed', fontFamily: 'monospace' }} />
-              </label>
-              <label>
-                <span style={{ display: 'block', color: '#5a5a5a', fontSize: '.75rem', marginBottom: 4 }}>Verification Status</span>
-                <input value={form.is_verified ? 'Verified (Player Pool)' : 'Pending Verification'} disabled style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 8, color: form.is_verified ? '#22c55e' : '#f5a100', fontSize: '.9rem', cursor: 'not-allowed', fontWeight: 600 }} />
               </label>
             </div>
           </div>

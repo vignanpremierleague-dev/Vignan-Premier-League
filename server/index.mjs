@@ -12,7 +12,7 @@ const projectRoot = path.resolve(__dirname, '..')
 loadEnvFile(path.join(projectRoot, '.env'))
 
 const PORT = Number(process.env.ADMIN_API_PORT || 8787)
-const TOKEN_TTL_MS = Number(process.env.ADMIN_TOKEN_TTL_MS || 1000 * 60 * 60 * 8)
+const TOKEN_TTL_MS = Number(process.env.ADMIN_TOKEN_TTL_MS || 1000 * 60 * 60 * 24)
 const ALLOWED_ORIGINS = new Set(
   (process.env.ADMIN_CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173')
     .split(',')
@@ -46,7 +46,7 @@ function base64urlDecode(str) {
   return Buffer.from(str, 'base64url').toString('utf8')
 }
 
-const JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.SUPABASE_SERVICE_KEY || 'vpl_admin_secret_key_2026'
+const JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.SUPABASE_SERVICE_KEY || 'f4849c987ac8abfcdc0c38e6df633ee2b8b6c11cf962bd60a69abbdecd41cf32'
 
 function signJwt(payload) {
   const header = { alg: 'HS256', typ: 'JWT' }
@@ -404,6 +404,36 @@ const server = http.createServer(async (req, res) => {
     sendJson(res, 200, { player: data })
     return
   }
+
+  if (req.method === 'PATCH' && /^\/api\/admin\/players\/[^/]+\/unverify$/.test(url.pathname)) {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const match = url.pathname.match(/^\/api\/admin\/players\/([^/]+)\/unverify$/)
+    const id = decodeURIComponent(match?.[1] || '')
+    if (!id) {
+      sendJson(res, 400, { error: 'Invalid player id.' })
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('vpl_players')
+      .update({ is_verified: false })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to unverify player.' })
+      return
+    }
+
+    sendJson(res, 200, { player: data })
+    return
+  }
+
 
   if (req.method === 'PATCH' && /^\/api\/admin\/players\/[^/]+\/block-device$/.test(url.pathname)) {
     if (!isAuthorized(req)) {

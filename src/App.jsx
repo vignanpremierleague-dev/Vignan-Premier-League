@@ -26,7 +26,7 @@ export default function App() {
           <Route path="/register"        element={<RegisterPage />} />
           <Route path="/contact"         element={<ContactPage />} />
           <Route path="/admin"           element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<ProtectedAdmin />} />
+          <Route path="/dboard"          element={<ProtectedAdmin />} />
           <Route path="*"                element={<Navigate to="/" replace />} />
         </Routes>
       </SiteBlockGate>

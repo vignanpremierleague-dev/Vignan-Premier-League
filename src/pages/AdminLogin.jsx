@@ -13,7 +13,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (localStorage.getItem('vpl_admin') || localStorage.getItem('vpl_admin_token')) {
-      navigate('/admin/dashboard', { replace: true })
+      navigate('/dboard', { replace: true })
     }
   }, [navigate])
 
@@ -31,7 +31,7 @@ export default function AdminLogin() {
       if (!token) throw new Error('Missing session token.')
       localStorage.setItem('vpl_admin', '1')
       localStorage.setItem('vpl_admin_token', token)
-      navigate('/admin/dashboard')
+      navigate('/dboard')
     } catch (err) {
       setError(err.message || 'Invalid username or password.')
     }

@@ -34,6 +34,14 @@ export function verifyAdminPlayer(token, id) {
   })
 }
 
+export function unverifyAdminPlayer(token, id) {
+  return request(`/admin/players/${id}/unverify`, {
+    method: 'PATCH',
+    token,
+  })
+}
+
+
 export function blockAdminPlayerDevice(token, id) {
   return request(`/admin/players/${id}/block-device`, {
     method: 'PATCH',
