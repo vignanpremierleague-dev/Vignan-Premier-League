@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginAdmin } from '../lib/adminApi'
 import { Flame, Lock, User, Eye, EyeOff, ShieldCheck } from 'lucide-react'
@@ -10,6 +10,16 @@ export default function AdminLogin() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (localStorage.getItem('vpl_admin') || localStorage.getItem('vpl_admin_token')) {
+      navigate('/admin/dashboard', { replace: true })
+    }
+  }, [navigate])
+
+  if (localStorage.getItem('vpl_admin') || localStorage.getItem('vpl_admin_token')) {
+    return null
+  }
 
   const handleSubmit = async e => {
     e.preventDefault()
