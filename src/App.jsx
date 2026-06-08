@@ -20,12 +20,9 @@ function ProtectedAdminAuction() {
   return <AuctionPortal mode="host" />
 }
 
-function ProtectedAdminAuctionDisplay() {
-  if (!localStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
-  return <AuctionPortal mode="display" />
-}
 
 export default function App() {
+  console.log('VPL Auction App Loaded - Cache Break')
   return (
     <BrowserRouter>
       <SiteBlockGate>
@@ -39,7 +36,7 @@ export default function App() {
           <Route path="/admin"           element={<AdminLogin />} />
           <Route path="/dboard"          element={<ProtectedAdmin />} />
           <Route path="/admin/auction"   element={<ProtectedAdminAuction />} />
-          <Route path="/auction-display" element={<ProtectedAdminAuctionDisplay />} />
+          <Route path="/auction-display" element={<AuctionPortal mode="display" />} />
           <Route path="*"                element={<Navigate to="/" replace />} />
         </Routes>
       </SiteBlockGate>

@@ -1,12 +1,12 @@
-import { CheckCircle, ChevronLeft, Crown, Flame, Minus, Plus, RotateCcw, SkipForward, Tv, Users } from 'lucide-react'
+import { CheckCircle, ChevronLeft, Crown, Flame, Minus, Plus, RotateCcw, SkipForward, Tv, Users, Eye, EyeOff } from 'lucide-react'
 import { AUCTION_STAGES, AUCTION_TYPES, formatCr } from '../lib/auction'
 import { BID_STEPS, C, SectionLabel, btnGhost, btnNeutral, btnOrange, navBtn } from './tokens'
 
 export default function ControlSidebar({
   auctionType, stage, activePlayer, currentBid, basePrice,
-  bidStep, loading,
+  bidStep, loading, isPublic,
   onSwitchType, onNominate, onBidChange, onBidStep, onAdjust,
-  onSellOpen, onReset, onDisplayOpen, onBack,
+  onSellOpen, onReset, onDisplayOpen, onBack, onTogglePublic
 }) {
   const isLive = stage === AUCTION_STAGES.LIVE
   const canAct = !!activePlayer && isLive
@@ -135,6 +135,10 @@ export default function ControlSidebar({
 
       {/* Footer actions */}
       <div style={{ padding: '10px 12px 16px', borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <button style={{ ...btnNeutral, width: '100%', fontSize: '.82rem', color: isPublic ? C.danger : C.orange }} onClick={onTogglePublic}>
+          {isPublic ? <EyeOff size={13} style={{ color: C.danger }} /> : <Eye size={13} style={{ color: C.orange }} />}
+          {isPublic ? 'Hide from Public' : 'Show to Public'}
+        </button>
         <button style={{ ...btnNeutral, width: '100%', fontSize: '.82rem', color: C.textSub }} onClick={onDisplayOpen}>
           <Tv size={13} style={{ color: C.orange }} /> Open Display Screen
         </button>

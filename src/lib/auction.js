@@ -25,6 +25,7 @@ export const DEFAULT_AUCTION_STATE = {
   display_title: 'VPL Captains Auction',
   nomination_order: [],
   last_event_at: null,
+  is_public_visible: true,
 }
 
 export function getAuctionConfig(settings) {
@@ -100,6 +101,7 @@ export function mergeAuctionState(partial) {
     sold_price: safeNumber(partial?.sold_price),
     nomination_order: Array.isArray(partial?.nomination_order) ? partial.nomination_order : [],
     display_title: partial?.display_title || getAuctionTitle(partial?.auction_type || DEFAULT_AUCTION_STATE.auction_type),
+    is_public_visible: partial?.is_public_visible ?? true,
   }
 }
 

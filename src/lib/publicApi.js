@@ -28,3 +28,7 @@ export function submitPlayerRegistration(payload) {
     body: payload,
   })
 }
+
+export function fetchPublicAuctionState() {
+  return request('/public/auction/state')
+}

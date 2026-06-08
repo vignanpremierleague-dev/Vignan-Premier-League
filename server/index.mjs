@@ -218,10 +218,6 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/public/auction/state') {
-    if (!isAuthorized(req)) {
-      sendJson(res, 401, { error: 'Unauthorized' })
-      return
-    }
 
     const { data, error } = await supabase
       .from('vpl_site_settings')

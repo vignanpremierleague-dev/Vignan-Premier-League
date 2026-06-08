@@ -4,6 +4,8 @@ import {
   fetchAdminPlayers, fetchAuctionState, fetchSiteSettings,
   resetAuction, updateAuctionState, updatePlayerDetails,
 } from '../lib/adminApi'
+import { fetchPublicAuctionState } from '../lib/publicApi'
+import { supabase } from '../lib/supabase'
 import {
   AUCTION_STAGES, AUCTION_TYPES, DEFAULT_AUCTION_STATE,
   buildRosterMap, clampCurrency, createRandomNomination,
@@ -34,6 +36,8 @@ export default function AuctionPortal({ mode = 'host' }) {
   const [error, setError] = useState('')
   const [sellOpen, setSellOpen] = useState(false)
   const [bidStep, setBidStep] = useState(1)
+
+  const channelRef = useRef(null)
 
   const playersRef = useRef([])
   useEffect(() => { playersRef.current = players }, [players])
@@ -92,16 +96,15 @@ export default function AuctionPortal({ mode = 'host' }) {
   }, [applyState, navigate, token])
 
   const loadDisplay = useCallback(async (initial = false) => {
-    if (!token) { navigate('/admin'); return }
     if (initial) setLoading(true)
     try {
-      const [stateRes, settingsRes] = await Promise.all([fetchAuctionState(token), fetchSiteSettings()])
+      const [stateRes, settingsRes] = await Promise.all([fetchPublicAuctionState(), fetchSiteSettings()])
       setSiteSettings(settingsRes)
       applyState(stateRes || DEFAULT_AUCTION_STATE, [])
       writeAuctionSnapshot(mergeAuctionState(stateRes || DEFAULT_AUCTION_STATE))
     } catch (err) { setError(err.message || 'Sync failed.') }
     finally { if (initial) setLoading(false) }
-  }, [applyState, navigate, token])
+  }, [applyState])
 
   useEffect(() => {
     if (isHost) loadAll()
@@ -115,16 +118,39 @@ export default function AuctionPortal({ mode = 'host' }) {
   useEffect(() => subscribeAuctionSnapshot(syncSnapshot), [syncSnapshot])
 
   useEffect(() => {
-    if (isHost) return
-    const id = window.setInterval(() => loadDisplay(false), 1500)
-    return () => window.clearInterval(id)
-  }, [isHost, loadDisplay])
+    if (!supabase) return
+    const channel = supabase.channel('public-auction')
+    
+    if (!isHost) {
+      channel.on('broadcast', { event: 'state-update' }, ({ payload }) => {
+        applyState(payload, [])
+      })
+    }
+    
+    channel.subscribe()
+    channelRef.current = channel
+
+    return () => {
+      supabase.removeChannel(channel)
+      channelRef.current = null
+    }
+  }, [isHost, applyState])
 
   const persist = useCallback(async patch => {
     const next = mergeAuctionState({ ...auctionState, ...patch, last_event_at: new Date().toISOString() })
     setAuctionState(next)
     resolveActivePlayer(undefined, next)
     writeAuctionSnapshot(next)
+    
+    if (channelRef.current) {
+      const active_player = next.active_player_id ? playersRef.current.find(p => p.id === next.active_player_id) : null
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'state-update',
+        payload: { ...next, active_player }
+      }).catch(() => {})
+    }
+
     if (isHost) {
       try { await updateAuctionState(token, next) }
       catch (err) { setError(err.message || 'Sync failed.') }
@@ -221,11 +247,13 @@ export default function AuctionPortal({ mode = 'host' }) {
         basePrice={basePrice}
         bidStep={bidStep}
         loading={loading}
+        isPublic={auctionState.is_public_visible ?? true}
         onSwitchType={switchType}
         onNominate={nominateNext}
         onBidChange={updateBid}
         onBidStep={setBidStep}
         onAdjust={delta => updateBid(currentBid + delta)}
+        onTogglePublic={() => persist({ is_public_visible: !(auctionState.is_public_visible ?? true) })}
         onSellOpen={() => setSellOpen(true)}
         onReset={handleReset}
         onDisplayOpen={() => window.open('/auction-display', '_blank')}

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Flame, Gavel, Users } from 'lucide-react'
+import { Flame, Gavel, Users, Tv } from 'lucide-react'
 import { AUCTION_STAGES, AUCTION_TYPES, formatCr } from '../lib/auction'
 import SoldStamp from './SoldStamp'
 import { C, ROLE_LABEL, StatBox, Tag } from './tokens'
@@ -8,6 +8,31 @@ export default function AuctionDisplay({ auctionState, activePlayer, currentBid,
   const isLive   = auctionState.stage === AUCTION_STAGES.LIVE
   const isSold   = auctionState.stage === AUCTION_STAGES.SOLD
   const isUnsold = auctionState.stage === AUCTION_STAGES.UNSOLD
+
+  if (auctionState.is_public_visible === false) {
+    return (
+      <div style={{
+        height: '100vh', width: '100vw', overflow: 'hidden',
+        background: '#080808', color: C.text,
+        fontFamily: '"DM Sans",system-ui,sans-serif',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: 500 }}>
+          <div style={{
+            width: 68, height: 68, borderRadius: '50%', margin: '0 auto 20px',
+            background: C.surface, border: `1px solid ${C.borderMid}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Tv size={26} color={C.textMuted} />
+          </div>
+          <h2 style={{ fontWeight: 800, fontSize: '1.7rem', margin: '0 0 10px', color: C.text }}>Auction Paused</h2>
+          <p style={{ color: C.textSub, fontSize: '.95rem', margin: 0, lineHeight: 1.6 }}>
+            The live display is currently hidden by the host. Please wait.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{
