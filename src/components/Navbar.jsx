@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Flame, X, ChevronRight } from 'lucide-react'
+import { fetchSiteSettings } from '../lib/adminApi'
 
 const links = [
   { label: 'Home',        href: '/',         route: true  },
@@ -13,12 +14,17 @@ export default function Navbar({ breadcrumb } = {}) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen]         = useState(false)
   const [pathname] = useState(typeof window !== 'undefined' ? window.location.pathname : '/')
+  const [settings, setSettings] = useState(null)
   const navRef = useRef(null)
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 60)
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
+  }, [])
+
+  useEffect(() => {
+    fetchSiteSettings().then(setSettings).catch(console.error)
   }, [])
 
   // prevent body scroll when menu is open on mobile
@@ -71,10 +77,16 @@ export default function Navbar({ breadcrumb } = {}) {
           </nav>
 
           {/* Desktop CTA */}
-          <a href="/register" className="btn-primary nav-cta" style={{ fontSize:'.76rem', padding:'9px 20px' }}
-            onClick={e => { e.preventDefault(); window.location.href='/register' }}>
-            Register
-          </a>
+          {settings?.registrationsOpen === false ? (
+            <button className="btn-primary nav-cta" style={{ fontSize:'.76rem', padding:'9px 20px', opacity: 0.5, cursor: 'not-allowed', background: '#333', borderColor: '#444', color: '#7a7a7a', boxShadow: 'none' }} disabled>
+              Closed
+            </button>
+          ) : (
+            <a href="/register" className="btn-primary nav-cta" style={{ fontSize:'.76rem', padding:'9px 20px' }}
+              onClick={e => { e.preventDefault(); window.location.href='/register' }}>
+              Register
+            </a>
+          )}
 
           {/* Hamburger button — mobile/tablet only */}
           <button
@@ -126,9 +138,15 @@ export default function Navbar({ breadcrumb } = {}) {
 
           {/* CTA */}
           <div style={{ marginTop:'auto', paddingTop: 32 }}>
-            <a href="/register" onClick={e => { close(); e.preventDefault(); window.location.href='/register' }} className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:'.9rem', padding:'14px 20px' }}>
-              <Flame size={16} /> Register Now
-            </a>
+            {settings?.registrationsOpen === false ? (
+              <button className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:'.9rem', padding:'14px 20px', opacity: 0.5, cursor: 'not-allowed', background: '#333', borderColor: '#444', color: '#7a7a7a', boxShadow: 'none' }} disabled>
+                Registrations Closed
+              </button>
+            ) : (
+              <a href="/register" onClick={e => { close(); e.preventDefault(); window.location.href='/register' }} className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:'.9rem', padding:'14px 20px' }}>
+                <Flame size={16} /> Register Now
+              </a>
+            )}
           </div>
         </div>
       </div>

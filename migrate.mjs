@@ -36,7 +36,11 @@ ALTER TABLE public.vpl_players
   ADD COLUMN IF NOT EXISTS device_fingerprint text,
   ADD COLUMN IF NOT EXISTS registration_ip text,
   ADD COLUMN IF NOT EXISTS registration_user_agent text,
-  ADD COLUMN IF NOT EXISTS device_blocked_at timestamp with time zone;
+  ADD COLUMN IF NOT EXISTS device_blocked_at timestamp with time zone,
+  ADD COLUMN IF NOT EXISTS is_captain boolean not null default false,
+  ADD COLUMN IF NOT EXISTS sold_to text default null,
+  ADD COLUMN IF NOT EXISTS bid_amount integer not null default 0,
+  ADD COLUMN IF NOT EXISTS auction_status text not null default 'available';
 
 CREATE TABLE IF NOT EXISTS public.vpl_site_settings (
   slug text PRIMARY KEY,

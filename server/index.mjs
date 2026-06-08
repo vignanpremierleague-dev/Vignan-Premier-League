@@ -88,6 +88,17 @@ function verifyJwt(token) {
 }
 
 const SITE_SETTINGS_SLUG = 'primary'
+const defaultAuctionState = {
+  auction_type: 'captains',
+  stage: 'idle',
+  active_player_id: null,
+  current_bid: 0,
+  sold_to: null,
+  sold_price: 0,
+  display_title: 'VPL Captains Auction',
+  nomination_order: [],
+  last_event_at: null,
+}
 const defaultSiteSettings = {
   registrationsOpen: true,
   marqueeMessage: '🔥 Welcome to VPL 2025! Registrations are now LIVE! Secure your spot before slots fill up.',
@@ -95,6 +106,11 @@ const defaultSiteSettings = {
   contactPhone: '+91 99999 99999',
   whatsappLink: 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t',
   paymentQrUrl: '/gpay-qr.jpeg',
+  auctionConfig: {
+    captainBasePrice: 3,
+    playerBasePrice: 1,
+    playerBasePriceOverrides: {},
+  },
   timelineSectionTitle: 'Tournament Timeline',
   timelineWindow: 'July - August',
   timelineEvents: [
@@ -112,18 +128,18 @@ const defaultSiteSettings = {
   ],
   teams: {
     A: [
-      { name: 'Team 1', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 2', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 3', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 4', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 5', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Dominators', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Warriors', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Gladiators', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Knights', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Lions', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
     ],
     B: [
-      { name: 'Team 6', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 7', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 8', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 9', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-      { name: 'Team 10', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Royals', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Titans', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Marvels', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Panthers', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+      { name: 'Thunderbolts', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
     ],
   },
   leagueMatches: [
@@ -198,6 +214,44 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/public/site-settings') {
     const content = await readSiteSettings()
     sendJson(res, 200, { content })
+    return
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/public/auction/state') {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('vpl_site_settings')
+      .select('content')
+      .eq('slug', 'auction_state')
+      .maybeSingle()
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to fetch auction state.' })
+      return
+    }
+
+    const state = {
+      ...defaultAuctionState,
+      ...(data?.content || {}),
+    }
+    
+    if (state.active_player_id) {
+      const { data: player, error: pError } = await supabase
+        .from('vpl_players')
+        .select('*')
+        .eq('id', state.active_player_id)
+        .maybeSingle()
+      
+      if (!pError && player) {
+        state.active_player = player
+      }
+    }
+
+    sendJson(res, 200, { state })
     return
   }
 
@@ -373,6 +427,81 @@ const server = http.createServer(async (req, res) => {
     }
 
     sendJson(res, 200, { content })
+    return
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/admin/auction/state') {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const body = await readJson(req, res)
+    if (!body) return
+
+    const { state } = body
+    if (!state) {
+      sendJson(res, 400, { error: 'State object is required.' })
+      return
+    }
+
+    const mergedState = {
+      ...defaultAuctionState,
+      ...state,
+      updated_at: undefined,
+    }
+
+    const { error } = await supabase
+      .from('vpl_site_settings')
+      .upsert({
+        slug: 'auction_state',
+        content: mergedState,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'slug' })
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to update auction state.' })
+      return
+    }
+
+    sendJson(res, 200, { state: mergedState })
+    return
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/admin/auction/reset') {
+    if (!isAuthorized(req)) {
+      sendJson(res, 401, { error: 'Unauthorized' })
+      return
+    }
+
+    const { error: resetPlayersError } = await supabase
+      .from('vpl_players')
+      .update({
+        sold_to: null,
+        bid_amount: 0,
+        auction_status: 'available',
+      })
+      .not('id', 'is', null)
+
+    if (resetPlayersError) {
+      sendJson(res, 500, { error: resetPlayersError.message || 'Failed to reset players.' })
+      return
+    }
+
+    const { error: resetStateError } = await supabase
+      .from('vpl_site_settings')
+      .upsert({
+        slug: 'auction_state',
+        content: defaultAuctionState,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'slug' })
+
+    if (resetStateError) {
+      sendJson(res, 500, { error: resetStateError.message || 'Failed to reset auction state.' })
+      return
+    }
+
+    sendJson(res, 200, { ok: true })
     return
   }
 
@@ -571,10 +700,11 @@ const server = http.createServer(async (req, res) => {
 
     // Sanitization & Extraction of only allowed player fields
     const allowedFields = [
-      'name', 'phone', 'email', 'photo_url',
+      'registration_id', 'name', 'phone', 'email', 'photo_url',
       'year', 'course', 'branch', 'section',
       'role', 'batting_side', 'bowling_arm', 'bowling_type',
-      'utr_number', 'payment_screenshot_url', 'is_verified'
+      'utr_number', 'payment_screenshot_url', 'is_verified',
+      'is_captain', 'sold_to', 'bid_amount', 'auction_status'
     ]
 
     const updatePayload = {}

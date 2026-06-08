@@ -91,9 +91,15 @@ export default function Hero({ settings, topOffset = 0 }) {
 
         {/* Buttons */}
         <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
-          <a href={primaryHref} className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = primaryHref }}>
-            <Flame style={{ width: 16, height: 16 }} /> {primaryLabel}
-          </a>
+          {settings?.registrationsOpen === false ? (
+            <a href="/schedule" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = '/schedule' }}>
+              <Flame style={{ width: 16, height: 16 }} /> Schedule & Points Table
+            </a>
+          ) : (
+            <a href={primaryHref} className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = primaryHref }}>
+              <Flame style={{ width: 16, height: 16 }} /> {primaryLabel}
+            </a>
+          )}
           <a href={secondaryHref} className="btn-ghost hero-btn-ghost">
             <ArrowDown style={{ width: 16, height: 16 }} /> {secondaryLabel}
           </a>

@@ -25,18 +25,18 @@ const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: { r
 const patch = {
   teams: {
     A: [
-      { name: "Team 1", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 2", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 3", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 4", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 5", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
+      { name: "Dominators", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Warriors", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Gladiators", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Knights", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Lions", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
     ],
     B: [
-      { name: "Team 6", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 7", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 8", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 9", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-      { name: "Team 10", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
+      { name: "Royals", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Titans", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Marvels", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Panthers", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+      { name: "Thunderbolts", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
     ]
   },
   leagueMatches: [
@@ -66,10 +66,10 @@ const patch = {
 async function run() {
   try {
     await client.connect()
-    // Merge patch into existing content using jsonb || operator (right side wins only for missing keys)
+    // Merge patch into existing content using jsonb || operator (right side wins to overwrite fields)
     await client.query(
       `UPDATE public.vpl_site_settings
-       SET content = $1::jsonb || content,
+       SET content = content || $1::jsonb,
            updated_at = now()
        WHERE slug = 'primary'`,
       [JSON.stringify(patch)]

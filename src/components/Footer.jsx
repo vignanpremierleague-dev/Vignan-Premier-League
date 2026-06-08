@@ -1,11 +1,11 @@
-import { Flame, Instagram, Phone, Mail, ArrowUp } from 'lucide-react'
+import { Flame, Phone, Mail, ArrowUp } from 'lucide-react'
 
 const quickLinks = [
   ['Home','/'], ['About','/#about'], ['Rules','/rules'],
   ['Schedule','/schedule'], ['Prizes','/#prizes'], ['Register','/register'], ['Contact','/contact'],
 ]
 const socials = [
-  { icon:<Instagram size={15}/>, href:'https://instagram.com/vignanpremierleague', label:'Instagram' },
+  { icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>, href:'https://instagram.com/vignanpremierleague', label:'Instagram' },
   { icon:<Phone     size={15}/>, href:'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t',               label:'WhatsApp' },
   { icon:<Mail      size={15}/>, href:'mailto:vpl@vignan.ac.in',                  label:'Email' },
 ]

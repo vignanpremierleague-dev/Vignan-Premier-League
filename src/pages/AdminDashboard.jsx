@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAdminPlayers, verifyAdminPlayer, blockAdminPlayerDevice, unblockAdminPlayerDevice, logoutAdmin, updateSiteSettings, fetchSiteSettings, updatePlayerDetails } from '../lib/adminApi'
 import { uploadToCloudinary } from '../lib/cloudinary'
+import { buildRosterMap, formatCr, getAuctionConfig, getPlayerBasePrice, getTeamsFromSettings } from '../lib/auction'
 import {
   Flame, LogOut, ShieldCheck, Users, CreditCard,
   RefreshCw, CheckCircle, XCircle, ExternalLink, Search,
-  User as UserIcon, X as XIcon, ChevronLeft, ChevronRight, Settings, Plus, Trash2, Upload
+  User as UserIcon, X as XIcon, ChevronLeft, ChevronRight, Settings, Plus, Trash2, Upload, Shield
 } from 'lucide-react'
+import TeamsPanel from '../components/TeamsPanel'
 
 const TABS = [
   { id: 'payments', label: 'Payments', icon: <CreditCard size={18} /> },
+  { id: 'teams',    label: 'Teams',    icon: <Shield size={18} />     },
   { id: 'auction',  label: 'Players',  icon: <Users size={18} />      },
   { id: 'edit_players', label: 'Edit Details', icon: <Settings size={18} /> },
   { id: 'qr_setup', label: 'Payment QR Setup', icon: <ExternalLink size={18} /> },
@@ -261,7 +264,21 @@ export default function AdminDashboard() {
             ))}
           </nav>
 
-          <div style={{ padding: sidebarCollapsed ? '20px 8px' : '20px', borderTop: '1px solid rgba(255,255,255,.08)' }}>
+          <div style={{ padding: sidebarCollapsed ? '10px 8px' : '10px 20px 0', borderTop: '1px solid rgba(255,255,255,.08)' }}>
+            <button onClick={() => window.open('/admin/auction', '_blank')} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: sidebarCollapsed ? 0 : 8, width: '100%',
+              background: 'linear-gradient(135deg, #ff6b22 0%, #ff4b00 100%)', border: 'none',
+              borderRadius: 8, padding: '10px 14px', cursor: 'pointer',
+              color: '#fff', fontSize: '.85rem', fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(255,107,34,.25)',
+              transition: 'all .25s ease'
+            }}>
+              <Flame size={16} style={{ flexShrink: 0 }} />
+              {!sidebarCollapsed && <span>Host Live Auction</span>}
+            </button>
+          </div>
+
+          <div style={{ padding: sidebarCollapsed ? '10px 8px 20px' : '10px 20px 20px' }}>
             <button onClick={logout} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: sidebarCollapsed ? 0 : 8, width: '100%',
               background: 'transparent', border: '1px solid rgba(230,57,70,.25)',
@@ -371,6 +388,10 @@ export default function AdminDashboard() {
             <PaymentPanel players={players} unverified={unverified} onVerify={verifyPlayer} onBlockDevice={blockPlayerDevice} onUnblockDevice={unblockPlayerDevice} isCompact={isCompact} />
           )}
 
+          {!loading && tab === 'teams' && siteSettings && (
+            <TeamsPanel players={players} siteSettings={siteSettings} />
+          )}
+
           {!loading && tab === 'auction' && (
             <AuctionPanel players={rosteredPlayers} allCount={verifiedPlayers.length}
               roleFilter={roleFilter} setRoleFilter={setRoleFilter}
@@ -379,7 +400,7 @@ export default function AdminDashboard() {
           )}
 
           {!loading && tab === 'edit_players' && (
-            <EditPlayersPanel players={players} setPlayers={setPlayers} token={token} handleUnauthorized={handleUnauthorized} isCompact={isCompact} />
+            <EditPlayersPanel players={players} setPlayers={setPlayers} token={token} handleUnauthorized={handleUnauthorized} isCompact={isCompact} siteSettings={siteSettings} setSiteSettings={setSiteSettings} />
           )}
 
           {!loading && tab === 'qr_setup' && siteSettings && (
@@ -391,7 +412,7 @@ export default function AdminDashboard() {
           )}
 
           {!loading && tab === 'schedule' && (
-            <SchedulePanel settings={siteSettings} onSave={handleSaveCMS} saving={savingCMS} isCompact={isCompact} />
+            <SchedulePanel settings={siteSettings} onSave={handleSaveCMS} saving={savingCMS} isCompact={isCompact} players={players} />
           )}
         </div>
       </main>
@@ -1549,8 +1570,10 @@ function buildScheduleForm(settings) {
   }
 }
 
-function SchedulePanel({ settings, onSave, saving, isCompact }) {
+function SchedulePanel({ settings, onSave, saving, isCompact, players }) {
   const [form, setForm] = useState(() => buildScheduleForm(settings))
+  const teamNames = getTeamsFromSettings(form)
+  const rosterMap = buildRosterMap(players || [], teamNames)
 
   useEffect(() => {
     setForm(buildScheduleForm(settings))
@@ -1866,6 +1889,46 @@ function SchedulePanel({ settings, onSave, saving, isCompact }) {
           </div>
         </div>
       </div>
+
+      <div style={{ background: '#111', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,.08)' }}>
+        <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: 8 }}>Auction Team Squads</h3>
+        <p style={{ color: '#7a7a7a', fontSize: '.82rem', marginBottom: 18 }}>Captains, full player list, spend, and purse balance are derived from the live auction data.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+          {teamNames.map((teamName) => {
+            const roster = rosterMap[teamName] || { roster: [], captain: null, spend: 0, remainingPurse: 100, squadCount: 0 }
+            return (
+              <div key={teamName} style={{ background: '#171717', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, padding: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 14 }}>
+                  <div>
+                    <div style={{ color: '#fff', fontWeight: 700, fontSize: '.98rem' }}>{teamName}</div>
+                    <div style={{ color: '#7a7a7a', fontSize: '.75rem', marginTop: 4 }}>Captain: {roster.captain?.name || 'Not assigned'}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#ffb800', fontWeight: 800, fontSize: '.82rem' }}>{formatCr(roster.spend)}</div>
+                    <div style={{ color: '#55d79a', fontSize: '.75rem', marginTop: 4 }}>{formatCr(roster.remainingPurse)} left</div>
+                  </div>
+                </div>
+                <div style={{ color: '#9a9a9a', fontSize: '.74rem', marginBottom: 10 }}>Squad: {roster.squadCount}/12</div>
+                {roster.roster.length ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {roster.roster.map((player) => (
+                      <div key={player.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', background: '#101010', borderRadius: 10, padding: '10px 12px' }}>
+                        <div style={{ color: '#efefef', fontSize: '.83rem' }}>
+                          {player.name}
+                          {player.is_captain ? ' (C)' : ''}
+                        </div>
+                        <div style={{ color: '#ffb800', fontFamily: 'monospace', fontSize: '.8rem' }}>{formatCr(player.bid_amount)}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: '#5a5a5a', fontSize: '.8rem' }}>No players assigned yet.</div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
@@ -1873,7 +1936,7 @@ function SchedulePanel({ settings, onSave, saving, isCompact }) {
 /* ─────────────────────────────────────────────── */
 /*  Edit Players Panel                             */
 /* ─────────────────────────────────────────────── */
-function EditPlayersPanel({ players, setPlayers, token, handleUnauthorized, isCompact }) {
+function EditPlayersPanel({ players, setPlayers, token, handleUnauthorized, isCompact, siteSettings, setSiteSettings }) {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [editingPlayer, setEditingPlayer] = useState(null)
@@ -1972,6 +2035,8 @@ function EditPlayersPanel({ players, setPlayers, token, handleUnauthorized, isCo
           handleUnauthorized={handleUnauthorized}
           setPlayers={setPlayers}
           isCompact={isCompact}
+          siteSettings={siteSettings}
+          setSiteSettings={setSiteSettings}
         />
       )}
     </div>
@@ -1981,14 +2046,14 @@ function EditPlayersPanel({ players, setPlayers, token, handleUnauthorized, isCo
 /* ─────────────────────────────────────────────── */
 /*  Player Editor Modal                            */
 /* ─────────────────────────────────────────────── */
-function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlayers, isCompact }) {
+function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlayers, isCompact, siteSettings, setSiteSettings }) {
   const [form, setForm] = useState({ ...player })
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  const [uploadingScreen, setUploadingScreen] = useState(false)
+  const auctionConfig = getAuctionConfig(siteSettings)
+  const [basePrice, setBasePrice] = useState(() => String(getPlayerBasePrice(player, siteSettings)))
   
   const photoFileRef = useRef(null)
-  const screenFileRef = useRef(null)
 
   const handleFieldChange = (field, val) => {
     setForm(prev => ({ ...prev, [field]: val }))
@@ -2008,32 +2073,35 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
     }
   }
 
-  const handleScreenUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploadingScreen(true)
-    try {
-      const asset = await uploadToCloudinary(file)
-      handleFieldChange('payment_screenshot_url', asset.secureUrl)
-    } catch (err) {
-      alert('Upload failed: ' + err.message)
-    } finally {
-      setUploadingScreen(false)
-    }
-  }
-
   const handleSave = async (e) => {
     e.preventDefault()
     setSaving(true)
     try {
-      const { player: updated } = await updatePlayerDetails(token, player.id, {
+      const basePriceValue = Number(basePrice)
+      const nextSettings = {
+        ...(siteSettings || {}),
+        auctionConfig: {
+          ...auctionConfig,
+          playerBasePriceOverrides: {
+            ...auctionConfig.playerBasePriceOverrides,
+            [player.id]: Number.isFinite(basePriceValue) ? Math.max(0, Math.round(basePriceValue)) : getPlayerBasePrice(player, siteSettings),
+          },
+        },
+      }
+
+      const [{ player: updated }] = await Promise.all([
+        updatePlayerDetails(token, player.id, {
         phone: form.phone,
         registration_id: form.registration_id,
         photo_url: form.photo_url,
         is_verified: form.is_verified,
-      })
+        is_captain: form.is_captain,
+        }),
+        updateSiteSettings(token, nextSettings),
+      ])
       
       setPlayers(prev => prev.map(p => p.id === player.id ? updated : p))
+      setSiteSettings(nextSettings)
       alert('Player details updated successfully.')
       onClose()
     } catch (err) {
@@ -2097,6 +2165,31 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
                   <option value="unverified" style={{ color: '#f5a100', background: '#111' }}>Pending / Unverified</option>
                   <option value="verified" style={{ color: '#22c55e', background: '#111' }}>Verified</option>
                 </select>
+              </label>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14, marginTop: 10 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', background: '#111', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(255,107,34,.15)' }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.is_captain)}
+                  onChange={e => handleFieldChange('is_captain', e.target.checked)}
+                  style={{ width: 18, height: 18, accentColor: '#ff6b22', cursor: 'pointer' }}
+                />
+                <span style={{ color: '#fff', fontSize: '.9rem', fontWeight: 600 }}>Mark as Captain Candidate</span>
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#efefef', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Base Price (Cr)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={basePrice}
+                  onChange={e => setBasePrice(e.target.value)}
+                  style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(255,107,34,.3)', borderRadius: 8, color: '#fff', fontSize: '.9rem', outline: 'none' }}
+                />
+                <p style={{ color: '#6a6a6a', fontSize: '.72rem', marginTop: 6 }}>
+                  Current defaults: captains {formatCr(auctionConfig.captainBasePrice)}, players {formatCr(auctionConfig.playerBasePrice)}.
+                </p>
               </label>
             </div>
           </div>

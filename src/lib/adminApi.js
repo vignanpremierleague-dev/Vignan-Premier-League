@@ -83,3 +83,23 @@ export function updatePlayerDetails(token, id, payload) {
     body: payload,
   })
 }
+
+export async function fetchAuctionState(token) {
+  const res = await request('/public/auction/state', { token })
+  return res.state
+}
+
+export function updateAuctionState(token, state) {
+  return request('/admin/auction/state', {
+    method: 'POST',
+    token,
+    body: { state },
+  })
+}
+
+export function resetAuction(token) {
+  return request('/admin/auction/reset', {
+    method: 'POST',
+    token,
+  })
+}

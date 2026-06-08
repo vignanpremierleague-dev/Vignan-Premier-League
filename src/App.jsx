@@ -8,10 +8,21 @@ import RegisterPage   from './pages/RegisterPage'
 import ContactPage    from './pages/ContactPage'
 import MainSite       from './MainSite'
 import SiteBlockGate  from './components/SiteBlockGate'
+import AuctionPortal  from './pages/AuctionPortal'
 
 function ProtectedAdmin() {
   if (!localStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
   return <AdminDashboard />
+}
+
+function ProtectedAdminAuction() {
+  if (!localStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
+  return <AuctionPortal mode="host" />
+}
+
+function ProtectedAdminAuctionDisplay() {
+  if (!localStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
+  return <AuctionPortal mode="display" />
 }
 
 export default function App() {
@@ -27,6 +38,8 @@ export default function App() {
           <Route path="/contact"         element={<ContactPage />} />
           <Route path="/admin"           element={<AdminLogin />} />
           <Route path="/dboard"          element={<ProtectedAdmin />} />
+          <Route path="/admin/auction"   element={<ProtectedAdminAuction />} />
+          <Route path="/auction-display" element={<ProtectedAdminAuctionDisplay />} />
           <Route path="*"                element={<Navigate to="/" replace />} />
         </Routes>
       </SiteBlockGate>
