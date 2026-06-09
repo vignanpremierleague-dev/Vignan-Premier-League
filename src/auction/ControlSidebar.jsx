@@ -137,7 +137,7 @@ export default function ControlSidebar({
       <div style={{ padding: '10px 12px 16px', borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button style={{ ...btnNeutral, width: '100%', fontSize: '.82rem', color: isPublic ? C.danger : C.orange }} onClick={onTogglePublic}>
           {isPublic ? <EyeOff size={13} style={{ color: C.danger }} /> : <Eye size={13} style={{ color: C.orange }} />}
-          {isPublic ? 'Hide from Public' : 'Show to Public'}
+          {isPublic ? 'Stop Auction Display' : 'Start Auction Display'}
         </button>
         <button style={{ ...btnNeutral, width: '100%', fontSize: '.82rem', color: C.textSub }} onClick={onDisplayOpen}>
           <Tv size={13} style={{ color: C.orange }} /> Open Display Screen

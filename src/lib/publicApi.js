@@ -32,3 +32,8 @@ export function submitPlayerRegistration(payload) {
 export function fetchPublicAuctionState() {
   return request('/public/auction/state')
 }
+
+export async function fetchPublicPlayers() {
+  const res = await request('/public/players')
+  return res.players || []
+}

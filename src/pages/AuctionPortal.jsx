@@ -4,7 +4,7 @@ import {
   fetchAdminPlayers, fetchAuctionState, fetchSiteSettings,
   resetAuction, updateAuctionState, updatePlayerDetails,
 } from '../lib/adminApi'
-import { fetchPublicAuctionState } from '../lib/publicApi'
+import { fetchPublicAuctionState, fetchPublicPlayers } from '../lib/publicApi'
 import { supabase } from '../lib/supabase'
 import {
   AUCTION_STAGES, AUCTION_TYPES, DEFAULT_AUCTION_STATE,
@@ -98,9 +98,10 @@ export default function AuctionPortal({ mode = 'host' }) {
   const loadDisplay = useCallback(async (initial = false) => {
     if (initial) setLoading(true)
     try {
-      const [stateRes, settingsRes] = await Promise.all([fetchPublicAuctionState(), fetchSiteSettings()])
+      const [playersRes, stateRes, settingsRes] = await Promise.all([fetchPublicPlayers(), fetchPublicAuctionState(), fetchSiteSettings()])
+      setPlayers(playersRes)
       setSiteSettings(settingsRes)
-      applyState(stateRes || DEFAULT_AUCTION_STATE, [])
+      applyState(stateRes || DEFAULT_AUCTION_STATE, playersRes)
       writeAuctionSnapshot(mergeAuctionState(stateRes || DEFAULT_AUCTION_STATE))
     } catch (err) { setError(err.message || 'Sync failed.') }
     finally { if (initial) setLoading(false) }
@@ -124,6 +125,15 @@ export default function AuctionPortal({ mode = 'host' }) {
     if (!isHost) {
       channel.on('broadcast', { event: 'state-update' }, ({ payload }) => {
         applyState(payload, [])
+        if (payload.active_player) {
+          setPlayers(prev => {
+            const idx = prev.findIndex(p => p.id === payload.active_player.id)
+            if (idx === -1) return prev
+            const nextList = [...prev]
+            nextList[idx] = payload.active_player
+            return nextList
+          })
+        }
       })
     }
     
@@ -136,14 +146,17 @@ export default function AuctionPortal({ mode = 'host' }) {
     }
   }, [isHost, applyState])
 
-  const persist = useCallback(async patch => {
+  const persist = useCallback(async (patch, overridePlayer = null) => {
     const next = mergeAuctionState({ ...auctionState, ...patch, last_event_at: new Date().toISOString() })
     setAuctionState(next)
     resolveActivePlayer(undefined, next)
     writeAuctionSnapshot(next)
     
     if (channelRef.current) {
-      const active_player = next.active_player_id ? playersRef.current.find(p => p.id === next.active_player_id) : null
+      let active_player = next.active_player_id ? playersRef.current.find(p => p.id === next.active_player_id) : null
+      if (overridePlayer && overridePlayer.id === next.active_player_id) {
+        active_player = overridePlayer
+      }
       channelRef.current.send({
         type: 'broadcast',
         event: 'state-update',
@@ -196,7 +209,7 @@ export default function AuctionPortal({ mode = 'host' }) {
         sold_to: teamName, bid_amount: finalPrice, auction_status: 'sold',
       })
       setPlayers(prev => prev.map(p => p.id === updated.id ? updated : p))
-      await persist({ sold_to: teamName, sold_price: finalPrice, current_bid: finalPrice, stage: AUCTION_STAGES.SOLD })
+      await persist({ sold_to: teamName, sold_price: finalPrice, current_bid: finalPrice, stage: AUCTION_STAGES.SOLD }, updated)
       setSellOpen(false)
     } catch (err) { setError(err.message || 'Failed.') }
     finally { setLoading(false) }
@@ -231,6 +244,11 @@ export default function AuctionPortal({ mode = 'host' }) {
         currentBid={currentBid}
         basePrice={basePrice}
         siteSettings={siteSettings}
+        soldCount={soldCount}
+        poolCount={poolCount}
+        players={players}
+        teamNames={teamNames}
+        rosterMap={rosterMap}
       />
     )
   }

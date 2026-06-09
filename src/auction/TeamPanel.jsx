@@ -3,8 +3,8 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { formatCr } from '../lib/auction'
 import { C } from './tokens'
 
-function TeamCard({ teamName, team }) {
-  const [expanded, setExpanded] = useState(false)
+function TeamCard({ teamName, team, defaultExpanded }) {
+  const [expanded, setExpanded] = useState(defaultExpanded ?? false)
   const pct = Math.round((team.squadCount / 12) * 100)
 
   return (
@@ -63,13 +63,13 @@ function TeamCard({ teamName, team }) {
   )
 }
 
-export default function TeamPanel({ teamNames, rosterMap }) {
+export default function TeamPanel({ teamNames, rosterMap, defaultExpanded = false }) {
   return (
     <aside style={{
       width: 310, flexShrink: 0,
       background: C.sidebar,
       display: 'flex', flexDirection: 'column',
-      overflow: 'hidden',
+      overflow: 'hidden', height: '100%',
     }}>
       <div style={{ padding: '13px 18px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
         <div style={{ fontWeight: 800, fontSize: '.9rem', color: C.text }}>Team Trackers</div>
@@ -79,7 +79,7 @@ export default function TeamPanel({ teamNames, rosterMap }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
           {teamNames.map(teamName => (
-            <TeamCard key={teamName} teamName={teamName} team={rosterMap[teamName]} />
+            <TeamCard key={teamName} teamName={teamName} team={rosterMap[teamName]} defaultExpanded={defaultExpanded} />
           ))}
         </div>
       </div>

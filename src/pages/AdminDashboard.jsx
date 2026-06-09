@@ -22,6 +22,7 @@ const TABS = [
 
 const ROLE_OPTIONS = [
   { v: 'all',                    l: 'All Players' },
+  { v: 'captains',               l: 'Captains' },
   { v: 'batsman',                l: 'Batsmen' },
   { v: 'bowler',                 l: 'Bowlers' },
   { v: 'wicket_keeper_batsman',  l: 'Wicket Keepers' },
@@ -172,7 +173,7 @@ export default function AdminDashboard() {
   const verifiedPlayers = players.filter(p => p.is_verified)
 
   const rosteredPlayers = verifiedPlayers.filter(p => {
-    const matchRole = roleFilter === 'all' || p.role === roleFilter
+    const matchRole = roleFilter === 'all' ? true : roleFilter === 'captains' ? p.is_captain : p.role === roleFilter
     const matchSearch = search === '' ||
       p.name?.toLowerCase().includes(search.toLowerCase()) ||
       p.registration_id?.toLowerCase().includes(search.toLowerCase())
@@ -1942,7 +1943,7 @@ function EditPlayersPanel({ players, setPlayers, token, handleUnauthorized, isCo
   const [editingPlayer, setEditingPlayer] = useState(null)
   
   const filtered = players.filter(p => {
-    const matchRole = roleFilter === 'all' || p.role === roleFilter
+    const matchRole = roleFilter === 'all' ? true : roleFilter === 'captains' ? p.is_captain : p.role === roleFilter
     const matchSearch = search === '' ||
       p.name?.toLowerCase().includes(search.toLowerCase()) ||
       p.registration_id?.toLowerCase().includes(search.toLowerCase())

@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+/* eslint-disable no-unused-vars */
+import { AnimatePresence, motion } from 'framer-motion'
 import { AUCTION_STAGES, formatCr } from '../lib/auction'
 import { C } from './tokens'
 

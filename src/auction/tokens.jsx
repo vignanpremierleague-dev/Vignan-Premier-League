@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /** Shared design tokens and micro-components for the Auction portal */
 
 export const C = {

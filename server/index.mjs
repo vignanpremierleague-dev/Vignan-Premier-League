@@ -217,6 +217,21 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/public/players') {
+    const { data, error } = await supabase
+      .from('vpl_players')
+      .select('id, name, photo_url, role, is_captain, auction_status, sold_to, bid_amount, registration_id, year, branch, section')
+      .eq('is_verified', true)
+
+    if (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to fetch players.' })
+      return
+    }
+
+    sendJson(res, 200, { players: data })
+    return
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/public/auction/state') {
 
     const { data, error } = await supabase

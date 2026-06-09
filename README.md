@@ -24,6 +24,7 @@ This project is a decoupled monolith with a **React (Vite) Frontend** and a **No
 
 ## 🚀 Getting Started
 
+
 ### Prerequisites
 *   Node.js 18+
 *   Supabase Account / Project
@@ -86,6 +87,7 @@ The VPL application features an ultra-low latency real-time auction system. It u
 4.  **Visibility Control:** The admin can dynamically toggle "Hide from Public" or "Show to Public", pushing holding screens to all viewers instantly.
 
 ---
+
 
 ## 🛠️ Scripts Overview
 *   `npm run dev` - Starts both frontend and backend concurrently.
