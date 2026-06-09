@@ -1,35 +1,57 @@
 # Vignan Premier League (VPL)
 
-The official application for managing the Vignan Premier League. This repository contains both the public-facing tournament website and the real-time administrative auction dashboard.
-
-![VPL Banner](https://placehold.co/800x200/111111/ff6b22?text=Vignan+Premier+League&font=Montserrat)
-
-## Features
-
-*   **Public Portal:** Teams, schedules, rules, registration, and contact pages.
-*   **Real-Time Auction Display (`/auction-display`):** A public, sub-50ms synchronized display screen showing the live player auction for viewers worldwide. Built on top of Supabase Realtime Broadcasts.
-*   **Admin Dashboard (`/admin`):** Secure panel to manage site settings, verify player registrations, manage teams, and access the auction control room.
-*   **Auction Control Room (`/admin/auction`):** Host controls to draft players, nominate, adjust live bids, execute sales, and toggle public visibility.
-*   **Device Fingerprinting & Banning:** Secure local system to prevent malicious or spoofed access.
-
-## Architecture & Tech Stack
-
-This project is a decoupled monolith with a **React (Vite) Frontend** and a **Node.js/Express Backend API**, backed by **Supabase (PostgreSQL)**.
-
-*   **Frontend:** React 18, Vite, React Router, Framer Motion (for animations), Lucide React (icons), Vanilla CSS.
-*   **Backend:** Node.js, Express, `jsonwebtoken` (JWTs) for auth.
-*   **Database & Real-Time Sync:** Supabase (PostgreSQL) and Supabase Realtime Channels.
+Official platform for the **Vignan Premier League** — a T10 cricket tournament with an IPL-style live player auction, faculty-owned teams, and real-time public display. This repo contains the public site, admin dashboard, and the full live auction system.
 
 ---
 
-## 🚀 Getting Started
+## Features
 
-### Prerequisites
-*   Node.js 18+
-*   Supabase Account / Project
+### Public Site
+- Hero with live auction CTA ("View Live Auction →") that swaps to Register when registrations are open
+- Scrolling marquee announcements (admin-editable)
+- Teams, schedules, rules, points table, registration, and contact pages
 
-### 1. Environment Configuration
+### Live Auction Display (`/auction-display`)
+- Real-time player auction screen for big displays, phones, and tablets
+- **3-breakpoint responsive layout:**
+  - `< 640px` — Phone: full-bleed tabbed layout (Live / Up Next / Teams)
+  - `640–1023px` — Tablet: sidebar + player card
+  - `≥ 1024px` — Desktop: sidebar + player card + team tracker panel
+- Round badge shows current auction category with role-matched color
+- Animated "Sold" banner with team + price reveal
+- Persists current player across browser refreshes
 
-Clone the repository and create a `.env` file from the `.env.example`:
-```bash
-cp .env.example .env
+### Admin Auction Control Desk (`/admin/auction`)
+- **5-category draft workflow:** Captains → All Rounders → Batsmen → Bowlers → Wicket Keepers
+- Colored round indicators per category (matches player card role colors)
+- Bid steps: **0.25 / 0.50 / 0.75 / 1 Cr**
+- Captain base price: **2 Cr**
+- Non-scrolling control sidebar — all actions visible without scroll
+- Sold stamp animation in the control desk
+
+### Admin Dashboard (`/admin`)
+- Player registration verification with device fingerprinting
+- Site CMS — hero text, marquee, timeline, coordinators, winners
+- Schedule & fixtures manager with live match result updates
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite, Framer Motion, Lucide React, Vanilla CSS |
+| Styling | Inline styles + Tailwind v4 (utility layer) |
+| Backend | Node.js / Express, JWT auth |
+| Database | Supabase (PostgreSQL `numeric(10,2)` for bid amounts) |
+| Real-time | Supabase Realtime Broadcasts + BroadcastChannel API |
+
+---
+
+## Database Migration
+
+If upgrading from an earlier version, run this once in your **Supabase Dashboard → SQL Editor** to enable decimal bid amounts:
+
+```sql
+ALTER TABLE vpl_players
+  ALTER COLUMN bid_amount TYPE numeric(10,2);
