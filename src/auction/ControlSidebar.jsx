@@ -1,6 +1,24 @@
-import { CheckCircle, ChevronLeft, Crown, Flame, Minus, Plus, RotateCcw, SkipForward, Tv, Users, Eye, EyeOff } from 'lucide-react'
-import { AUCTION_STAGES, AUCTION_TYPES, formatCr } from '../lib/auction'
-import { BID_STEPS, C, SectionLabel, btnGhost, btnNeutral, btnOrange, navBtn } from './tokens'
+import { CheckCircle, ChevronLeft, Flame, Minus, Plus, RotateCcw, SkipForward, Tv, Eye, EyeOff } from 'lucide-react'
+import { AUCTION_STAGES, AUCTION_TYPE_COLOR, AUCTION_TYPE_LABEL, AUCTION_TYPES, formatCr } from '../lib/auction'
+import { BID_STEPS, C, navBtn } from './tokens'
+
+const row = {
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  gap: 6, padding: '7px 10px', borderRadius: 8,
+  fontFamily: '"DM Sans",system-ui,sans-serif', fontWeight: 700,
+  fontSize: '.78rem', border: 'none', cursor: 'pointer', transition: 'all .15s',
+}
+
+/** Small colored square matching admin portal role card colors */
+function RoundDot({ color }) {
+  return (
+    <span style={{
+      width: 8, height: 8, borderRadius: 2, flexShrink: 0,
+      background: color, display: 'inline-block',
+      boxShadow: `0 0 6px ${color}80`,
+    }} />
+  )
+}
 
 export default function ControlSidebar({
   auctionType, stage, activePlayer, currentBid, basePrice,
@@ -12,66 +30,88 @@ export default function ControlSidebar({
   const canAct = !!activePlayer && isLive
 
   return (
-    <aside style={{
-      width: 310, flexShrink: 0,
+    <aside className="vpl-control-sidebar" style={{
+      width: 280, flexShrink: 0,
       background: C.sidebar, borderRight: `1px solid ${C.border}`,
       display: 'flex', flexDirection: 'column',
       height: '100%',
     }}>
       {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Flame size={20} color={C.orange} style={{ flexShrink: 0 }} />
-        <span style={{ fontWeight: 800, color: C.text, fontSize: '1.2rem', fontFamily: '"Syne", sans-serif' }}>
-          VPL Control
-        </span>
+      <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <Flame size={18} color={C.orange} />
+        <span style={{ fontWeight: 800, color: C.text, fontSize: '1rem', fontFamily: '"Syne", sans-serif' }}>VPL Control</span>
+        {/* Live pulse */}
+        {isLive && (
+          <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, fontSize: '.65rem', fontWeight: 700, color: C.orange, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.orange, boxShadow: `0 0 5px ${C.orange}`, display: 'inline-block', animation: 'vplPulse 1.2s ease-in-out infinite' }} />
+            LIVE
+          </span>
+        )}
       </div>
 
-      {/* Nav / controls */}
-      <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', minHeight: 0 }}>
-        {/* Round */}
-        <SectionLabel>Draft Round</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {[
-            { type: AUCTION_TYPES.CAPTAINS, label: 'Captains', icon: <Crown size={18} /> },
-            { type: AUCTION_TYPES.PLAYERS,  label: 'Players',  icon: <Users size={18} /> },
-          ].map(({ type, label, icon }) => (
-            <button key={type} onClick={() => onSwitchType(type)} style={{
-              ...navBtn(auctionType === type),
-              justifyContent: 'center', flexDirection: 'column', gap: 6, padding: '12px 8px'
-            }}>
-              {icon} <span>{label}</span>
-            </button>
-          ))}
+      {/* Controls — fixed, no scroll */}
+      <div style={{ flex: 1, padding: '12px 12px 0', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+
+        {/* ── Auction Round ──────────────────────────────────── */}
+        <div>
+          <div style={labelStyle}>Auction Round</div>
+          {/* Captains — full width, gold */}
+          <button onClick={() => onSwitchType(AUCTION_TYPES.CAPTAINS)} style={{
+            ...navBtn(auctionType === AUCTION_TYPES.CAPTAINS),
+            width: '100%', justifyContent: 'flex-start', marginBottom: 6, padding: '8px 12px',
+            ...(auctionType === AUCTION_TYPES.CAPTAINS ? { background: 'rgba(245,161,0,.1)', color: '#f5a100' } : {})
+          }}>
+            <RoundDot color={AUCTION_TYPE_COLOR.captains} />
+            {AUCTION_TYPE_LABEL.captains}
+          </button>
+          {/* Player categories — 2x2 grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
+            {[
+              { type: AUCTION_TYPES.ALL_ROUNDERS,  label: AUCTION_TYPE_LABEL.all_rounders  },
+              { type: AUCTION_TYPES.BATSMEN,        label: AUCTION_TYPE_LABEL.batsmen        },
+              { type: AUCTION_TYPES.BOWLERS,        label: AUCTION_TYPE_LABEL.bowlers        },
+              { type: AUCTION_TYPES.WICKET_KEEPERS, label: AUCTION_TYPE_LABEL.wicket_keepers },
+            ].map(({ type, label }) => {
+              const color = AUCTION_TYPE_COLOR[type]
+              const active = auctionType === type
+              return (
+                <button key={type} onClick={() => onSwitchType(type)} style={{
+                  ...navBtn(active),
+                  justifyContent: 'flex-start', padding: '7px 8px', fontSize: '.74rem',
+                  ...(active ? { background: `${color}18`, color } : {})
+                }}>
+                  <RoundDot color={color} />
+                  {label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        <div style={{ borderTop: `1px solid ${C.border}`, margin: '8px 0' }} />
+        <Divider />
 
-        {/* Nominate */}
-        <SectionLabel>Nomination</SectionLabel>
+        {/* ── Nomination ───────────────────────────────────────── */}
         <button
-          style={{ ...btnOrange, width: '100%', padding: '11px 16px', justifyContent: 'center', opacity: loading ? 0.6 : 1 }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: '"DM Sans"', fontWeight: 700, fontSize: '.85rem', background: 'linear-gradient(135deg,#ff6b22,#ff4b00)', color: '#fff', boxShadow: '0 4px 12px rgba(255,107,34,.25)', transition: 'all .15s', opacity: loading ? 0.6 : 1, width: '100%' }}
           onClick={onNominate} disabled={loading}
         >
-          <SkipForward size={15} />
-          {loading ? 'Loading…' : 'Nominate Next Player'}
+          <SkipForward size={14} />
+          {loading ? 'Loading…' : 'Nominate Next'}
         </button>
 
-        <div style={{ borderTop: `1px solid ${C.border}`, margin: '8px 0' }} />
+        <Divider />
 
-        {/* Bid Controls */}
-        <SectionLabel>Bid Control</SectionLabel>
+        {/* ── Bid Control ──────────────────────────────────────── */}
+        <div>
+          <div style={labelStyle}>Bid Control</div>
 
-        {/* Price input */}
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: '.7rem', color: C.textMuted, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 6 }}>
-            Current Price
-          </div>
+          {/* Price input */}
           <input
             type="number"
             style={{
-              width: '100%', padding: '10px 14px', borderRadius: 8,
+              width: '100%', padding: '8px 12px', borderRadius: 8, marginBottom: 8,
               background: C.surface, border: `1px solid ${C.borderMid}`,
-              color: C.orange, fontSize: '1.4rem', fontWeight: 800,
+              color: C.orange, fontSize: '1.5rem', fontWeight: 800,
               fontFamily: '"DM Sans"', outline: 'none', boxSizing: 'border-box',
             }}
             value={currentBid}
@@ -82,18 +122,13 @@ export default function ControlSidebar({
             onFocus={e => e.target.style.borderColor = C.orange}
             onBlur={e => e.target.style.borderColor = C.borderMid}
           />
-        </div>
 
-        {/* Step selector */}
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: '.7rem', color: C.textMuted, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 6 }}>
-            Step Size
-          </div>
-          <div style={{ display: 'flex', gap: 5 }}>
+          {/* Step selector */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             {BID_STEPS.map(step => (
               <button key={step} onClick={() => onBidStep(step)} style={{
-                flex: 1, padding: '7px 4px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                fontFamily: '"DM Sans"', fontWeight: 700, fontSize: '.75rem',
+                flex: 1, padding: '6px 2px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                fontFamily: '"DM Sans"', fontWeight: 700, fontSize: '.72rem',
                 background: bidStep === step ? C.orange : C.surface,
                 color: bidStep === step ? '#fff' : C.textSub,
                 transition: 'all .1s',
@@ -102,53 +137,83 @@ export default function ControlSidebar({
               </button>
             ))}
           </div>
+
+          {/* +/- */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <button
+              style={{ ...row, background: C.surface, color: C.textSub, border: `1px solid ${C.border}`, opacity: !activePlayer ? 0.4 : 1 }}
+              disabled={!activePlayer} onClick={() => onAdjust(-bidStep)}
+            >
+              <Minus size={13} /> {formatCr(bidStep)}
+            </button>
+            <button
+              style={{ ...row, background: 'linear-gradient(135deg,#ff6b22,#ff4b00)', color: '#fff', opacity: !activePlayer ? 0.4 : 1 }}
+              disabled={!activePlayer} onClick={() => onAdjust(bidStep)}
+            >
+              <Plus size={13} /> {formatCr(bidStep)}
+            </button>
+          </div>
         </div>
 
-        {/* +/- */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <button
-            style={{ ...btnOrange, padding: '9px 8px', fontSize: '.82rem', opacity: !activePlayer ? 0.4 : 1 }}
-            disabled={!activePlayer} onClick={() => onAdjust(bidStep)}
-          >
-            <Plus size={14} /> +{formatCr(bidStep)}
-          </button>
-          <button
-            style={{ ...btnNeutral, padding: '9px 8px', fontSize: '.82rem', opacity: !activePlayer ? 0.4 : 1 }}
-            disabled={!activePlayer} onClick={() => onAdjust(-bidStep)}
-          >
-            <Minus size={14} /> -{formatCr(bidStep)}
-          </button>
-        </div>
+        <Divider />
 
-        <div style={{ borderTop: `1px solid ${C.border}`, margin: '8px 0' }} />
-
-        {/* Sell */}
-        <SectionLabel>Sale</SectionLabel>
+        {/* ── Sell ─────────────────────────────────────────────── */}
         <button
-          style={{ ...btnOrange, width: '100%', padding: '11px 16px', opacity: !canAct ? 0.38 : 1, justifyContent: 'center' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: '"DM Sans"', fontWeight: 700, fontSize: '.85rem', background: canAct ? 'linear-gradient(135deg,#ff6b22,#ff4b00)' : C.surface, color: canAct ? '#fff' : C.textMuted, boxShadow: canAct ? '0 4px 12px rgba(255,107,34,.25)' : 'none', transition: 'all .15s', opacity: !canAct ? 0.38 : 1, width: '100%' }}
           disabled={!canAct}
           onClick={onSellOpen}
         >
-          <CheckCircle size={15} /> Sold To…
-        </button>
-      </nav>
-
-      {/* Footer actions */}
-      <div style={{ padding: '10px 12px 16px', borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <button style={{ ...btnNeutral, width: '100%', fontSize: '.82rem', color: isPublic ? C.danger : C.orange }} onClick={onTogglePublic}>
-          {isPublic ? <EyeOff size={13} style={{ color: C.danger }} /> : <Eye size={13} style={{ color: C.orange }} />}
-          {isPublic ? 'Stop Auction Display' : 'Start Auction Display'}
-        </button>
-        <button style={{ ...btnNeutral, width: '100%', fontSize: '.82rem', color: C.textSub }} onClick={onDisplayOpen}>
-          <Tv size={13} style={{ color: C.orange }} /> Open Display Screen
-        </button>
-        <button style={{ ...btnGhost, width: '100%', fontSize: '.82rem' }} onClick={onReset}>
-          <RotateCcw size={13} /> Reset Entire Auction
-        </button>
-        <button style={{ ...btnNeutral, width: '100%', fontSize: '.82rem' }} onClick={onBack}>
-          <ChevronLeft size={13} /> Back to Dashboard
+          <CheckCircle size={14} /> Sell Player
         </button>
       </div>
+
+      {/* ── Footer: 4 compact icon+label buttons in a 2x2 grid ── */}
+      <div style={{ padding: '10px 12px 12px', borderTop: `1px solid ${C.border}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flexShrink: 0 }}>
+        <FooterBtn
+          Icon={isPublic ? EyeOff : Eye}
+          label={isPublic ? 'Stop Display' : 'Start Display'}
+          color={isPublic ? C.danger : C.orange}
+          onClick={onTogglePublic}
+        />
+        <FooterBtn Icon={Tv} label="Open Screen" color={C.orange} onClick={onDisplayOpen} />
+        <FooterBtn Icon={RotateCcw} label="Reset" color={C.danger} onClick={onReset} />
+        <FooterBtn Icon={ChevronLeft} label="Dashboard" color={C.textSub} onClick={onBack} />
+      </div>
+
+      <style>{`
+        @keyframes vplPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
     </aside>
+  )
+}
+
+function Divider() {
+  return <div style={{ borderTop: `1px solid ${C.border}`, margin: '0' }} />
+}
+
+const labelStyle = {
+  fontSize: '.62rem', fontWeight: 700, letterSpacing: '.12em',
+  textTransform: 'uppercase', color: C.textMuted, marginBottom: 7,
+}
+
+function FooterBtn({ Icon, label, color, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 4, padding: '8px 6px', borderRadius: 8, border: `1px solid ${C.border}`,
+        background: 'transparent', cursor: 'pointer', transition: 'all .15s',
+        fontFamily: '"DM Sans"',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.04)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    >
+      <Icon size={14} color={color} />
+      <span style={{ fontSize: '.62rem', fontWeight: 700, color: color, whiteSpace: 'nowrap' }}>{label}</span>
+    </button>
   )
 }

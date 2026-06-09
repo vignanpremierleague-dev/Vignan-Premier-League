@@ -16,22 +16,22 @@ function TeamCard({ teamName, team, defaultExpanded }) {
         onClick={() => setExpanded(!expanded)}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '9px 13px', background: C.surface3, 
+          padding: '12px 16px', background: C.surface3,
           borderBottom: (expanded && team.roster.length > 0) ? `1px solid ${C.border}` : 'none',
           cursor: 'pointer'
         }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           {expanded ? <ChevronDown size={14} color={C.textMuted} style={{ flexShrink: 0 }} /> : <ChevronRight size={14} color={C.textMuted} style={{ flexShrink: 0 }} />}
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 800, fontSize: '.82rem', color: C.text, letterSpacing: '.02em' }}>{teamName}</div>
-            <div style={{ fontSize: '.68rem', color: team.captain ? C.gold : C.textMuted, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>
+            <div style={{ fontWeight: 800, fontSize: '.88rem', color: C.text, letterSpacing: '.02em' }}>{teamName}</div>
+            <div style={{ fontSize: '.7rem', color: team.captain ? C.gold : C.textMuted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
               {team.captain ? `⭐ ${team.captain.name}` : 'No captain'}
             </div>
           </div>
         </div>
-        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
-          <div style={{ fontWeight: 800, fontSize: '.9rem', color: C.orange }}>{formatCr(team.remainingPurse)}</div>
-          <div style={{ fontSize: '.66rem', color: C.textMuted, marginTop: 1 }}>{team.squadCount}/12</div>
+        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
+          <div style={{ fontWeight: 800, fontSize: '.92rem', color: C.orange }}>{formatCr(team.remainingPurse)}</div>
+          <div style={{ fontSize: '.68rem', color: C.textMuted, marginTop: 2 }}>{team.squadCount}/12</div>
         </div>
       </div>
 
@@ -48,7 +48,7 @@ function TeamCard({ teamName, team, defaultExpanded }) {
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '3px 4px', marginBottom: 2,
             }}>
-              <span style={{ fontSize: '.74rem', fontWeight: 600, color: C.textSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>
+              <span style={{ fontSize: '.74rem', fontWeight: 600, color: C.textSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160, textTransform: 'capitalize' }}>
                 {p.name}
                 {p.is_captain && <span style={{ color: C.gold, marginLeft: 3 }}>★</span>}
               </span>
@@ -63,20 +63,24 @@ function TeamCard({ teamName, team, defaultExpanded }) {
   )
 }
 
-export default function TeamPanel({ teamNames, rosterMap, defaultExpanded = false }) {
+export default function TeamPanel({ teamNames, rosterMap, defaultExpanded = false, fullWidth = false }) {
   return (
     <aside style={{
-      width: 310, flexShrink: 0,
+      width: fullWidth ? '100%' : 310,
+      flexShrink: 0,
       background: C.sidebar,
       display: 'flex', flexDirection: 'column',
-      overflow: 'hidden', height: '100%',
+      overflow: fullWidth ? 'visible' : 'hidden',
+      height: fullWidth ? 'auto' : '100%',
     }}>
-      <div style={{ padding: '13px 18px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-        <div style={{ fontWeight: 800, fontSize: '.9rem', color: C.text }}>Team Trackers</div>
-        <div style={{ fontSize: '.73rem', color: C.textMuted, marginTop: 1 }}>Purse &amp; squad status</div>
-      </div>
+      {!fullWidth && (
+        <div style={{ padding: '13px 18px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: '.9rem', color: C.text }}>Team Trackers</div>
+          <div style={{ fontSize: '.73rem', color: C.textMuted, marginTop: 1 }}>Purse &amp; squad status</div>
+        </div>
+      )}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
+      <div style={{ flex: 1, overflowY: fullWidth ? 'visible' : 'auto', padding: fullWidth ? '0' : 10 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
           {teamNames.map(teamName => (
             <TeamCard key={teamName} teamName={teamName} team={rosterMap[teamName]} defaultExpanded={defaultExpanded} />

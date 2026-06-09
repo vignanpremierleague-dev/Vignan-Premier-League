@@ -9,7 +9,7 @@ import EmberParticles  from './components/EmberParticles'
 import { useEffect, useState } from 'react'
 import { fetchSiteSettings } from './lib/adminApi'
 
-const DEFAULT_MARQUEE_MESSAGE = '🔥 Welcome to VPL 2025! Registrations are now LIVE! Secure your spot before slots fill up.'
+const DEFAULT_MARQUEE_MESSAGE = '  VPL Live Auction is happening on 12th June 2025!  Get ready — teams will be built live, player by player.  Faculty-owned teams, IPL-style bidding. Mark the date!  VPL Live Auction — 12th June 2025  '
 const NAVBAR_HEIGHT = 60
 const MARQUEE_HEIGHT = 49
 

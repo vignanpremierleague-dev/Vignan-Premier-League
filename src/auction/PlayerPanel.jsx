@@ -1,7 +1,7 @@
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { RefreshCw, Users } from 'lucide-react'
 import { AUCTION_STAGES, AUCTION_TYPES, formatCr } from '../lib/auction'
-import SoldStamp from './SoldStamp'
+import SoldBanner from './SoldBanner'
 import { C, ROLE_LABEL, StatBox, Tag, btnNeutral } from './tokens'
 
 export default function PlayerPanel({ auctionState, activePlayer, currentBid, basePrice, soldCount, poolCount, loading, onRefresh }) {
@@ -61,7 +61,7 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
       </div>
 
       {/* Player card area */}
-      <div style={{ flex: 1, padding: 20, overflow: 'hidden', display: 'flex' }}>
+      <div style={{ flex: 1, padding: '16px 20px 20px', overflow: 'hidden', display: 'flex' }}>
         {!activePlayer ? (
           <div style={{
             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -78,16 +78,11 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
             border: `1px solid ${C.border}`, overflow: 'hidden',
             display: 'flex', position: 'relative',
           }}>
-            {/* Sold / Unsold stamp */}
-            <AnimatePresence>
-              {(isSold || isUnsold) && (
-                <SoldStamp stage={auctionState.stage} soldTo={auctionState.sold_to} soldPrice={auctionState.sold_price} />
-              )}
-            </AnimatePresence>
+            {/* No absolute stamp overlay — handled inline below */}
 
-            {/* Photo — clear square block */}
+            {/* Photo — fills full height */}
             <div style={{
-              width: 300, flexShrink: 0,
+              width: 280, flexShrink: 0,
               background: C.surface, borderRight: `1px solid ${C.border}`,
               position: 'relative', overflow: 'hidden',
             }}>
@@ -104,10 +99,10 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
               )}
               {/* ID badge */}
               <span style={{
-                position: 'absolute', bottom: 10, left: 10,
-                background: 'rgba(0,0,0,.75)', border: `1px solid ${C.border}`,
+                position: 'absolute', bottom: 12, left: 12,
+                background: 'rgba(0,0,0,.8)', border: `1px solid ${C.border}`,
                 color: C.textSub, fontSize: '.68rem', fontWeight: 700,
-                padding: '3px 8px', borderRadius: 5, letterSpacing: '.05em',
+                padding: '4px 10px', borderRadius: 6, letterSpacing: '.05em', fontFamily: 'monospace',
               }}>
                 #{activePlayer.registration_id}
               </span>
@@ -129,7 +124,7 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
 
               {/* Name */}
               <div>
-                <h2 style={{ margin: '0 0 5px', fontWeight: 800, fontSize: '1.7rem', color: C.text, lineHeight: 1.1 }}>
+                <h2 style={{ margin: '0 0 4px', fontWeight: 900, fontSize: '2rem', color: C.text, lineHeight: 1.1, textTransform: 'capitalize' }}>
                   {activePlayer.name}
                 </h2>
                 <p style={{ margin: 0, fontSize: '.82rem', color: C.textSub }}>
@@ -137,18 +132,26 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
                 </p>
               </div>
 
-              {/* Stat grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
-                <StatBox label="Base Price" value={formatCr(basePrice)} />
-                <StatBox label="Current Bid" value={formatCr(currentBid)} color={C.orange} />
-                <StatBox label="Stage" value={auctionState.stage.toUpperCase()} color={isLive ? C.orange : C.textSub} />
-              </div>
-
-              {/* Secondary info */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <StatBox label="Batting" value={activePlayer.batting_side ? `${activePlayer.batting_side} Hand` : '—'} color={C.textSub} />
-                <StatBox label="Bowling" value={activePlayer.bowling_style || '—'} color={C.textSub} />
-              </div>
+              {/* Stat grid OR SoldBanner — animated swap */}
+              <AnimatePresence mode="wait">
+                {(isSold || isUnsold) ? (
+                  <motion.div key="banner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <SoldBanner stage={auctionState.stage} soldTo={auctionState.sold_to} soldPrice={auctionState.sold_price} />
+                  </motion.div>
+                ) : (
+                  <motion.div key="stats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+                      <StatBox label="Base Price" value={formatCr(basePrice)} />
+                      <StatBox label="Current Bid" value={formatCr(currentBid)} color={C.orange} />
+                      <StatBox label="Stage" value={auctionState.stage.toUpperCase()} color={isLive ? C.orange : C.textSub} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <StatBox label="Batting" value={activePlayer.batting_side ? `${activePlayer.batting_side} Hand` : '—'} color={C.textSub} />
+                      <StatBox label="Bowling" value={activePlayer.bowling_style || '—'} color={C.textSub} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         )}

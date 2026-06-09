@@ -9,10 +9,10 @@ import { supabase } from '../lib/supabase'
 import {
   AUCTION_STAGES, AUCTION_TYPES, DEFAULT_AUCTION_STATE,
   buildRosterMap, clampCurrency, createRandomNomination,
-  getAuctionConfig, getAvailableTeamsForSale,
+  getAuctionConfig, getAvailableTeamsForSale, getEligiblePlayers,
   getPlayerBasePrice, getTeamsFromSettings, mergeAuctionState,
 } from '../lib/auction'
-import { readAuctionSnapshot, subscribeAuctionSnapshot, writeAuctionSnapshot } from '../lib/auctionSync'
+import { readAuctionSnapshot, subscribeAuctionSnapshot, writeAuctionSnapshot, cacheDisplayPlayer, readCachedDisplayPlayer } from '../lib/auctionSync'
 
 import AuctionDisplay from '../auction/AuctionDisplay'
 import ControlSidebar from '../auction/ControlSidebar'
@@ -35,7 +35,7 @@ export default function AuctionPortal({ mode = 'host' }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [sellOpen, setSellOpen] = useState(false)
-  const [bidStep, setBidStep] = useState(1)
+  const [bidStep, setBidStep] = useState(0.25)
 
   const channelRef = useRef(null)
 
@@ -55,22 +55,24 @@ export default function AuctionPortal({ mode = 'host' }) {
 
   const currentBid = Math.max(clampCurrency(auctionState.current_bid), basePrice || 0)
 
-  const resolveActivePlayer = useCallback((nextPlayers, nextState) => {
+  const resolveActivePlayer = useCallback((nextPlayers, nextState, fallback = null) => {
     const list = Array.isArray(nextPlayers) ? nextPlayers : playersRef.current
     const matched = nextState?.active_player_id ? list.find(p => p.id === nextState.active_player_id) : null
-    const next = matched || nextState?.active_player || null
+    const next = matched || nextState?.active_player || fallback || null
     setActivePlayer(prev => {
       if (!prev && !next) return null
+      // Keep prev if state still references the same player but we can't resolve them from the list
+      if (!next && nextState?.active_player_id && prev?.id === nextState.active_player_id) return prev
       if (!prev || !next) return next
       if (prev.id === next.id) return prev
       return next
     })
   }, [])
 
-  const applyState = useCallback((incoming, nextPlayers) => {
+  const applyState = useCallback((incoming, nextPlayers, fallback = null) => {
     const merged = mergeAuctionState(incoming)
     setAuctionState(merged)
-    resolveActivePlayer(nextPlayers, merged)
+    resolveActivePlayer(nextPlayers, merged, fallback)
   }, [resolveActivePlayer])
 
   const syncSnapshot = useCallback(incoming => {
@@ -101,8 +103,12 @@ export default function AuctionPortal({ mode = 'host' }) {
       const [playersRes, stateRes, settingsRes] = await Promise.all([fetchPublicPlayers(), fetchPublicAuctionState(), fetchSiteSettings()])
       setPlayers(playersRes)
       setSiteSettings(settingsRes)
-      applyState(stateRes || DEFAULT_AUCTION_STATE, playersRes)
-      writeAuctionSnapshot(mergeAuctionState(stateRes || DEFAULT_AUCTION_STATE))
+      // Use cached player as fallback so the current player persists across refresh
+      const cachedPlayer = readCachedDisplayPlayer(stateRes?.active_player_id)
+      applyState(stateRes || DEFAULT_AUCTION_STATE, playersRes, cachedPlayer)
+      // NOTE: display mode intentionally does NOT write to the snapshot.
+      // Only the host should ever call writeAuctionSnapshot — writing here
+      // would broadcast via BroadcastChannel and corrupt the host tab's state.
     } catch (err) { setError(err.message || 'Sync failed.') }
     finally { if (initial) setLoading(false) }
   }, [applyState])
@@ -126,6 +132,8 @@ export default function AuctionPortal({ mode = 'host' }) {
       channel.on('broadcast', { event: 'state-update' }, ({ payload }) => {
         applyState(payload, [])
         if (payload.active_player) {
+          // Cache for refresh persistence
+          cacheDisplayPlayer(payload.active_player)
           setPlayers(prev => {
             const idx = prev.findIndex(p => p.id === payload.active_player.id)
             if (idx === -1) return prev
@@ -133,6 +141,10 @@ export default function AuctionPortal({ mode = 'host' }) {
             nextList[idx] = payload.active_player
             return nextList
           })
+        }
+        // Clear cache when auction goes idle or completes
+        if (payload.stage === 'idle' || payload.stage === 'completed') {
+          cacheDisplayPlayer(null)
         }
       })
     }
@@ -230,10 +242,7 @@ export default function AuctionPortal({ mode = 'host' }) {
   }
 
   const soldCount = players.filter(p => p.auction_status === 'sold').length
-  const poolCount = players.filter(p => {
-    const ok = auctionState.auction_type === AUCTION_TYPES.CAPTAINS ? p.is_captain : !p.is_captain
-    return ok && p.auction_status !== 'sold' && p.auction_status !== 'unsold'
-  }).length
+  const poolCount = getEligiblePlayers(players, auctionState.auction_type).length
 
   /* Display mode */
   if (!isHost) {
@@ -289,10 +298,12 @@ export default function AuctionPortal({ mode = 'host' }) {
         onRefresh={loadAll}
       />
 
-      <TeamPanel
-        teamNames={teamNames}
-        rosterMap={rosterMap}
-      />
+      <div className="vpl-team-panel-wrapper">
+        <TeamPanel
+          teamNames={teamNames}
+          rosterMap={rosterMap}
+        />
+      </div>
 
       {error && (
         <div style={{
@@ -316,7 +327,23 @@ export default function AuctionPortal({ mode = 'host' }) {
         onClose={() => setSellOpen(false)}
       />
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+        /* Responsive admin desk */
+        .vpl-team-panel-wrapper {
+          display: flex; flex-direction: column; height: 100%;
+          border-left: 1px solid rgba(255,255,255,.08);
+        }
+        @media (max-width: 1280px) {
+          .vpl-team-panel-wrapper { display: none; }
+        }
+        @media (max-width: 900px) {
+          .vpl-control-sidebar { width: 220px !important; }
+        }
+        @media (max-width: 700px) {
+          .vpl-control-sidebar { display: none; }
+        }
+      `}</style>
     </div>
   )
 }

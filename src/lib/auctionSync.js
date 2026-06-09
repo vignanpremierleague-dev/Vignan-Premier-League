@@ -52,3 +52,29 @@ export function subscribeAuctionSnapshot(listener) {
     activeChannel?.removeEventListener('message', handleMessage)
   }
 }
+const DISPLAY_PLAYER_KEY = 'vpl_display_active_player_v1'
+
+/** Cache the active player object on the display side for refresh persistence. */
+export function cacheDisplayPlayer(player) {
+  if (typeof window === 'undefined') return
+  try {
+    if (player) window.localStorage.setItem(DISPLAY_PLAYER_KEY, JSON.stringify(player))
+    else window.localStorage.removeItem(DISPLAY_PLAYER_KEY)
+  } catch { /* ignore */ }
+}
+
+/**
+ * Return the cached player only if its ID matches the given activePlayerId.
+ * This prevents showing stale data after the host moves to a new player.
+ */
+export function readCachedDisplayPlayer(activePlayerId) {
+  if (typeof window === 'undefined' || !activePlayerId) return null
+  try {
+    const raw = window.localStorage.getItem(DISPLAY_PLAYER_KEY)
+    if (!raw) return null
+    const player = JSON.parse(raw)
+    return player?.id === activePlayerId ? player : null
+  } catch {
+    return null
+  }
+}

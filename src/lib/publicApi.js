@@ -29,8 +29,9 @@ export function submitPlayerRegistration(payload) {
   })
 }
 
-export function fetchPublicAuctionState() {
-  return request('/public/auction/state')
+export async function fetchPublicAuctionState() {
+  const res = await request('/public/auction/state')
+  return res.state || null  // unwrap: server returns { state: {...} }
 }
 
 export async function fetchPublicPlayers() {

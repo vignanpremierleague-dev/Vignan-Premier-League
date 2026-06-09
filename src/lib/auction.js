@@ -1,6 +1,39 @@
 export const AUCTION_TYPES = {
-  CAPTAINS: 'captains',
-  PLAYERS: 'players',
+  CAPTAINS:      'captains',
+  ALL_ROUNDERS:  'all_rounders',
+  BATSMEN:       'batsmen',
+  BOWLERS:       'bowlers',
+  WICKET_KEEPERS:'wicket_keepers',
+  // Legacy alias kept for backward-compat
+  PLAYERS:       'players',
+}
+
+/** Maps non-captain auction types to the player role they filter on */
+export const AUCTION_TYPE_ROLE = {
+  all_rounders:   'all_rounder',
+  batsmen:        'batsman',
+  bowlers:        'bowler',
+  wicket_keepers: 'wicket_keeper_batsman',
+}
+
+/** Human-readable label for each auction type */
+export const AUCTION_TYPE_LABEL = {
+  captains:       'Captains',
+  all_rounders:   'All Rounders',
+  batsmen:        'Batsmen',
+  bowlers:        'Bowlers',
+  wicket_keepers: 'Wicket Keepers',
+  players:        'Players',
+}
+
+/** Color per auction type — matches ROLE_COLOR in tokens.jsx */
+export const AUCTION_TYPE_COLOR = {
+  captains:       '#f5a100',
+  all_rounders:   '#10b981',
+  batsmen:        '#3b82f6',
+  bowlers:        '#ef4444',
+  wicket_keepers: '#8b5cf6',
+  players:        '#ff6b22',
 }
 
 export const AUCTION_STAGES = {
@@ -40,7 +73,15 @@ export function getAuctionConfig(settings) {
 }
 
 export function getAuctionTitle(auctionType) {
-  return auctionType === AUCTION_TYPES.CAPTAINS ? 'VPL Captains Auction' : 'VPL Players Auction'
+  const labels = {
+    captains:       'VPL Captains Auction',
+    all_rounders:   'VPL All-Rounders Auction',
+    batsmen:        'VPL Batsmen Auction',
+    bowlers:        'VPL Bowlers Auction',
+    wicket_keepers: 'VPL Wicket-Keepers Auction',
+    players:        'VPL Players Auction',
+  }
+  return labels[auctionType] || 'VPL Auction'
 }
 
 export function getTeamsFromSettings(settings) {
@@ -72,8 +113,18 @@ export function buildRosterMap(players, teamNames) {
 
 export function getEligiblePlayers(players, auctionType) {
   return players.filter((player) => {
-    const matchesType = auctionType === AUCTION_TYPES.CAPTAINS ? Boolean(player.is_captain) : !player.is_captain
-    return matchesType && player.auction_status !== 'sold' && player.auction_status !== 'unsold'
+    if (auctionType === AUCTION_TYPES.CAPTAINS) {
+      return Boolean(player.is_captain)
+        && player.auction_status !== 'sold'
+        && player.auction_status !== 'unsold'
+    }
+    // For role-specific categories filter by role; for legacy PLAYERS type show all non-captains
+    const role = AUCTION_TYPE_ROLE[auctionType]
+    const matchesRole = role ? player.role === role : !player.is_captain
+    return matchesRole
+      && !player.is_captain
+      && player.auction_status !== 'sold'
+      && player.auction_status !== 'unsold'
   })
 }
 
@@ -126,5 +177,6 @@ export function safeNumber(value) {
 }
 
 export function clampCurrency(value) {
-  return Math.max(0, Math.round(safeNumber(value)))
+  // Allow up to 2 decimal places to support 0.25 / 0.50 Cr bid steps
+  return Math.max(0, Math.round(safeNumber(value) * 100) / 100)
 }

@@ -107,7 +107,7 @@ const defaultSiteSettings = {
   whatsappLink: 'https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t',
   paymentQrUrl: '/gpay-qr.jpeg',
   auctionConfig: {
-    captainBasePrice: 3,
+    captainBasePrice: 2,
     playerBasePrice: 1,
     playerBasePriceOverrides: {},
   },
@@ -723,6 +723,12 @@ const server = http.createServer(async (req, res) => {
       if (body[key] !== undefined) {
         updatePayload[key] = body[key]
       }
+    }
+    // Ensure bid_amount is stored as a proper decimal number, not a string.
+    // Run: ALTER TABLE vpl_players ALTER COLUMN bid_amount TYPE numeric(10,2);
+    // in Supabase SQL editor so the column accepts decimal values.
+    if (updatePayload.bid_amount !== undefined) {
+      updatePayload.bid_amount = Math.round(parseFloat(updatePayload.bid_amount) * 100) / 100
     }
 
     if (Object.keys(updatePayload).length === 0) {

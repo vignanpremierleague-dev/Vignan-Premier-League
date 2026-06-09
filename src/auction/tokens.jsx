@@ -24,10 +24,19 @@ export const C = {
 
 export const ROLE_LABEL = {
   batsman: 'Batsman', bowler: 'Bowler',
-  wicket_keeper_batsman: 'WK-Batsman', all_rounder: 'All Rounder',
+  wicket_keeper_batsman: 'Wicket Keeper', all_rounder: 'All Rounder',
 }
 
-export const BID_STEPS = [1, 2, 5, 10]
+/** Matches ROLE_COLOR in AdminDashboard — single source of truth */
+export const ROLE_COLOR = {
+  batsman:               '#3b82f6',
+  bowler:                '#ef4444',
+  wicket_keeper_batsman: '#8b5cf6',
+  all_rounder:           '#10b981',
+  captains:              '#f5a100',
+}
+
+export const BID_STEPS = [0.25, 0.5, 0.75, 1]
 
 // Matches admin panel nav button style exactly
 export function navBtn(active) {
