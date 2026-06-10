@@ -1,4 +1,4 @@
-import { Flame, ArrowDown, Radio } from 'lucide-react'
+import { Flame, ArrowUpRight, Radio } from 'lucide-react'
 import FireParticles from './FireParticles'
 
 export default function Hero({ settings, topOffset = 0 }) {
@@ -9,8 +9,8 @@ export default function Hero({ settings, topOffset = 0 }) {
   const subtitle = settings?.heroSubtitle || 'T10 Format · IPL-Style Auction · Faculty Team Owners · Vignan Campus'
   const primaryLabel = settings?.heroPrimaryCtaLabel || 'Register Now'
   const primaryHref = settings?.heroPrimaryCtaHref || '/register'
-  const secondaryLabel = settings?.heroSecondaryCtaLabel || 'Explore'
-  const secondaryHref = settings?.heroSecondaryCtaHref || '#about'
+  const secondaryLabel = 'View Teams'
+  const secondaryHref = '/teams'
   const contentPadding = topOffset > 0 ? '64px 0 40px' : '96px 0 64px'
 
   return (
@@ -95,10 +95,10 @@ export default function Hero({ settings, topOffset = 0 }) {
             <>
               <a href="/auction" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = '/auction' }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', display: 'inline-block', flexShrink: 0, animation: 'flicker .9s ease-in-out infinite' }} />
-                View Live Auction &rarr;
+                View Live Auction <ArrowUpRight style={{ width: 16, height: 16 }} />
               </a>
               <a href={secondaryHref} className="btn-ghost hero-btn-ghost">
-                <ArrowDown style={{ width: 16, height: 16 }} /> {secondaryLabel}
+                {secondaryLabel} <ArrowUpRight style={{ width: 16, height: 16 }} />
               </a>
             </>
           ) : (
@@ -107,7 +107,7 @@ export default function Hero({ settings, topOffset = 0 }) {
                 <Flame style={{ width: 16, height: 16 }} /> {primaryLabel}
               </a>
               <a href="/auction" className="btn-ghost hero-btn-ghost" onClick={e => { e.preventDefault(); window.location.href = '/auction' }}>
-                <Flame style={{ width: 14, height: 14 }} /> View Live Auction &rarr;
+                <Flame style={{ width: 14, height: 14 }} /> View Live Auction <ArrowUpRight style={{ width: 16, height: 16 }} />
               </a>
             </>
           )}

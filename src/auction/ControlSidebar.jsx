@@ -1,4 +1,5 @@
-import { CheckCircle, ChevronLeft, Flame, Minus, Plus, RotateCcw, SkipForward, Tv, Eye, EyeOff } from 'lucide-react'
+import { useState } from 'react'
+import { CheckCircle, ChevronLeft, Flame, Minus, Plus, RotateCcw, SkipForward, Tv, Eye, EyeOff, Radio } from 'lucide-react'
 import { AUCTION_STAGES, AUCTION_TYPE_COLOR, AUCTION_TYPE_LABEL, AUCTION_TYPES, formatCr } from '../lib/auction'
 import { BID_STEPS, C, navBtn } from './tokens'
 
@@ -22,9 +23,9 @@ function RoundDot({ color }) {
 
 export default function ControlSidebar({
   auctionType, stage, activePlayer, currentBid, basePrice,
-  bidStep, loading, isPublic,
+  bidStep, loading, isPublic, isAuctionLive, auctionState,
   onSwitchType, onNominate, onBidChange, onBidStep, onAdjust,
-  onSellOpen, onReset, onDisplayOpen, onBack, onTogglePublic
+  onSellOpen, onReset, onDisplayOpen, onBack, onTogglePublic, onToggleAuctionLive, onUpdateTitle
 }) {
   const isLive = stage === AUCTION_STAGES.LIVE
   const canAct = !!activePlayer && isLive
@@ -40,21 +41,25 @@ export default function ControlSidebar({
       <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         <Flame size={18} color={C.orange} />
         <span style={{ fontWeight: 800, color: C.text, fontSize: '1rem', fontFamily: '"Syne", sans-serif' }}>VPL Control</span>
-        {/* Live pulse */}
-        {isLive && (
-          <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, fontSize: '.65rem', fontWeight: 700, color: C.orange, letterSpacing: '.06em', textTransform: 'uppercase' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.orange, boxShadow: `0 0 5px ${C.orange}`, display: 'inline-block', animation: 'vplPulse 1.2s ease-in-out infinite' }} />
-            LIVE
-          </span>
-        )}
+
       </div>
 
-      {/* Controls — fixed, no scroll */}
-      <div style={{ flex: 1, padding: '12px 12px 0', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+      {/* Controls — scrollable */}
+      <div style={{ flex: 1, padding: '12px 12px 12px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, overflowY: 'auto' }}>
 
         {/* ── Auction Round ──────────────────────────────────── */}
         <div>
-          <div style={labelStyle}>Auction Round</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div style={{ fontSize: '.7rem', color: '#6a6a6a', textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700 }}>Auction Round</div>
+            <input 
+              type="text" 
+              placeholder="e.g. Day 2" 
+              value={(auctionState?.display_title === 'VPL Captains Auction' ? '' : auctionState?.display_title) || ''}
+              onChange={e => onUpdateTitle(e.target.value)}
+              style={{ width: 80, padding: '2px 6px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 4, color: '#fff', fontSize: '.65rem', outline: 'none' }}
+              title="Auction Day / Subtitle"
+            />
+          </div>
           {/* Captains — full width, gold */}
           <button onClick={() => onSwitchType(AUCTION_TYPES.CAPTAINS)} style={{
             ...navBtn(auctionType === AUCTION_TYPES.CAPTAINS),
@@ -176,7 +181,12 @@ export default function ControlSidebar({
           onClick={onTogglePublic}
         />
         <FooterBtn Icon={Tv} label="Open Screen" color={C.orange} onClick={onDisplayOpen} />
-        <FooterBtn Icon={RotateCcw} label="Reset" color={C.danger} onClick={onReset} />
+        <FooterBtn
+          Icon={Radio}
+          label={isAuctionLive ? 'Stop Live' : 'Start Live'}
+          color={isAuctionLive ? C.danger : '#22c55e'}
+          onClick={onToggleAuctionLive}
+        />
         <FooterBtn Icon={ChevronLeft} label="Dashboard" color={C.textSub} onClick={onBack} />
       </div>
 

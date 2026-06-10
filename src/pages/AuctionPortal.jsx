@@ -201,6 +201,20 @@ export default function AuctionPortal({ mode = 'host' }) {
     await persist({ active_player_id: selected.id, current_bid: getPlayerBasePrice(selected, siteSettings), sold_to: null, sold_price: 0, stage: AUCTION_STAGES.LIVE })
   }
 
+  const handleClearPlayer = async () => {
+    setActivePlayer(null)
+    await persist({ active_player_id: null, current_bid: 0, sold_to: null, sold_price: 0, stage: AUCTION_STAGES.LIVE })
+  }
+
+  const handleSelectSpecificPlayer = async (p) => {
+    setActivePlayer(p)
+    if (p.auction_status === 'sold') {
+      await persist({ active_player_id: p.id, current_bid: p.bid_amount, sold_to: p.sold_to, sold_price: p.bid_amount, stage: AUCTION_STAGES.SOLD })
+    } else {
+      await persist({ active_player_id: p.id, current_bid: getPlayerBasePrice(p, siteSettings), sold_to: null, sold_price: 0, stage: AUCTION_STAGES.LIVE })
+    }
+  }
+
   const updateBid = async val => {
     if (!activePlayer) return
     await persist({ current_bid: Math.max(basePrice, clampCurrency(val)) })
@@ -227,19 +241,7 @@ export default function AuctionPortal({ mode = 'host' }) {
     finally { setLoading(false) }
   }
 
-  const handleReset = async () => {
-    if (!window.confirm('Reset entire auction? All sales will be cleared.')) return
-    try {
-      setLoading(true)
-      await resetAuction(token)
-      await loadAll()
-      setSellOpen(false); setActivePlayer(null)
-      const fresh = DEFAULT_AUCTION_STATE
-      setAuctionState(fresh)
-      writeAuctionSnapshot(fresh)
-    } catch (err) { setError(err.message || 'Reset failed.') }
-    finally { setLoading(false) }
-  }
+
 
   const soldCount = players.filter(p => p.auction_status === 'sold').length
   const poolCount = getEligiblePlayers(players, auctionState.auction_type).length
@@ -275,16 +277,19 @@ export default function AuctionPortal({ mode = 'host' }) {
         bidStep={bidStep}
         loading={loading}
         isPublic={auctionState.is_public_visible ?? true}
+        isAuctionLive={auctionState.is_live ?? false}
+        auctionState={auctionState}
         onSwitchType={switchType}
         onNominate={nominateNext}
         onBidChange={updateBid}
         onBidStep={setBidStep}
         onAdjust={delta => updateBid(currentBid + delta)}
         onTogglePublic={() => persist({ is_public_visible: !(auctionState.is_public_visible ?? true) })}
+        onToggleAuctionLive={() => persist({ is_live: !(auctionState.is_live ?? false) })}
         onSellOpen={() => setSellOpen(true)}
-        onReset={handleReset}
         onDisplayOpen={() => window.open('/auction-display', '_blank')}
         onBack={() => navigate('/dboard')}
+        onUpdateTitle={val => persist({ display_title: val })}
       />
 
       <PlayerPanel
@@ -296,6 +301,9 @@ export default function AuctionPortal({ mode = 'host' }) {
         poolCount={poolCount}
         loading={loading}
         onRefresh={loadAll}
+        players={players}
+        onSelectSpecificPlayer={handleSelectSpecificPlayer}
+        onClear={handleClearPlayer}
       />
 
       <div className="vpl-team-panel-wrapper">

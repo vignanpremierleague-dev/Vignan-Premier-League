@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { RefreshCw, Users } from 'lucide-react'
-import { AUCTION_STAGES, AUCTION_TYPES, formatCr } from '../lib/auction'
+import { RefreshCw, Users, Search, Minus } from 'lucide-react'
+import { AUCTION_STAGES, AUCTION_TYPES, formatCr, formatName } from '../lib/auction'
 import SoldBanner from './SoldBanner'
 import { C, ROLE_LABEL, StatBox, Tag, btnNeutral } from './tokens'
 
-export default function PlayerPanel({ auctionState, activePlayer, currentBid, basePrice, soldCount, poolCount, loading, onRefresh }) {
+export default function PlayerPanel({ auctionState, activePlayer, currentBid, basePrice, soldCount, poolCount, loading, onRefresh, players, onSelectSpecificPlayer, onClear }) {
+  const [searchQuery, setSearchQuery] = useState('')
   const isLive = auctionState.stage === AUCTION_STAGES.LIVE
   const isSold = auctionState.stage === AUCTION_STAGES.SOLD
   const isUnsold = auctionState.stage === AUCTION_STAGES.UNSOLD
@@ -60,6 +62,51 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
         ))}
       </div>
 
+      {/* Action Bar (Search & Clear) */}
+      <div style={{ display: 'flex', gap: 12, padding: '12px 20px', borderBottom: `1px solid ${C.border}`, background: C.sidebar, position: 'relative', flexShrink: 0, alignItems: 'center' }}>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <Search size={14} color={C.textMuted} style={{ position: 'absolute', left: 12, top: 10 }} />
+          <input 
+            type="text" 
+            placeholder="Search player name or ID..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ width: '100%', padding: '8px 12px 8px 34px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#fff', fontSize: '.8rem', outline: 'none' }}
+          />
+          {searchQuery.length > 1 && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, maxHeight: 200, overflowY: 'auto', background: '#1a1a1a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+              {players?.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.registration_id && p.registration_id.toLowerCase().includes(searchQuery.toLowerCase()))).slice(0, 10).map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => { onSelectSpecificPlayer(p); setSearchQuery(''); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,.05)', color: p.auction_status === 'sold' ? '#888' : '#fff', fontSize: '.75rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.05)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span style={{ fontWeight: 600 }}>{formatName(p.name)} <span style={{ color: C.textMuted, fontSize: '.65rem', marginLeft: 6 }}>#{p.registration_id}</span></span>
+                  <span style={{ fontSize: '.65rem', background: p.auction_status === 'sold' ? 'rgba(255,255,255,.1)' : 'rgba(255,107,34,.2)', color: p.auction_status === 'sold' ? '#aaa' : '#ff6b22', padding: '2px 6px', borderRadius: 4 }}>{p.auction_status === 'sold' ? 'SOLD' : 'AVAILABLE'}</span>
+                </button>
+              ))}
+              {players?.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.registration_id && p.registration_id.toLowerCase().includes(searchQuery.toLowerCase()))).length === 0 && (
+                <div style={{ padding: '12px', color: '#666', fontSize: '.75rem', textAlign: 'center' }}>No matches found.</div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {activePlayer && isLive && (
+          <button
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,.1)', cursor: 'pointer', fontFamily: '"DM Sans"', fontWeight: 600, fontSize: '.8rem', background: 'transparent', color: '#8a8a8a', transition: 'all .15s', whiteSpace: 'nowrap' }}
+            onClick={onClear} disabled={loading}
+            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,.05)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#8a8a8a'; e.currentTarget.style.background = 'transparent' }}
+          >
+            <Minus size={14} />
+            Clear Display
+          </button>
+        )}
+      </div>
+
       {/* Player card area */}
       <div style={{ flex: 1, padding: '16px 20px 20px', overflow: 'hidden', display: 'flex' }}>
         {!activePlayer ? (
@@ -82,7 +129,7 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
 
             {/* Photo — fills full height */}
             <div style={{
-              width: 280, flexShrink: 0,
+              width: 370, flexShrink: 0,
               background: C.surface, borderRight: `1px solid ${C.border}`,
               position: 'relative', overflow: 'hidden',
             }}>
@@ -124,8 +171,8 @@ export default function PlayerPanel({ auctionState, activePlayer, currentBid, ba
 
               {/* Name */}
               <div>
-                <h2 style={{ margin: '0 0 4px', fontWeight: 900, fontSize: '2rem', color: C.text, lineHeight: 1.1, textTransform: 'capitalize' }}>
-                  {activePlayer.name}
+                <h2 style={{ margin: '0 0 4px', fontWeight: 900, fontSize: '2rem', color: C.text, lineHeight: 1.1 }}>
+                  {formatName(activePlayer.name)}
                 </h2>
                 <p style={{ margin: 0, fontSize: '.82rem', color: C.textSub }}>
                   Year {activePlayer.year} &bull; {activePlayer.branch} &bull; Sec {activePlayer.section}

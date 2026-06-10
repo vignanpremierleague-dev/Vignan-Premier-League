@@ -220,7 +220,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/public/players') {
     const { data, error } = await supabase
       .from('vpl_players')
-      .select('id, name, photo_url, role, is_captain, auction_status, sold_to, bid_amount, registration_id, year, branch, section')
+      .select('id, name, photo_url, role, is_captain, auction_status, registration_id, year, branch, section, vpl_auction_transactions(bid_amount, vpl_teams(name))')
       .eq('is_verified', true)
 
     if (error) {
@@ -228,16 +228,29 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    sendJson(res, 200, { players: data })
+    const players = (data || []).map(p => {
+      const tx = p.vpl_auction_transactions?.[0] || p.vpl_auction_transactions
+      const flat = { ...p }
+      delete flat.vpl_auction_transactions
+      if (tx && tx.vpl_teams) {
+        flat.sold_to = tx.vpl_teams.name || null
+        flat.bid_amount = tx.bid_amount || 0
+      } else {
+        flat.sold_to = null
+        flat.bid_amount = 0
+      }
+      return flat
+    })
+
+    sendJson(res, 200, { players })
     return
   }
 
   if (req.method === 'GET' && url.pathname === '/api/public/auction/state') {
-
     const { data, error } = await supabase
-      .from('vpl_site_settings')
-      .select('content')
-      .eq('slug', 'auction_state')
+      .from('vpl_auction_state')
+      .select('*')
+      .eq('id', 1)
       .maybeSingle()
 
     if (error) {
@@ -247,7 +260,7 @@ const server = http.createServer(async (req, res) => {
 
     const state = {
       ...defaultAuctionState,
-      ...(data?.content || {}),
+      ...(data || {}),
     }
     
     if (state.active_player_id) {
@@ -402,7 +415,7 @@ const server = http.createServer(async (req, res) => {
 
     const { data, error } = await supabase
       .from('vpl_players')
-      .select('*')
+      .select('*, vpl_auction_transactions(bid_amount, vpl_teams(name))')
       .order('registered_at', { ascending: false })
 
     if (error) {
@@ -410,7 +423,18 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    sendJson(res, 200, { players: data || [] })
+    const players = (data || []).map(p => {
+      const tx = p.vpl_auction_transactions?.[0] || p.vpl_auction_transactions
+      const flat = { ...p }
+      delete flat.vpl_auction_transactions
+      if (tx && tx.vpl_teams) {
+        flat.sold_to = tx.vpl_teams.name || null
+        flat.bid_amount = tx.bid_amount || 0
+      }
+      return flat
+    })
+
+    sendJson(res, 200, { players })
     return
   }
 
@@ -459,16 +483,16 @@ const server = http.createServer(async (req, res) => {
     const mergedState = {
       ...defaultAuctionState,
       ...state,
+      id: 1,
       updated_at: undefined,
     }
+    
+    // active_player is hydrated dynamically; it is not a database column.
+    delete mergedState.active_player
 
     const { error } = await supabase
-      .from('vpl_site_settings')
-      .upsert({
-        slug: 'auction_state',
-        content: mergedState,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'slug' })
+      .from('vpl_auction_state')
+      .upsert(mergedState, { onConflict: 'id' })
 
     if (error) {
       sendJson(res, 500, { error: error.message || 'Failed to update auction state.' })
@@ -485,6 +509,11 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    const { error: resetTxError } = await supabase
+      .from('vpl_auction_transactions')
+      .delete()
+      .not('id', 'is', null)
+
     const { error: resetPlayersError } = await supabase
       .from('vpl_players')
       .update({
@@ -500,12 +529,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     const { error: resetStateError } = await supabase
-      .from('vpl_site_settings')
-      .upsert({
-        slug: 'auction_state',
-        content: defaultAuctionState,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'slug' })
+      .from('vpl_auction_state')
+      .upsert({ ...defaultAuctionState, id: 1 }, { onConflict: 'id' })
 
     if (resetStateError) {
       sendJson(res, 500, { error: resetStateError.message || 'Failed to reset auction state.' })
@@ -736,6 +761,14 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    let auctionUpdate = null
+    if (updatePayload.sold_to !== undefined || updatePayload.bid_amount !== undefined) {
+      auctionUpdate = {
+        sold_to: updatePayload.sold_to,
+        bid_amount: updatePayload.bid_amount
+      }
+    }
+
     const { data, error } = await supabase
       .from('vpl_players')
       .update(updatePayload)
@@ -748,7 +781,37 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    sendJson(res, 200, { player: data })
+    if (auctionUpdate && auctionUpdate.sold_to) {
+       const { data: team } = await supabase.from('vpl_teams').select('id').eq('name', auctionUpdate.sold_to).single()
+       if (team) {
+          await supabase.from('vpl_auction_transactions').upsert({
+             player_id: id,
+             team_id: team.id,
+             bid_amount: auctionUpdate.bid_amount || 0,
+             is_captain_draft: data.is_captain
+          }, { onConflict: 'player_id' })
+       }
+    } else if (auctionUpdate && auctionUpdate.sold_to === null) {
+       await supabase.from('vpl_auction_transactions').delete().eq('player_id', id)
+    }
+
+    const { data: finalPlayer } = await supabase
+      .from('vpl_players')
+      .select('*, vpl_auction_transactions(bid_amount, vpl_teams(name))')
+      .eq('id', id)
+      .single()
+
+    if (finalPlayer) {
+      const tx = finalPlayer.vpl_auction_transactions?.[0] || finalPlayer.vpl_auction_transactions
+      delete finalPlayer.vpl_auction_transactions
+      if (tx && tx.vpl_teams) {
+        finalPlayer.sold_to = tx.vpl_teams.name || null
+        finalPlayer.bid_amount = tx.bid_amount || 0
+      }
+      sendJson(res, 200, { player: finalPlayer })
+    } else {
+      sendJson(res, 200, { player: data })
+    }
     return
   }
 

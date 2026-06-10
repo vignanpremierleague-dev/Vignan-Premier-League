@@ -390,7 +390,15 @@ export default function AdminDashboard() {
           )}
 
           {!loading && tab === 'teams' && siteSettings && (
-            <TeamsPanel players={players} siteSettings={siteSettings} />
+            <TeamsPanel
+              players={players}
+              setPlayers={setPlayers}
+              token={token}
+              handleUnauthorized={handleUnauthorized}
+              isCompact={isCompact}
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
+            />
           )}
 
           {!loading && tab === 'auction' && (
@@ -892,8 +900,8 @@ function buildCMSForm(settings) {
     heroSubtitle: source.heroSubtitle || 'T10 Format · IPL-Style Auction · Faculty Team Owners · Vignan Campus',
     heroPrimaryCtaLabel: source.heroPrimaryCtaLabel || 'Register Now',
     heroPrimaryCtaHref: source.heroPrimaryCtaHref || '/register',
-    heroSecondaryCtaLabel: source.heroSecondaryCtaLabel || 'Explore',
-    heroSecondaryCtaHref: source.heroSecondaryCtaHref || '#about',
+    heroSecondaryCtaLabel: source.heroSecondaryCtaLabel || 'View Teams',
+    heroSecondaryCtaHref: source.heroSecondaryCtaHref || '/teams',
     supportTitle: source.supportTitle || 'Need help?',
     supportDescription: source.supportDescription || 'Reach out for registration queries, rule clarifications, or anything about VPL 2025.',
     supportWhatsappLabel: source.supportWhatsappLabel || 'WhatsApp Group',
@@ -1494,8 +1502,8 @@ function SpotDetail({ label, value, color }) {
 /*  Schedule and Fixtures Panel                    */
 /* ─────────────────────────────────────────────── */
 const DEFAULT_TEAMS = {
-  A: Array.from({ length: 5 }, (_, i) => ({ name: `Team ${i + 1}`, p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' })),
-  B: Array.from({ length: 5 }, (_, i) => ({ name: `Team ${i + 6}`, p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' })),
+  A: Array.from({ length: 5 }, (_, i) => ({ name: `Team ${i + 1}`, ownerName: '', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' })),
+  B: Array.from({ length: 5 }, (_, i) => ({ name: `Team ${i + 6}`, ownerName: '', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' })),
 }
 const DEFAULT_MATCHES = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
@@ -1752,6 +1760,39 @@ function SchedulePanel({ settings, onSave, saving, isCompact, players }) {
            </div>
          </div>
       </div>
+      
+      {/* TEAM OWNERS MANAGER */}
+      <div style={{ background: '#111', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,.08)', marginBottom: 32 }}>
+         <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: 16 }}>Team Owners Mapping</h3>
+         
+         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+           {/* Group A Owners */}
+           <div>
+             <h4 style={{ color: '#ff6b22', fontSize: '.9rem', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Group A</h4>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {form.teams.A.map((t, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ color: '#aaa', fontSize: '.85rem', width: 120 }}>{t.name || `Team ${i+1}`}</div>
+                    <input value={t.ownerName || ''} onChange={e => handleGroupTeamUpdate('A', i, 'ownerName', e.target.value)} placeholder="Owner Name" style={{ ...compactInput, color: '#fff', flex: 1 }} />
+                  </div>
+                ))}
+             </div>
+           </div>
+
+           {/* Group B Owners */}
+           <div>
+             <h4 style={{ color: '#3b82f6', fontSize: '.9rem', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Group B</h4>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {form.teams.B.map((t, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ color: '#aaa', fontSize: '.85rem', width: 120 }}>{t.name || `Team ${i+6}`}</div>
+                    <input value={t.ownerName || ''} onChange={e => handleGroupTeamUpdate('B', i, 'ownerName', e.target.value)} placeholder="Owner Name" style={{ ...compactInput, color: '#fff', flex: 1 }} />
+                  </div>
+                ))}
+             </div>
+           </div>
+         </div>
+      </div>
 
       {/* FIXTURES MANAGER */}
       <div style={{ background: '#111', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,.08)', marginBottom: 32 }}>
@@ -1891,45 +1932,7 @@ function SchedulePanel({ settings, onSave, saving, isCompact, players }) {
         </div>
       </div>
 
-      <div style={{ background: '#111', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,.08)' }}>
-        <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: 8 }}>Auction Team Squads</h3>
-        <p style={{ color: '#7a7a7a', fontSize: '.82rem', marginBottom: 18 }}>Captains, full player list, spend, and purse balance are derived from the live auction data.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-          {teamNames.map((teamName) => {
-            const roster = rosterMap[teamName] || { roster: [], captain: null, spend: 0, remainingPurse: 100, squadCount: 0 }
-            return (
-              <div key={teamName} style={{ background: '#171717', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, padding: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 14 }}>
-                  <div>
-                    <div style={{ color: '#fff', fontWeight: 700, fontSize: '.98rem' }}>{teamName}</div>
-                    <div style={{ color: '#7a7a7a', fontSize: '.75rem', marginTop: 4 }}>Captain: {roster.captain?.name || 'Not assigned'}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#ffb800', fontWeight: 800, fontSize: '.82rem' }}>{formatCr(roster.spend)}</div>
-                    <div style={{ color: '#55d79a', fontSize: '.75rem', marginTop: 4 }}>{formatCr(roster.remainingPurse)} left</div>
-                  </div>
-                </div>
-                <div style={{ color: '#9a9a9a', fontSize: '.74rem', marginBottom: 10 }}>Squad: {roster.squadCount}/12</div>
-                {roster.roster.length ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {roster.roster.map((player) => (
-                      <div key={player.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', background: '#101010', borderRadius: 10, padding: '10px 12px' }}>
-                        <div style={{ color: '#efefef', fontSize: '.83rem' }}>
-                          {player.name}
-                          {player.is_captain ? ' (C)' : ''}
-                        </div>
-                        <div style={{ color: '#ffb800', fontFamily: 'monospace', fontSize: '.8rem' }}>{formatCr(player.bid_amount)}</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ color: '#5a5a5a', fontSize: '.8rem' }}>No players assigned yet.</div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
+
     </div>
   )
 }
@@ -2047,7 +2050,7 @@ function EditPlayersPanel({ players, setPlayers, token, handleUnauthorized, isCo
 /* ─────────────────────────────────────────────── */
 /*  Player Editor Modal                            */
 /* ─────────────────────────────────────────────── */
-function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlayers, isCompact, siteSettings, setSiteSettings }) {
+export function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlayers, isCompact, siteSettings, setSiteSettings }) {
   const [form, setForm] = useState({ ...player })
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -2097,6 +2100,8 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
         photo_url: form.photo_url,
         is_verified: form.is_verified,
         is_captain: form.is_captain,
+        sold_to: form.sold_to,
+        bid_amount: form.bid_amount,
         }),
         updateSiteSettings(token, nextSettings),
       ])
@@ -2191,6 +2196,35 @@ function PlayerEditorModal({ player, token, onClose, handleUnauthorized, setPlay
                 <p style={{ color: '#6a6a6a', fontSize: '.72rem', marginTop: 6 }}>
                   Current defaults: captains {formatCr(auctionConfig.captainBasePrice)}, players {formatCr(auctionConfig.playerBasePrice)}.
                 </p>
+              </label>
+            </div>
+
+            {/* Auction Override Controls */}
+            <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: 14, marginTop: 4, paddingTop: 14, borderTop: '1px solid rgba(255,107,34,.15)' }}>
+              <label>
+                <span style={{ display: 'block', color: '#f5a100', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Sold To (Team Override)</span>
+                <select
+                  value={form.sold_to || ''}
+                  onChange={e => handleFieldChange('sold_to', e.target.value || null)}
+                  style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(245,161,0,.3)', borderRadius: 8, color: form.sold_to ? '#f5a100' : '#8a8a8a', fontSize: '.9rem', outline: 'none' }}
+                >
+                  <option value="">-- Unsold / Available --</option>
+                  {Object.values(siteSettings?.teams || {}).flat().map(t => (
+                    <option key={t.name} value={t.name}>{t.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span style={{ display: 'block', color: '#f5a100', fontSize: '.78rem', marginBottom: 6, fontWeight: 600 }}>Sold Price Override (Cr)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.bid_amount || 0}
+                  onChange={e => handleFieldChange('bid_amount', Number(e.target.value))}
+                  disabled={!form.sold_to}
+                  style={{ width: '100%', padding: 11, background: '#111', border: '1px solid rgba(245,161,0,.3)', borderRadius: 8, color: form.sold_to ? '#f5a100' : '#5a5a5a', fontSize: '.9rem', outline: 'none', opacity: !form.sold_to ? 0.5 : 1 }}
+                />
               </label>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Flame, Gavel, Users, Tv } from 'lucide-react'
-import { AUCTION_STAGES, AUCTION_TYPE_COLOR, AUCTION_TYPE_LABEL, formatCr, getEligiblePlayers } from '../lib/auction'
+import { Flame, Gavel, Users, Tv, PanelLeft, PanelRight } from 'lucide-react'
+import { AUCTION_STAGES, AUCTION_TYPE_COLOR, AUCTION_TYPE_LABEL, formatCr, getEligiblePlayers, formatName } from '../lib/auction'
 import SoldBanner from './SoldBanner'
 import TeamPanel  from './TeamPanel'
 import { C, ROLE_LABEL, ROLE_COLOR } from './tokens'
@@ -32,7 +32,7 @@ function RoundBadge({ auctionType }) {
 }
 
 // ─── Sidebar (shared, width controlled by caller) ────────────────────────────
-function Sidebar({ auctionState, poolCount, soldCount, poolPlayers, width = 280 }) {
+function Sidebar({ auctionState, poolCount, soldCount, poolPlayers, width = 280, hideHeader }) {
   return (
     <aside style={{
       width, flexShrink: 0, height: '100%',
@@ -40,10 +40,12 @@ function Sidebar({ auctionState, poolCount, soldCount, poolPlayers, width = 280 
       display: 'flex', flexDirection: 'column', overflow: 'hidden',
     }}>
       {/* Header */}
-      <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-        <Flame size={16} color={C.orange} />
-        <span style={{ fontWeight: 800, fontSize: '1rem', color: C.text, fontFamily: '"Syne",sans-serif' }}>VPL Live</span>
-      </div>
+      {!hideHeader && (
+        <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <Flame size={16} color={C.orange} />
+          <span style={{ fontWeight: 800, fontSize: '1rem', color: C.text, fontFamily: '"Syne",sans-serif' }}>VPL Live</span>
+        </div>
+      )}
 
       {/* Body */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '14px 14px', gap: 16, overflow: 'hidden' }}>
@@ -69,7 +71,7 @@ function Sidebar({ auctionState, poolCount, soldCount, poolPlayers, width = 280 
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
             {poolPlayers.map(p => (
               <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: 'rgba(255,255,255,.03)', borderRadius: 5, border: `1px solid rgba(255,255,255,.04)`, minWidth: 0 }}>
-                <span style={{ fontSize: '.76rem', fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 6, textTransform: 'capitalize' }}>{p.name}</span>
+                <span style={{ fontSize: '.76rem', fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 6 }}>{formatName(p.name)}</span>
                 <span style={{ fontSize: '.62rem', color: C.textMuted, fontFamily: 'monospace', flexShrink: 0 }}>{p.registration_id}</span>
               </div>
             ))}
@@ -109,7 +111,7 @@ function PlayerCard({ activePlayer, currentBid, basePrice, auctionState }) {
       style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}
     >
       {/* Photo — left panel, fills full height */}
-      <div style={{ width: '38%', maxWidth: 400, flexShrink: 0, position: 'relative', background: C.surface, borderRight: `1px solid ${C.border}`, overflow: 'hidden' }}>
+      <div style={{ width: '78%', maxWidth: 400, flexShrink: 0, position: 'relative', background: C.surface, borderRight: `1px solid ${C.border}`, overflow: 'hidden' }}>
         {activePlayer.photo_url
           ? <img src={activePlayer.photo_url} alt={activePlayer.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={64} color={C.textMuted} style={{ opacity: 0.15 }} /></div>
@@ -138,8 +140,8 @@ function PlayerCard({ activePlayer, currentBid, basePrice, auctionState }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(24px,4vw,48px)', gap: 24, overflow: 'auto', minWidth: 0 }}>
         {/* Name */}
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontWeight: 900, fontSize: 'clamp(1.5rem,3vw,2.8rem)', margin: '0 0 6px', color: C.text, lineHeight: 1.1, textTransform: 'capitalize', wordBreak: 'break-word' }}>
-            {activePlayer.name}
+          <h1 style={{ fontWeight: 900, fontSize: 'clamp(1.5rem,3vw,2.8rem)', margin: '0 0 6px', color: C.text, lineHeight: 1.1, wordBreak: 'break-word' }}>
+            {formatName(activePlayer.name)}
           </h1>
           <p style={{ color: C.textSub, fontSize: '.9rem', margin: 0 }}>
             Year {activePlayer.year} · {activePlayer.branch?.toUpperCase?.()} · Sec {activePlayer.section?.toUpperCase?.()}
@@ -179,6 +181,37 @@ function PlayerCard({ activePlayer, currentBid, basePrice, auctionState }) {
   )
 }
 
+function TopNav({ title, onToggleLeft, onToggleRight }) {
+  return (
+    <div style={{ width: '100%', height: 64, background: C.sidebar, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0, zIndex: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {onToggleLeft && (
+          <button onClick={onToggleLeft} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.textSub, padding: 4, display: 'flex', alignItems: 'center' }}>
+            <PanelLeft size={28} />
+          </button>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Flame size={20} color={C.orange} />
+          <span style={{ fontWeight: 900, fontSize: '1.2rem', color: C.text, fontFamily: '"Syne",sans-serif', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+            {title || 'VPL Live Auction'}
+          </span>
+        </div>
+      </div>
+      {onToggleRight && (
+        <button onClick={onToggleRight} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.textSub, padding: 4, display: 'flex', alignItems: 'center' }}>
+          <PanelRight size={20} />
+        </button>
+      )}
+    </div>
+  )
+}
+
+function BottomFooter() {
+  return (
+    <div style={{ width: '100%', height: 64, background: C.sidebar, borderTop: `1px solid ${C.border}`, flexShrink: 0, zIndex: 10 }}></div>
+  )
+}
+
 // ─── Root component ───────────────────────────────────────────────────────────
 export default function AuctionDisplay({
   auctionState, activePlayer, currentBid, basePrice,
@@ -186,9 +219,16 @@ export default function AuctionDisplay({
   players = [], teamNames = [], rosterMap = {},
 }) {
   const [mobileTab, setMobileTab] = useState('live')
+  const [leftOpen, setLeftOpen] = useState(true)
+  const [rightOpen, setRightOpen] = useState(true)
   const poolPlayers = getEligiblePlayers(players, auctionState.auction_type)
 
   const rootStyle = { height: '100vh', width: '100vw', overflow: 'hidden', background: C.bg, color: C.text, fontFamily: '"DM Sans",system-ui,sans-serif' }
+
+  const customSubtitle = auctionState.display_title && auctionState.display_title !== 'VPL Captains Auction' 
+    ? ` • ${auctionState.display_title.toUpperCase()}` 
+    : ''
+  const dynamicTitle = `VPL ${AUCTION_TYPE_LABEL[auctionState.auction_type]?.toUpperCase() || ''} AUCTION${customSubtitle}`
 
   // Not public yet
   if (auctionState.is_public_visible === false) {
@@ -237,26 +277,38 @@ export default function AuctionDisplay({
       </div>
 
       {/* ── Tablet (640–1023px): sidebar + player card ───────────────────────── */}
-      <div className="ad-tablet" style={rootStyle}>
-        <Sidebar {...poolProps} width={240} />
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
-          <AnimatePresence mode="wait">
-            <PlayerCard key={activePlayer?.id ?? 'idle'} {...sharedProps} />
-          </AnimatePresence>
+      <div className="ad-tablet" style={{ ...rootStyle, flexDirection: 'column' }}>
+        <TopNav title={dynamicTitle} onToggleLeft={() => setLeftOpen(!leftOpen)} />
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, width: '100%' }}>
+          <motion.div initial={false} animate={{ width: leftOpen ? 252 : 0, opacity: leftOpen ? 1 : 0 }} style={{ overflow: 'hidden', flexShrink: 0 }}>
+            <Sidebar {...poolProps} width={252} hideHeader />
+          </motion.div>
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
+            <AnimatePresence mode="wait">
+              <PlayerCard key={activePlayer?.id ?? 'idle'} {...sharedProps} />
+            </AnimatePresence>
+          </div>
         </div>
+        <BottomFooter />
       </div>
 
       {/* ── Desktop (≥1024px): sidebar + player card + TeamPanel ─────────────── */}
-      <div className="ad-desktop" style={rootStyle}>
-        <Sidebar {...poolProps} width={280} />
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
-          <AnimatePresence mode="wait">
-            <PlayerCard key={activePlayer?.id ?? 'idle'} {...sharedProps} />
-          </AnimatePresence>
+      <div className="ad-desktop" style={{ ...rootStyle, flexDirection: 'column' }}>
+        <TopNav title={dynamicTitle} onToggleLeft={() => setLeftOpen(!leftOpen)} onToggleRight={() => setRightOpen(!rightOpen)} />
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, width: '100%' }}>
+          <motion.div initial={false} animate={{ width: leftOpen ? 292 : 0, opacity: leftOpen ? 1 : 0 }} style={{ overflow: 'hidden', flexShrink: 0 }}>
+            <Sidebar {...poolProps} width={292} hideHeader />
+          </motion.div>
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
+            <AnimatePresence mode="wait">
+              <PlayerCard key={activePlayer?.id ?? 'idle'} {...sharedProps} />
+            </AnimatePresence>
+          </div>
+          <motion.div initial={false} animate={{ width: rightOpen ? 322 : 0, opacity: rightOpen ? 1 : 0 }} style={{ overflow: 'hidden', flexShrink: 0, borderLeft: rightOpen ? `1px solid ${C.border}` : 'none' }}>
+            <TeamPanel teamNames={teamNames} rosterMap={rosterMap} defaultExpanded />
+          </motion.div>
         </div>
-        <div style={{ borderLeft: `1px solid ${C.border}`, flexShrink: 0, height: '100%', overflow: 'hidden' }}>
-          <TeamPanel teamNames={teamNames} rosterMap={rosterMap} defaultExpanded />
-        </div>
+        <BottomFooter />
       </div>
     </>
   )

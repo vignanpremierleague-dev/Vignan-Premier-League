@@ -9,6 +9,7 @@ import ContactPage    from './pages/ContactPage'
 import MainSite       from './MainSite'
 import SiteBlockGate  from './components/SiteBlockGate'
 import AuctionPortal  from './pages/AuctionPortal'
+import TeamsPublic    from './pages/TeamsPublic'
 
 function ProtectedAdmin() {
   if (!localStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
@@ -28,6 +29,7 @@ export default function App() {
       <SiteBlockGate>
         <Routes>
           <Route path="/"                element={<MainSite />} />
+          <Route path="/teams"           element={<TeamsPublic />} />
           <Route path="/team"            element={<Team />} />
           <Route path="/rules"           element={<RulesPage />} />
           <Route path="/schedule"        element={<SchedulesPage />} />

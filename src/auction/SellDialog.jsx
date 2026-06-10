@@ -1,17 +1,33 @@
+import { useState } from 'react'
 import { formatCr } from '../lib/auction'
 import { C, btnNeutral } from './tokens'
+import ConfirmationModal from '../components/ConfirmationModal'
 
 export default function SellDialog({ open, player, currentBid, availableTeams, onSell, onClose }) {
+  const [confirmTeam, setConfirmTeam] = useState(null)
+
   if (!open || !player) return null
+
+  const handleClose = () => {
+    setConfirmTeam(null)
+    onClose()
+  }
+
+  const handleSell = () => {
+    onSell(confirmTeam)
+    setConfirmTeam(null)
+  }
+
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(0,0,0,.65)', backdropFilter: 'blur(5px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-      }}
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
+    <>
+      <div
+        style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'rgba(0,0,0,.65)', backdropFilter: 'blur(5px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        }}
+        onClick={e => e.target === e.currentTarget && handleClose()}
+      >
       <div style={{
         background: C.sidebar, border: `1px solid ${C.borderMid}`,
         borderRadius: 12, width: '100%', maxWidth: 420, padding: 26,
@@ -25,7 +41,7 @@ export default function SellDialog({ open, player, currentBid, availableTeams, o
           {availableTeams.length > 0 ? availableTeams.map(t => (
             <button
               key={t.teamName}
-              onClick={() => onSell(t.teamName)}
+              onClick={() => setConfirmTeam(t.teamName)}
               style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 padding: '12px 16px', borderRadius: 8, cursor: 'pointer',
@@ -44,8 +60,18 @@ export default function SellDialog({ open, player, currentBid, availableTeams, o
             </div>
           )}
         </div>
-        <button style={{ ...btnNeutral, width: '100%' }} onClick={onClose}>Cancel</button>
+        <button style={{ ...btnNeutral, width: '100%' }} onClick={handleClose}>Cancel</button>
       </div>
     </div>
+    
+    <ConfirmationModal
+      isOpen={!!confirmTeam}
+      title="Verify Sale"
+      message={<>Are you absolutely sure you want to sell <strong>{player.name}</strong> to the <strong style={{ color: '#ff6b22' }}>{confirmTeam}</strong> for <strong>{formatCr(currentBid)}</strong>?</>}
+      verifyTextRaw="SOLD"
+      onConfirm={handleSell}
+      onCancel={() => setConfirmTeam(null)}
+    />
+    </>
   )
 }

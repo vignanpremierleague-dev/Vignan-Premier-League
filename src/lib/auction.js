@@ -118,7 +118,6 @@ export function getEligiblePlayers(players, auctionType) {
         && player.auction_status !== 'sold'
         && player.auction_status !== 'unsold'
     }
-    // For role-specific categories filter by role; for legacy PLAYERS type show all non-captains
     const role = AUCTION_TYPE_ROLE[auctionType]
     const matchesRole = role ? player.role === role : !player.is_captain
     return matchesRole
@@ -126,6 +125,11 @@ export function getEligiblePlayers(players, auctionType) {
       && player.auction_status !== 'sold'
       && player.auction_status !== 'unsold'
   })
+}
+
+export function formatName(name) {
+  if (!name) return ''
+  return name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
 
 export function getAvailableTeamsForSale(rosterMap, auctionType, finalPrice) {

@@ -66,7 +66,7 @@ function TeamCard({ teamName, team, defaultExpanded }) {
 export default function TeamPanel({ teamNames, rosterMap, defaultExpanded = false, fullWidth = false }) {
   return (
     <aside style={{
-      width: fullWidth ? '100%' : 310,
+      width: fullWidth ? '100%' : 322,
       flexShrink: 0,
       background: C.sidebar,
       display: 'flex', flexDirection: 'column',

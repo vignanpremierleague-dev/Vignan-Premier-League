@@ -4,6 +4,7 @@ import { fetchSiteSettings } from '../lib/adminApi'
 
 const links = [
   { label: 'Home',        href: '/',         route: true  },
+  { label: 'Teams',       href: '/teams',    route: true  },
   { label: 'Dignitaries', href: '/team',     route: true  },
   { label: 'Rules',       href: '/rules',    route: true  },
   { label: 'Schedule',    href: '/schedule', route: true  },
