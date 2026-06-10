@@ -36,7 +36,7 @@ export default function App() {
           <Route path="/admin"           element={<AdminLogin />} />
           <Route path="/dboard"          element={<ProtectedAdmin />} />
           <Route path="/admin/auction"   element={<ProtectedAdminAuction />} />
-          <Route path="/auction-display" element={<AuctionPortal mode="display" />} />
+          <Route path="/auction" element={<AuctionPortal mode="display" />} />
           <Route path="*"                element={<Navigate to="/" replace />} />
         </Routes>
       </SiteBlockGate>
