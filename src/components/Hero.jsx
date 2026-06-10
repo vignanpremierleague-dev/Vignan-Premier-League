@@ -93,7 +93,7 @@ export default function Hero({ settings, topOffset = 0 }) {
         <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
           {settings?.registrationsOpen === false ? (
             <>
-              <a href="/auction-display" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = '/auction-display' }}>
+              <a href="/auction" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = '/auction' }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', display: 'inline-block', flexShrink: 0, animation: 'flicker .9s ease-in-out infinite' }} />
                 View Live Auction &rarr;
               </a>
@@ -106,7 +106,7 @@ export default function Hero({ settings, topOffset = 0 }) {
               <a href={primaryHref} className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = primaryHref }}>
                 <Flame style={{ width: 16, height: 16 }} /> {primaryLabel}
               </a>
-              <a href="/auction-display" className="btn-ghost hero-btn-ghost" onClick={e => { e.preventDefault(); window.location.href = '/auction-display' }}>
+              <a href="/auction" className="btn-ghost hero-btn-ghost" onClick={e => { e.preventDefault(); window.location.href = '/auction' }}>
                 <Flame style={{ width: 14, height: 14 }} /> View Live Auction &rarr;
               </a>
             </>
