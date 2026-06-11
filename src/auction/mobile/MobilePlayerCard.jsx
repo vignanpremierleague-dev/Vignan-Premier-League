@@ -36,7 +36,7 @@ function PlayerCard({ activePlayer, currentBid, basePrice, auctionState }) {
       style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
     >
       {/* Photo — capped so bottom nav tabs stay visible */}
-      <div style={{ flex: 1, minHeight: 0, maxHeight: 'calc(100dvh - 52px - 60px - 76px)', position: 'relative', background: C.surface, overflow: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, maxHeight: 'calc(100dvh - 52px - 60px - 76px - 24px)', position: 'relative', background: C.surface, overflow: 'hidden' }}>
         {activePlayer.photo_url ? (
           <img
             src={activePlayer.photo_url}

@@ -274,6 +274,7 @@ export default function AuctionDisplay({
           {mobileTab === 'teams' && <MobileTeamsTab teamNames={teamNames} rosterMap={rosterMap} />}
         </div>
         <MobileBottomNav activeTab={mobileTab} onTabChange={setMobileTab} />
+        <div style={{ height: 24, flexShrink: 0, background: 'rgba(11,11,11,0.97)' }} />
       </div>
 
       {/* ── Tablet (640–1023px): sidebar + player card ───────────────────────── */}
