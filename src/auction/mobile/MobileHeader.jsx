@@ -1,9 +1,10 @@
 import { Flame } from 'lucide-react'
-import { AUCTION_STAGES } from '../../lib/auction'
+import { AUCTION_STAGES, AUCTION_TYPE_LABEL } from '../../lib/auction'
 import { C } from '../tokens'
 
-export default function MobileHeader({ stage }) {
+export default function MobileHeader({ stage, auctionType }) {
   const isLive = stage === AUCTION_STAGES.LIVE
+  const typeLabel = AUCTION_TYPE_LABEL[auctionType] || 'Auction'
 
   return (
     <div style={{
@@ -22,7 +23,10 @@ export default function MobileHeader({ stage }) {
           color: C.text, letterSpacing: '.08em',
           fontFamily: '"Syne", sans-serif',
           lineHeight: 1, textTransform: 'uppercase',
-        }}>VPL Live</span>
+        }}>
+          VPL
+          <span style={{ color: C.textSub, fontWeight: 500, letterSpacing: '.04em', marginLeft: 6 }}>· {typeLabel}</span>
+        </span>
       </div>
 
       <div style={{

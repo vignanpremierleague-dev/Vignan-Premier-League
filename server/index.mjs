@@ -220,7 +220,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/public/players') {
     const { data, error } = await supabase
       .from('vpl_players')
-      .select('id, name, photo_url, role, is_captain, auction_status, registration_id, year, branch, section, vpl_auction_transactions(bid_amount, vpl_teams(name))')
+      .select('id, name, photo_url, role, is_captain, auction_status, registration_id, year, branch, section, batting_side, bowling_arm, bowling_type, vpl_auction_transactions(bid_amount, vpl_teams(name))')
       .eq('is_verified', true)
 
     if (error) {

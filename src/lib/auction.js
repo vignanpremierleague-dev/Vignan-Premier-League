@@ -65,7 +65,8 @@ export function getAuctionConfig(settings) {
   const config = settings?.auctionConfig || {}
   return {
     captainBasePrice: safeNumber(config.captainBasePrice) || 3,
-    playerBasePrice: safeNumber(config.playerBasePrice) || 1,
+    // Minimum 50L (0.5 Cr) for all non-captain players
+    playerBasePrice: Math.max(safeNumber(config.playerBasePrice) || 0.5, 0.5),
     playerBasePriceOverrides: typeof config.playerBasePriceOverrides === 'object' && config.playerBasePriceOverrides
       ? config.playerBasePriceOverrides
       : {},
@@ -171,6 +172,11 @@ export function getPlayerBasePrice(player, settings) {
 
 export function formatCr(value) {
   const amount = safeNumber(value)
+  if (amount < 1) {
+    // Show as Lakhs: 0.5 → "50L", 0.05 → "5L"
+    const lakhs = Math.round(amount * 100)
+    return `${lakhs}L`
+  }
   const fixed = amount % 1 === 0 ? amount.toFixed(0) : amount.toFixed(2).replace(/\.?0+$/, '')
   return `${fixed} Cr`
 }
@@ -183,4 +189,17 @@ export function safeNumber(value) {
 export function clampCurrency(value) {
   // Allow up to 2 decimal places to support 0.25 / 0.50 Cr bid steps
   return Math.max(0, Math.round(safeNumber(value) * 100) / 100)
+}
+
+/**
+ * Returns the bid increment step (in Cr) for the given current bid.
+ *  50L → 1Cr  : +5L  (0.05)
+ *  1Cr → 2Cr  : +10L (0.10)
+ *  2Cr+        : +25L (0.25)
+ */
+export function getBidStep(currentBid) {
+  const bid = safeNumber(currentBid)
+  if (bid < 1)  return 0.05
+  if (bid < 2)  return 0.10
+  return 0.25
 }

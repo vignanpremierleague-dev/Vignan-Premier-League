@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
 import { formatCr } from '../lib/auction'
 import { C } from './tokens'
 
@@ -63,7 +63,7 @@ function TeamCard({ teamName, team, defaultExpanded }) {
   )
 }
 
-export default function TeamPanel({ teamNames, rosterMap, defaultExpanded = false, fullWidth = false }) {
+export default function TeamPanel({ teamNames, rosterMap, defaultExpanded = false, fullWidth = false, isOpen, onToggle }) {
   return (
     <aside style={{
       width: fullWidth ? '100%' : 322,
@@ -74,9 +74,22 @@ export default function TeamPanel({ teamNames, rosterMap, defaultExpanded = fals
       height: fullWidth ? 'auto' : '100%',
     }}>
       {!fullWidth && (
-        <div style={{ padding: '13px 18px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: '.9rem', color: C.text }}>Team Trackers</div>
-          <div style={{ fontSize: '.73rem', color: C.textMuted, marginTop: 1 }}>Purse &amp; squad status</div>
+        <div style={{ height: 48, display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+          <button
+            onClick={onToggle}
+            title={isOpen ? 'Collapse panel' : 'Expand panel'}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.textSub, padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', transition: 'color .15s' }}
+            onMouseEnter={e => e.currentTarget.style.color = C.text}
+            onMouseLeave={e => e.currentTarget.style.color = C.textSub}
+          >
+            {isOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+          {isOpen && (
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '.88rem', color: C.text }}>Team Tracker</div>
+              <div style={{ fontSize: '.68rem', color: C.textMuted }}>Purse &amp; squad status</div>
+            </div>
+          )}
         </div>
       )}
 

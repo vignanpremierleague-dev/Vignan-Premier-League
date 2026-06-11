@@ -36,7 +36,7 @@ function PlayerCard({ activePlayer, currentBid, basePrice, auctionState }) {
       style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
     >
       {/* Photo — capped so bottom nav tabs stay visible */}
-      <div style={{ flex: 1, minHeight: 0, maxHeight: 'calc(100dvh - 52px - 60px - 76px - 24px)', position: 'relative', background: C.surface, overflow: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, maxHeight: 'calc(100dvh - 52px - 60px - 76px - 64px)', position: 'relative', background: C.surface, overflow: 'hidden' }}>
         {activePlayer.photo_url ? (
           <img
             src={activePlayer.photo_url}
@@ -80,6 +80,21 @@ function PlayerCard({ activePlayer, currentBid, basePrice, auctionState }) {
             Year {activePlayer.year} · {activePlayer.branch?.toUpperCase?.()} · Sec {activePlayer.section?.toUpperCase?.()}
             <span style={{ marginLeft: 8, fontFamily: 'monospace', opacity: 0.7 }}>#{activePlayer.registration_id}</span>
           </p>
+          {/* Attribute chips */}
+          {(activePlayer.batting_side || activePlayer.bowling_arm) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 7 }}>
+              {activePlayer.batting_side && (
+                <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(59,130,246,.18)', border: '1px solid rgba(59,130,246,.35)', color: '#93c5fd', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+                  {activePlayer.batting_side} Hand Bat
+                </span>
+              )}
+              {activePlayer.bowling_arm && (
+                <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', color: '#fca5a5', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+                  {activePlayer.bowling_arm} Arm{activePlayer.bowling_type ? ` · ${activePlayer.bowling_type.replace(/_/g, ' ')}` : ''}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

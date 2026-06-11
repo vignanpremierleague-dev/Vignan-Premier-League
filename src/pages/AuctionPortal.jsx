@@ -10,7 +10,7 @@ import {
   AUCTION_STAGES, AUCTION_TYPES, DEFAULT_AUCTION_STATE,
   buildRosterMap, clampCurrency, createRandomNomination,
   getAuctionConfig, getAvailableTeamsForSale, getEligiblePlayers,
-  getPlayerBasePrice, getTeamsFromSettings, mergeAuctionState,
+  getPlayerBasePrice, getTeamsFromSettings, mergeAuctionState, getBidStep,
 } from '../lib/auction'
 import { readAuctionSnapshot, subscribeAuctionSnapshot, writeAuctionSnapshot, cacheDisplayPlayer, readCachedDisplayPlayer } from '../lib/auctionSync'
 
@@ -35,7 +35,7 @@ export default function AuctionPortal({ mode = 'host' }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [sellOpen, setSellOpen] = useState(false)
-  const [bidStep, setBidStep] = useState(0.25)
+  const [bidStep, setBidStep] = useState(() => getBidStep(0.5))
 
   const channelRef = useRef(null)
 
@@ -53,18 +53,29 @@ export default function AuctionPortal({ mode = 'host' }) {
     return getPlayerBasePrice(activePlayer, siteSettings)
   }, [activePlayer, auctionState.auction_type, auctionConfig, siteSettings])
 
-  const currentBid = Math.max(clampCurrency(auctionState.current_bid), basePrice || 0)
+  const currentBid = activePlayer
+    ? Math.max(clampCurrency(auctionState.current_bid), basePrice || 0)
+    : (basePrice || 0)
+
+  // Auto-update bid step when bid crosses a tier boundary
+  useEffect(() => { setBidStep(getBidStep(currentBid)) }, [currentBid])
 
   const resolveActivePlayer = useCallback((nextPlayers, nextState, fallback = null) => {
     const list = Array.isArray(nextPlayers) ? nextPlayers : playersRef.current
     const matched = nextState?.active_player_id ? list.find(p => p.id === nextState.active_player_id) : null
-    const next = matched || nextState?.active_player || fallback || null
+    // Merge: use state's active_player as the base (has all DB fields from select('*')),
+    // then overlay matched (from local player list) on top to get fresher auction_status etc.
+    // This prevents partial players list fetches from dropping fields like batting_side.
+    const statePlayer = nextState?.active_player || null
+    const next = matched
+      ? { ...(statePlayer ?? {}), ...matched }
+      : (statePlayer || fallback || null)
     setActivePlayer(prev => {
       if (!prev && !next) return null
       // Keep prev if state still references the same player but we can't resolve them from the list
       if (!next && nextState?.active_player_id && prev?.id === nextState.active_player_id) return prev
       if (!prev || !next) return next
-      if (prev.id === next.id) return prev
+      if (prev.id === next.id) return next  // always apply fresh merged data
       return next
     })
   }, [])

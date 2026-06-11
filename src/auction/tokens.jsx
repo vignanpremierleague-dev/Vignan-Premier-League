@@ -36,7 +36,7 @@ export const ROLE_COLOR = {
   captains:              '#f5a100',
 }
 
-export const BID_STEPS = [0.25, 0.5, 0.75, 1]
+export const BID_STEPS = [0.05, 0.10, 0.25]
 
 // Matches admin panel nav button style exactly
 export function navBtn(active) {
