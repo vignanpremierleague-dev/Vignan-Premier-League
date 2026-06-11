@@ -18,9 +18,10 @@ export default function MobileHeader({ stage }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Flame size={17} color={C.orange} />
         <span style={{
-          fontWeight: 800, fontSize: '1rem',
-          color: C.text, letterSpacing: '.02em',
+          fontWeight: 600, fontSize: '1rem',
+          color: C.text, letterSpacing: '.08em',
           fontFamily: '"Syne", sans-serif',
+          lineHeight: 1, textTransform: 'uppercase',
         }}>VPL Live</span>
       </div>
 
