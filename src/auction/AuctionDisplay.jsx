@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Flame, Gavel, Users, Tv, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Flame, Gavel, Users, Tv, ChevronRight } from 'lucide-react'
 import { AUCTION_STAGES, AUCTION_TYPE_COLOR, AUCTION_TYPE_LABEL, formatCr, getEligiblePlayers, formatName } from '../lib/auction'
 import SoldBanner from './SoldBanner'
 import TeamPanel  from './TeamPanel'
@@ -12,79 +12,142 @@ import MobilePoolTab   from './mobile/MobilePoolTab'
 import MobileTeamsTab  from './mobile/MobileTeamsTab'
 import MobileBottomNav from './mobile/MobileBottomNav'
 
-// ─── Round badge (colored dot + label) ───────────────────────────────────────
-function RoundBadge({ auctionType }) {
-  const color = AUCTION_TYPE_COLOR[auctionType] || C.orange
-  const label = AUCTION_TYPE_LABEL[auctionType] || 'Players'
+// ─── Accordion team card (desktop side columns) ───────────────────────────────
+function DesktopTeamCard({ teamName, team }) {
+  const [expanded, setExpanded] = useState(false)
+  const pct = Math.round((team.squadCount / 12) * 100)
+
   return (
     <div style={{
-      display: 'inline-flex', alignItems: 'center', gap: 8,
-      padding: '6px 12px', borderRadius: 8,
-      background: `${color}14`, border: `1px solid ${color}40`,
+      background: C.surface, border: `1px solid ${C.border}`,
+      borderRadius: 9, overflow: 'hidden', flexShrink: 0,
     }}>
-      <span style={{
-        width: 8, height: 8, borderRadius: 2, flexShrink: 0,
-        background: color, boxShadow: `0 0 6px ${color}80`,
-      }} />
-      <span style={{ fontWeight: 700, fontSize: '.82rem', color }}>{label}</span>
+      {/* Header — click to toggle */}
+      <div
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 14px', background: C.surface3,
+          borderBottom: (expanded && team.roster.length > 0) ? `1px solid ${C.border}` : 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+          {/* Chevron */}
+          <ChevronRight size={14} color={C.textMuted} style={{ flexShrink: 0, transition: 'transform .2s', transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 800, fontSize: '.95rem', color: C.text, letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>{teamName}</div>
+            <div style={{ fontSize: '.72rem', color: team.captain ? C.gold : C.textMuted, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>
+              {team.captain ? `⭐ ${team.captain.name}` : 'No captain'}
+            </div>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 10 }}>
+          <div style={{ fontWeight: 900, fontSize: '1.05rem', color: C.orange }}>{formatCr(team.remainingPurse)}</div>
+          <div style={{ fontSize: '.75rem', color: C.textMuted, marginTop: 2 }}>{team.squadCount}/12</div>
+        </div>
+      </div>
+
+      {/* Squad fill bar */}
+      <div style={{ height: 2, background: C.border }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: `linear-gradient(90deg,${C.orange},#ff4b00)`, transition: 'width .3s' }} />
+      </div>
+
+      {/* Roster — shown when expanded */}
+      {expanded && team.roster.length > 0 && (
+        <div style={{ padding: '6px 10px 8px' }}>
+          {team.roster.map(p => (
+            <div key={p.id} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '3px 4px', marginBottom: 2,
+            }}>
+              <span style={{ fontSize: '.73rem', fontWeight: 600, color: C.textSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130, textTransform: 'capitalize' }}>
+                {p.name}
+                {p.is_captain && <span style={{ color: C.gold, marginLeft: 3 }}>★</span>}
+              </span>
+              <span style={{ fontSize: '.71rem', fontWeight: 800, color: C.orange, flexShrink: 0, marginLeft: 6 }}>
+                {formatCr(p.bid_amount)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {expanded && team.roster.length === 0 && (
+        <div style={{ padding: '10px 14px', fontSize: '.75rem', color: C.textMuted }}>No players yet</div>
+      )}
     </div>
   )
 }
 
-// ─── Sidebar (shared, width controlled by caller) ────────────────────────────
-function Sidebar({ auctionState, poolCount, soldCount, poolPlayers, width = 280, isOpen, onToggle }) {
+// ─── Desktop side-column wrapper ─────────────────────────────────────────────
+function DesktopTeamColumn({ teamNames, rosterMap }) {
   return (
-    <aside style={{
-      width, flexShrink: 0, height: '100%',
-      background: C.sidebar, borderRight: `1px solid ${C.border}`,
-      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 6,
+      padding: '12px 10px', overflowY: 'auto', flex: 1, minHeight: 0,
     }}>
-      {/* Toggle strip — always at top, always visible in 44px collapsed mode */}
-      <div style={{ height: 48, display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-        <button
-          onClick={onToggle}
-          title={isOpen ? 'Collapse panel' : 'Expand panel'}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.textSub, padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', transition: 'color .15s' }}
-          onMouseEnter={e => e.currentTarget.style.color = C.text}
-          onMouseLeave={e => e.currentTarget.style.color = C.textSub}
-        >
-          {isOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-        </button>
-        {isOpen && <span style={{ fontWeight: 700, fontSize: '.7rem', color: C.textMuted, letterSpacing: '.12em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Live Pool</span>}
-      </div>
-      {/* Body */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '14px 14px', gap: 16, overflow: 'hidden' }}>
-        {/* Round */}
-        <div>
-          <div style={{ fontSize: '.72rem', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 6 }}>Now Bidding</div>
-          <RoundBadge auctionType={auctionState.auction_type} />
-        </div>
+      {teamNames.map(teamName => (
+        <DesktopTeamCard
+          key={teamName}
+          teamName={teamName}
+          team={rosterMap[teamName] || { remainingPurse: 0, squadCount: 0, roster: [], captain: null }}
+        />
+      ))}
+    </div>
+  )
+}
 
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {[{ label: 'In Pool', value: poolCount, color: C.text }, { label: 'Sold', value: soldCount, color: C.green }].map(s => (
-            <div key={s.label} style={{ padding: '10px 12px', background: C.surface, borderRadius: 7, border: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: '.7rem', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 4 }}>{s.label}</div>
-              <div style={{ fontWeight: 900, fontSize: '2rem', color: s.color, lineHeight: 1 }}>{s.value}</div>
-            </div>
-          ))}
-        </div>
+// ─── Desktop top nav ──────────────────────────────────────────────────────────
+function DesktopTopNav({ auctionType, poolCount, soldCount }) {
+  const typeLabel  = AUCTION_TYPE_LABEL[auctionType] || 'Auction'
+  const typeColor  = AUCTION_TYPE_COLOR[auctionType] || C.orange
 
-        {/* Pool list */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: '.72rem', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 8 }}>Up Next</div>
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {poolPlayers.map(p => (
-              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: 'rgba(255,255,255,.03)', borderRadius: 5, border: `1px solid rgba(255,255,255,.04)`, minWidth: 0 }}>
-                <span style={{ fontSize: '.88rem', fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 6 }}>{formatName(p.name)}</span>
-                <span style={{ fontSize: '.72rem', color: C.textMuted, fontFamily: 'monospace', flexShrink: 0 }}>{p.registration_id}</span>
-              </div>
-            ))}
-            {poolPlayers.length === 0 && <div style={{ fontSize: '.88rem', color: C.textMuted }}>Pool empty</div>}
-          </div>
+  return (
+    <div style={{
+      width: '100%', height: 64,
+      background: C.sidebar, borderBottom: `1px solid ${C.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '0 28px', flexShrink: 0, zIndex: 10,
+    }}>
+      {/* Left — brand + role label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Flame size={20} color={C.orange} />
+        <span style={{
+          fontWeight: 700, fontSize: '1.15rem', color: C.text,
+          fontFamily: '"Syne",sans-serif', letterSpacing: '.08em',
+          textTransform: 'uppercase', lineHeight: 1,
+        }}>
+          VPL
+          <span style={{ color: typeColor, fontWeight: 600, letterSpacing: '.04em', marginLeft: 8 }}>
+            · {typeLabel}
+          </span>
+        </span>
+      </div>
+
+      {/* Right — In Pool + Sold pills, side by side */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* In Pool */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '6px 14px', borderRadius: 8,
+          background: C.surface, border: `1px solid ${C.border}`,
+        }}>
+          <span style={{ fontSize: '.62rem', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: C.textMuted }}>In Pool</span>
+          <span style={{ fontWeight: 900, fontSize: '1.15rem', color: C.text, lineHeight: 1 }}>{poolCount}</span>
+        </div>
+        {/* Divider */}
+        <div style={{ width: 1, height: 26, background: C.border }} />
+        {/* Sold */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '6px 14px', borderRadius: 8,
+          background: `${C.green}12`, border: `1px solid ${C.green}30`,
+        }}>
+          <span style={{ fontSize: '.62rem', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: `${C.green}99` }}>Sold</span>
+          <span style={{ fontWeight: 900, fontSize: '1.15rem', color: C.green, lineHeight: 1 }}>{soldCount}</span>
         </div>
       </div>
-    </aside>
+    </div>
   )
 }
 
@@ -199,7 +262,8 @@ function PlayerCard({ activePlayer, currentBid, basePrice, auctionState }) {
   )
 }
 
-function TopNav({ auctionType }) {
+// ─── Tablet TopNav (simple, centred) ─────────────────────────────────────────
+function TabletTopNav({ auctionType }) {
   const typeLabel = AUCTION_TYPE_LABEL[auctionType] || 'Auction'
   return (
     <div style={{ width: '100%', height: 64, background: C.sidebar, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', flexShrink: 0, zIndex: 10 }}>
@@ -227,16 +291,16 @@ export default function AuctionDisplay({
   players = [], teamNames = [], rosterMap = {},
 }) {
   const [mobileTab, setMobileTab] = useState('live')
-  const [leftOpen, setLeftOpen] = useState(true)
-  const [rightOpen, setRightOpen] = useState(true)
+  const [leftOpen,  setLeftOpen]  = useState(true)
+
   const poolPlayers = getEligiblePlayers(players, auctionState.auction_type)
 
   const rootStyle = { height: '100dvh', width: '100vw', overflow: 'hidden', background: C.bg, color: C.text, fontFamily: '"DM Sans",system-ui,sans-serif' }
 
-  const customSubtitle = auctionState.display_title && auctionState.display_title !== 'VPL Captains Auction' 
-    ? ` • ${auctionState.display_title.toUpperCase()}` 
-    : ''
-  const dynamicTitle = `VPL ${AUCTION_TYPE_LABEL[auctionState.auction_type]?.toUpperCase() || ''} AUCTION${customSubtitle}`
+  // Split teams into two halves for desktop columns
+  const half       = Math.ceil(teamNames.length / 2)
+  const leftTeams  = teamNames.slice(0, half)
+  const rightTeams = teamNames.slice(half)
 
   // Not public yet
   if (auctionState.is_public_visible === false) {
@@ -271,6 +335,14 @@ export default function AuctionDisplay({
           .ad-tablet  { display: none; }
           .ad-desktop { display: flex; }
         }
+        /* Desktop team column header label */
+        .ad-col-label {
+          height: 48px;
+          display: flex; align-items: center;
+          padding: 0 14px;
+          border-bottom: 1px solid rgba(255,255,255,.08);
+          flex-shrink: 0;
+        }
       `}</style>
 
       {/* ── Phone (<640px) ──────────────────────────────────────────────────── */}
@@ -285,13 +357,10 @@ export default function AuctionDisplay({
         <div style={{ height: 64, flexShrink: 0, background: 'rgba(11,11,11,0.97)' }} />
       </div>
 
-      {/* ── Tablet (640–1023px): sidebar + player card ───────────────────────── */}
+      {/* ── Tablet (640–1023px): slim sidebar + player card ──────────────────── */}
       <div className="ad-tablet" style={{ ...rootStyle, flexDirection: 'column' }}>
-        <TopNav auctionType={auctionState.auction_type} />
+        <TabletTopNav auctionType={auctionState.auction_type} />
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, width: '100%' }}>
-          <motion.div initial={false} animate={{ width: leftOpen ? 252 : 44 }} style={{ overflow: 'hidden', flexShrink: 0 }}>
-            <Sidebar {...poolProps} width={252} isOpen={leftOpen} onToggle={() => setLeftOpen(!leftOpen)} />
-          </motion.div>
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
             <AnimatePresence mode="wait">
               <PlayerCard key={activePlayer?.id ?? 'idle'} {...sharedProps} />
@@ -301,22 +370,50 @@ export default function AuctionDisplay({
         <BottomFooter />
       </div>
 
-      {/* ── Desktop (≥1024px): sidebar + player card + TeamPanel ─────────────── */}
+      {/* ── Desktop (≥1024px): left teams | player card | right teams ────────── */}
       <div className="ad-desktop" style={{ ...rootStyle, flexDirection: 'column' }}>
-        <TopNav auctionType={auctionState.auction_type} />
+        {/* Top nav — space-between: VPL label left, pool+sold right */}
+        <DesktopTopNav
+          auctionType={auctionState.auction_type}
+          poolCount={poolCount}
+          soldCount={soldCount}
+        />
+
+        {/* Main body */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, width: '100%' }}>
-          <motion.div initial={false} animate={{ width: leftOpen ? 292 : 44 }} style={{ overflow: 'hidden', flexShrink: 0 }}>
-            <Sidebar {...poolProps} width={292} isOpen={leftOpen} onToggle={() => setLeftOpen(!leftOpen)} />
-          </motion.div>
+
+          {/* Left — first half of teams */}
+          <aside style={{
+            width: 290, flexShrink: 0,
+            background: C.sidebar, borderRight: `1px solid ${C.border}`,
+            display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+          }}>
+            <div className="ad-col-label">
+              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textMuted }}>Teams — Purse</span>
+            </div>
+            <DesktopTeamColumn teamNames={leftTeams} rosterMap={rosterMap} />
+          </aside>
+
+          {/* Centre — player card */}
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
             <AnimatePresence mode="wait">
               <PlayerCard key={activePlayer?.id ?? 'idle'} {...sharedProps} />
             </AnimatePresence>
           </div>
-          <motion.div initial={false} animate={{ width: rightOpen ? 322 : 44 }} style={{ overflow: 'hidden', flexShrink: 0, borderLeft: `1px solid ${C.border}` }}>
-            <TeamPanel teamNames={teamNames} rosterMap={rosterMap} defaultExpanded isOpen={rightOpen} onToggle={() => setRightOpen(!rightOpen)} />
-          </motion.div>
+
+          {/* Right — second half of teams */}
+          <aside style={{
+            width: 290, flexShrink: 0,
+            background: C.sidebar, borderLeft: `1px solid ${C.border}`,
+            display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+          }}>
+            <div className="ad-col-label">
+              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textMuted }}>Teams — Purse</span>
+            </div>
+            <DesktopTeamColumn teamNames={rightTeams} rosterMap={rosterMap} />
+          </aside>
         </div>
+
         <BottomFooter />
       </div>
     </>

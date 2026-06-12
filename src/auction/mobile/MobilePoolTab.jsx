@@ -9,7 +9,7 @@ export default function MobilePoolTab({ auctionState, poolCount, soldCount, pool
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 16px' }}>
 
-      {/* Current round banner — colored dot, no emoji */}
+      {/* Current round banner */}
       <div style={{
         padding: '10px 14px', borderRadius: 10, marginBottom: 20,
         background: `${color}10`, border: `1px solid ${color}35`,
@@ -29,15 +29,24 @@ export default function MobilePoolTab({ auctionState, poolCount, soldCount, pool
         </div>
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — role-specific labels */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+        {/* In Pool */}
         <div style={{ padding: '16px', borderRadius: 10, background: C.panel, border: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 6 }}>In Pool</div>
-          <div style={{ fontWeight: 900, fontSize: '2rem', color: C.text, lineHeight: 1 }}>{poolCount}</div>
+          <div style={{ fontSize: '.58rem', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 2 }}>
+            {label} in Pool
+          </div>
+          <div style={{ fontWeight: 900, fontSize: '2.2rem', color: C.text, lineHeight: 1, marginBottom: 2 }}>{poolCount}</div>
+          <div style={{ fontSize: '.68rem', color: C.textMuted }}>awaiting auction</div>
         </div>
-        <div style={{ padding: '16px', borderRadius: 10, background: C.panel, border: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 6 }}>Sold</div>
-          <div style={{ fontWeight: 900, fontSize: '2rem', color: '#4ade80', lineHeight: 1 }}>{soldCount}</div>
+
+        {/* Sold */}
+        <div style={{ padding: '16px', borderRadius: 10, background: `${C.green}0d`, border: `1px solid ${C.green}28` }}>
+          <div style={{ fontSize: '.58rem', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: `${C.green}88`, marginBottom: 2 }}>
+            {label} Sold
+          </div>
+          <div style={{ fontWeight: 900, fontSize: '2.2rem', color: C.green, lineHeight: 1, marginBottom: 2 }}>{soldCount}</div>
+          <div style={{ fontSize: '.68rem', color: `${C.green}70` }}>successfully sold</div>
         </div>
       </div>
 

@@ -7,7 +7,7 @@ import {
 import { fetchPublicAuctionState, fetchPublicPlayers } from '../lib/publicApi'
 import { supabase } from '../lib/supabase'
 import {
-  AUCTION_STAGES, AUCTION_TYPES, DEFAULT_AUCTION_STATE,
+  AUCTION_STAGES, AUCTION_TYPES, AUCTION_TYPE_ROLE, DEFAULT_AUCTION_STATE,
   buildRosterMap, clampCurrency, createRandomNomination,
   getAuctionConfig, getAvailableTeamsForSale, getEligiblePlayers,
   getPlayerBasePrice, getTeamsFromSettings, mergeAuctionState, getBidStep,
@@ -254,7 +254,18 @@ export default function AuctionPortal({ mode = 'host' }) {
 
 
 
-  const soldCount = players.filter(p => p.auction_status === 'sold').length
+  const soldCount = useMemo(() => {
+    const { auction_type } = auctionState
+    if (auction_type === AUCTION_TYPES.CAPTAINS) {
+      return players.filter(p => p.is_captain && p.auction_status === 'sold').length
+    }
+    const role = AUCTION_TYPE_ROLE[auction_type]
+    return players.filter(p =>
+      !p.is_captain &&
+      p.auction_status === 'sold' &&
+      (role ? p.role === role : true)
+    ).length
+  }, [players, auctionState])
   const poolCount = getEligiblePlayers(players, auctionState.auction_type).length
 
   /* Display mode */
