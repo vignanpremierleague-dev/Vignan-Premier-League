@@ -326,7 +326,7 @@ function PlayerCard({ player: p, onSelect }) {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'top center',
+              objectPosition: 'center center',
               display: 'block',
             }}
           />
@@ -478,7 +478,7 @@ function PlayerSpotlight({ players, index, onNavigate, onClose }) {
             <img
               src={p.photo_url}
               alt={p.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
             />
           ) : (
             <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${roleColor}12 0%, #111113 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
