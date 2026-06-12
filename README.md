@@ -1,5 +1,6 @@
 # Vignan Premier League (VPL)
 
+
 Official platform for the **Vignan Premier League** — a T10 cricket tournament with an IPL-style live player auction, faculty-owned teams, and real-time public display. This repo contains the public site, admin dashboard, and the full live auction system.
 
 ---
