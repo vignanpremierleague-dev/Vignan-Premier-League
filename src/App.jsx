@@ -11,6 +11,7 @@ import SiteBlockGate  from './components/SiteBlockGate'
 import AuctionPortal  from './pages/AuctionPortal'
 import TeamsPublic    from './pages/TeamsPublic'
 import AuctionResults from './pages/AuctionResults'
+import PlayersPage    from './pages/PlayersPage'
 
 function ProtectedAdmin() {
   if (!localStorage.getItem('vpl_admin')) return <Navigate to="/admin" replace />
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/admin/auction"   element={<ProtectedAdminAuction />} />
           <Route path="/auction" element={<AuctionPortal mode="display" />} />
           <Route path="/auction-results" element={<AuctionResults />} />
+          <Route path="/players"         element={<PlayersPage />} />
           <Route path="*"                element={<Navigate to="/" replace />} />
         </Routes>
       </SiteBlockGate>
