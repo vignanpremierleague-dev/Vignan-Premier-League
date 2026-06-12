@@ -78,16 +78,10 @@ export default function Navbar({ breadcrumb } = {}) {
           </nav>
 
           {/* Desktop CTA */}
-          {settings?.registrationsOpen === false ? (
-            <button className="btn-primary nav-cta" style={{ fontSize:'.76rem', padding:'9px 20px', opacity: 0.5, cursor: 'not-allowed', background: '#333', borderColor: '#444', color: '#7a7a7a', boxShadow: 'none' }} disabled>
-              Closed
-            </button>
-          ) : (
-            <a href="/register" className="btn-primary nav-cta" style={{ fontSize:'.76rem', padding:'9px 20px' }}
-              onClick={e => { e.preventDefault(); window.location.href='/register' }}>
-              Register
-            </a>
-          )}
+          <a href="/auction-results" className="btn-primary nav-cta" style={{ fontSize:'.76rem', padding:'9px 20px' }}
+            onClick={e => { e.preventDefault(); window.location.href='/auction-results' }}>
+            Auction Results
+          </a>
 
           {/* Hamburger button — mobile/tablet only */}
           <button
@@ -139,15 +133,9 @@ export default function Navbar({ breadcrumb } = {}) {
 
           {/* CTA */}
           <div style={{ marginTop:'auto', paddingTop: 32 }}>
-            {settings?.registrationsOpen === false ? (
-              <button className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:'.9rem', padding:'14px 20px', opacity: 0.5, cursor: 'not-allowed', background: '#333', borderColor: '#444', color: '#7a7a7a', boxShadow: 'none' }} disabled>
-                Registrations Closed
-              </button>
-            ) : (
-              <a href="/register" onClick={e => { close(); e.preventDefault(); window.location.href='/register' }} className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:'.9rem', padding:'14px 20px' }}>
-                <Flame size={16} /> Register Now
-              </a>
-            )}
+            <a href="/auction-results" onClick={e => { close(); e.preventDefault(); window.location.href='/auction-results' }} className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:'.9rem', padding:'14px 20px' }}>
+              Auction Results
+            </a>
           </div>
         </div>
       </div>
