@@ -252,7 +252,17 @@ export default function AuctionPortal({ mode = 'host' }) {
     finally { setLoading(false) }
   }
 
-
+  const handleSetStage = async nextStage => {
+    const update = { stage: nextStage }
+    if (nextStage === AUCTION_STAGES.COMING_SOON || nextStage === AUCTION_STAGES.ENDED) {
+      update.active_player_id = null
+      update.current_bid = 0
+      update.sold_to = null
+      update.sold_price = 0
+      setActivePlayer(null)
+    }
+    await persist(update)
+  }
 
   const soldCount = useMemo(() => {
     const { auction_type } = auctionState
@@ -309,9 +319,10 @@ export default function AuctionPortal({ mode = 'host' }) {
         onTogglePublic={() => persist({ is_public_visible: !(auctionState.is_public_visible ?? true) })}
         onToggleAuctionLive={() => persist({ is_live: !(auctionState.is_live ?? false) })}
         onSellOpen={() => setSellOpen(true)}
-        onDisplayOpen={() => window.open('/auction-display', '_blank')}
+        onDisplayOpen={() => window.open('/auction', '_blank')}
         onBack={() => navigate('/dboard')}
         onUpdateTitle={val => persist({ display_title: val })}
+        onSetStage={handleSetStage}
       />
 
       <PlayerPanel

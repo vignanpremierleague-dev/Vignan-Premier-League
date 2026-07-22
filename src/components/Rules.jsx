@@ -8,14 +8,14 @@ gsap.registerPlugin(ScrollTrigger)
 
 const rules = [
   { icon:<Clock size={14} color="#ff6b22"/>, title:'Match Format', items:[
-    'T10 format — 10 overs per side.',
+    '8 over format — 8 overs per side.',
     'Standard ICC cricket rules apply.',
     'Powerplay: first 2 overs with field restrictions.',
     'Maximum 2 overs per bowler.',
     'Match must complete within 90 minutes.',
   ]},
   { icon:<Users size={14} color="#ff6b22"/>, title:'Team Composition', items:[
-    '11 playing members + 2 substitutes.',
+    '11 playing members + 1 substitute.',
     'Players drafted exclusively through the auction.',
     'Players may not refuse their selection.',
     'Substitutes can only field, not bat or bowl.',

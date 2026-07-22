@@ -6,7 +6,8 @@ import { buildRosterMap, formatCr, getAuctionConfig, getPlayerBasePrice, getTeam
 import {
   Flame, LogOut, ShieldCheck, Users, CreditCard,
   RefreshCw, CheckCircle, XCircle, ExternalLink, Search,
-  User as UserIcon, X as XIcon, ChevronLeft, ChevronRight, Settings, Plus, Trash2, Upload, Shield
+  User as UserIcon, X as XIcon, ChevronLeft, ChevronRight, Settings, Plus, Trash2, Upload, Shield,
+  Camera
 } from 'lucide-react'
 import TeamsPanel from '../components/TeamsPanel'
 
@@ -47,7 +48,7 @@ const DEFAULT_TIMELINE_EVENTS = [
   { title: 'Registrations Open', date: 'Coming Soon', desc: 'Register online and pay the Rs.300 entry fee to join the player pool.' },
   { title: 'Player Auction', date: 'Coming Soon', desc: 'Faculty team owners bid for players in a high-energy live auction.' },
   { title: 'Team Reveal', date: 'Coming Soon', desc: 'Final squads announced and jersey numbers assigned.' },
-  { title: 'League Matches', date: 'Coming Soon', desc: 'Round-robin T10 league stage where every match and every ball counts.' },
+  { title: 'League Matches', date: 'Coming Soon', desc: 'Round-robin 8 Over league stage where every match and every ball counts.' },
   { title: 'Knockouts & Finals', date: 'Coming Soon', desc: 'Semi-finals and the Grand Finale for the VPL championship.' },
   { title: 'Awards Ceremony', date: 'Coming Soon', desc: 'Best Batsman, Bowler, and Player of the Tournament will be recognized.' },
 ]
@@ -897,7 +898,7 @@ function buildCMSForm(settings) {
     heroTitleLine1: source.heroTitleLine1 || 'VIGNAN',
     heroTitleLine2: source.heroTitleLine2 || 'PREMIER',
     heroTitleLine3: source.heroTitleLine3 || 'LEAGUE',
-    heroSubtitle: source.heroSubtitle || 'T10 Format · IPL-Style Auction · Faculty Team Owners · Vignan Campus',
+    heroSubtitle: source.heroSubtitle || '8 Over Format · IPL-Style Auction · Faculty Team Owners · Vignan Campus',
     heroPrimaryCtaLabel: source.heroPrimaryCtaLabel || 'Register Now',
     heroPrimaryCtaHref: source.heroPrimaryCtaHref || '/register',
     heroSecondaryCtaLabel: source.heroSecondaryCtaLabel || 'View Teams',
@@ -2058,6 +2059,43 @@ export function PlayerEditorModal({ player, token, onClose, handleUnauthorized, 
   const [basePrice, setBasePrice] = useState(() => String(getPlayerBasePrice(player, siteSettings)))
   
   const photoFileRef = useRef(null)
+  const videoRef = useRef(null)
+  const [cameraActive, setCameraActive] = useState(false)
+  const [cameraStream, setCameraStream] = useState(null)
+
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [cameraStream])
+
+  const startCamera = async () => {
+    try {
+      setCameraActive(true)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } }
+      })
+      setCameraStream(stream)
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+        }
+      }, 50)
+    } catch (err) {
+      alert('Could not access camera: ' + err.message)
+      setCameraActive(false)
+    }
+  }
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop())
+      setCameraStream(null)
+    }
+    setCameraActive(false)
+  }
 
   const handleFieldChange = (field, val) => {
     setForm(prev => ({ ...prev, [field]: val }))
@@ -2072,6 +2110,32 @@ export function PlayerEditorModal({ player, token, onClose, handleUnauthorized, 
       handleFieldChange('photo_url', asset.secureUrl)
     } catch (err) {
       alert('Upload failed: ' + err.message)
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  const capturePhoto = async () => {
+    if (!videoRef.current) return
+    const video = videoRef.current
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth || 640
+    canvas.height = video.videoHeight || 640
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    
+    setUploadingPhoto(true)
+    stopCamera()
+    
+    try {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+      if (!blob) throw new Error('Failed to capture frame.')
+      const file = new File([blob], `${player.name || 'player'}_captured.jpg`, { type: 'image/jpeg' })
+      const asset = await uploadToCloudinary(file)
+      handleFieldChange('photo_url', asset.secureUrl)
+    } catch (err) {
+      alert('Capture failed: ' + err.message)
     } finally {
       setUploadingPhoto(false)
     }
@@ -2125,7 +2189,7 @@ export function PlayerEditorModal({ player, token, onClose, handleUnauthorized, 
         {/* Modal Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
           <h2 style={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>Edit Player Details</h2>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,.05)', border: 'none', borderRadius: 8, padding: 8, color: '#fff', cursor: 'pointer', display: 'flex' }}><XIcon size={16} /></button>
+          <button onClick={() => { stopCamera(); onClose(); }} style={{ background: 'rgba(255,255,255,.05)', border: 'none', borderRadius: 8, padding: 8, color: '#fff', cursor: 'pointer', display: 'flex' }}><XIcon size={16} /></button>
         </div>
 
         {/* Modal Form */}
@@ -2136,20 +2200,100 @@ export function PlayerEditorModal({ player, token, onClose, handleUnauthorized, 
             <span style={{ display: 'block', color: '#ff6b22', fontSize: '.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em' }}>Editable Details</span>
             
             {/* Editable Player Photo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
-                {form.photo_url ? (
-                  <img src={form.photo_url} alt="Photo" style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', border: '1.5px solid rgba(255,107,34,.3)' }} />
-                ) : (
-                  <div style={{ width: 80, height: 80, borderRadius: 12, background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserIcon size={28} color="#8a8a8a" /></div>
-                )}
-                {uploadingPhoto && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff6b22', fontSize: '.7rem', fontWeight: 700 }}>Uploading...</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
+                  {form.photo_url ? (
+                    <img src={form.photo_url} alt="Photo" style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', border: '1.5px solid rgba(255,107,34,.3)' }} />
+                  ) : (
+                    <div style={{ width: 80, height: 80, borderRadius: 12, background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserIcon size={28} color="#8a8a8a" /></div>
+                  )}
+                  {uploadingPhoto && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff6b22', fontSize: '.7rem', fontWeight: 700 }}>Uploading...</div>}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <input ref={photoFileRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                  <button
+                    type="button"
+                    onClick={() => { stopCamera(); photoFileRef.current?.click(); }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '8px 14px', background: 'rgba(255,107,34,.1)',
+                      border: '1px solid rgba(255,107,34,.25)', color: '#ff6b22',
+                      borderRadius: 8, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700,
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    <Upload size={14} /> Upload Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cameraActive ? stopCamera : startCamera}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '8px 14px', background: cameraActive ? 'rgba(230,57,70,.1)' : 'rgba(255,255,255,.05)',
+                      border: cameraActive ? '1px solid rgba(230,57,70,.25)' : '1px solid rgba(255,255,255,.1)',
+                      color: cameraActive ? '#e63946' : '#efefef',
+                      borderRadius: 8, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700,
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    <Camera size={14} /> {cameraActive ? 'Close Camera' : 'Take Photo'}
+                  </button>
+                </div>
               </div>
-              <div>
-                <input ref={photoFileRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
-                <button type="button" onClick={() => photoFileRef.current?.click()} style={{ padding: '8px 14px', background: 'rgba(255,107,34,.1)', border: '1px solid rgba(255,107,34,.25)', color: '#ff6b22', borderRadius: 8, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700 }}>Upload New Player Photo</button>
-                <p style={{ color: '#6a6a6a', fontSize: '.72rem', marginTop: 6 }}>This image will be used during the live player auction.</p>
-              </div>
+
+              {/* Camera Preview Area */}
+              {cameraActive && (
+                <div style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                  background: '#0d0d0d', border: '1px solid rgba(255,255,255,.08)',
+                  borderRadius: 12, padding: 14, marginTop: 4, position: 'relative'
+                }}>
+                  <div style={{
+                    position: 'relative', width: '100%', maxWidth: 320, aspectRatio: '1/1',
+                    borderRadius: 8, overflow: 'hidden', background: '#000',
+                    border: '1.5px solid rgba(255,107,34,.3)'
+                  }}>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{
+                      position: 'absolute', inset: 0, pointerEvents: 'none',
+                      border: '2px dashed rgba(255,107,34,.4)', borderRadius: '50%',
+                      margin: 20
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 320, justifyContent: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      style={{
+                        flex: 1, padding: '8px 16px', background: 'linear-gradient(135deg,#ff6b22,#ff4b00)',
+                        border: 'none', color: '#fff', borderRadius: 8, cursor: 'pointer',
+                        fontSize: '.8rem', fontWeight: 700, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 6, boxShadow: '0 4px 10px rgba(255,107,34,.25)'
+                      }}
+                    >
+                      <Camera size={14} /> Capture Snapshot
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      style={{
+                        padding: '8px 16px', background: 'rgba(255,255,255,.05)',
+                        border: '1px solid rgba(255,255,255,.1)', color: '#efefef',
+                        borderRadius: 8, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr 1fr', gap: 14 }}>

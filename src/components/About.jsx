@@ -3,7 +3,7 @@ import { animate, stagger } from 'animejs'
 import { Timer, Gavel, MapPin } from 'lucide-react'
 
 const stats = [
-  { icon:<Timer size={22} color="#ff6b22"/>, title:'T10 Format',       desc:'10 overs of explosive cricket action per side — fast, intense, non-stop.' },
+  { icon:<Timer size={22} color="#ff6b22"/>, title:'8 Over Format',       desc:'8 overs of explosive cricket action per side — fast, intense, non-stop.' },
   { icon:<Gavel size={22} color="#ff6b22"/>, title:'Faculty Auctions', desc:'Faculty bid for students in a live IPL-style auction ceremony.' },
   { icon:<MapPin size={22} color="#ff6b22"/>, title:'Vignan Ground',   desc:'All matches at the official Vignan campus cricket ground.' },
 ]
@@ -44,7 +44,7 @@ export default function About() {
           <h2 className="section-heading fire-text" style={{ marginBottom:8 }}>About VPL</h2>
           <span className="divider" />
           <p style={{ fontFamily:'"DM Sans",system-ui,sans-serif', color:'#8b8b8b', maxWidth:580, margin:'20px auto 0', lineHeight:1.8, fontSize:'.95rem' }}>
-            The <strong style={{ color:'#ff6b22', fontWeight:600 }}>Vignan Premier League</strong> is a college cricket tournament like no other. Players attend a live auction where faculty act as team owners, drafting their squads. Teams then battle in the electrifying T10 format.
+            The <strong style={{ color:'#ff6b22', fontWeight:600 }}>Vignan Premier League</strong> is a college cricket tournament like no other. Players attend a live auction where faculty act as team owners, drafting their squads. Teams then battle in the electrifying 8 Over format.
           </p>
         </div>
 

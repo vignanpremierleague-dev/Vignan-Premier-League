@@ -370,11 +370,16 @@ export default function AuctionResults() {
       <style>{`
         .results-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          grid-template-columns: repeat(4, 1fr);
           gap: 16px;
         }
         .podium-row {
           gap: 0;
+        }
+        @media (max-width: 900px) {
+          .results-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
         }
         @media (max-width: 600px) {
           .results-grid {

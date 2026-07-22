@@ -31,42 +31,42 @@ const client = new Client({
 
 const newTeams = {
   A: [
-    { name: "Dominators", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
     { name: "Warriors", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-    { name: "Gladiators", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
     { name: "Knights", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-    { name: "Lions", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
+    { name: "Marvels", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+    { name: "Thunderbolts", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+    { name: "Royals", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
   ],
   B: [
-    { name: "Royals", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+    { name: "Lions", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
     { name: "Titans", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-    { name: "Marvels", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
     { name: "Panthers", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
-    { name: "Thunderbolts", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
+    { name: "Gladiators", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" },
+    { name: "Dominators", p: 0, w: 0, l: 0, pts: 0, nrr: "+0.000" }
   ]
 }
 
 const newLeagueMatches = [
-  { id: 1,  grp: "A", t1: "Dominators",  t2: "Warriors",      date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 2,  grp: "A", t1: "Gladiators",  t2: "Knights",       date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 3,  grp: "A", t1: "Lions",       t2: "Dominators",    date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 4,  grp: "A", t1: "Warriors",    t2: "Gladiators",    date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 5,  grp: "A", t1: "Knights",     t2: "Lions",         date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 6,  grp: "A", t1: "Dominators",  t2: "Gladiators",    date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 7,  grp: "A", t1: "Warriors",    t2: "Knights",       date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 8,  grp: "A", t1: "Gladiators",  t2: "Lions",         date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 9,  grp: "A", t1: "Dominators",  t2: "Knights",       date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 10, grp: "A", t1: "Warriors",    t2: "Lions",         date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 11, grp: "B", t1: "Royals",      t2: "Titans",        date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 12, grp: "B", t1: "Marvels",     t2: "Panthers",      date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 13, grp: "B", t1: "Thunderbolts",t2: "Royals",        date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 14, grp: "B", t1: "Titans",      t2: "Marvels",       date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 15, grp: "B", t1: "Panthers",    t2: "Thunderbolts",  date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 16, grp: "B", t1: "Royals",      t2: "Marvels",       date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 17, grp: "B", t1: "Titans",      t2: "Panthers",      date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 18, grp: "B", t1: "Marvels",     t2: "Thunderbolts",  date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 19, grp: "B", t1: "Royals",      t2: "Panthers",      date: "TBD", time: "TBD", status: "UPCOMING" },
-  { id: 20, grp: "B", t1: "Titans",      t2: "Thunderbolts",  date: "TBD", time: "TBD", status: "UPCOMING" }
+  { id: 1,  grp: "A", t1: "Warriors",     t2: "Knights",      date: "Day 1",  time: "TBD", status: "UPCOMING" },
+  { id: 2,  grp: "B", t1: "Lions",        t2: "Titans",       date: "Day 2",  time: "TBD", status: "UPCOMING" },
+  { id: 3,  grp: "A", t1: "Marvels",      t2: "Thunderbolts", date: "Day 3",  time: "TBD", status: "UPCOMING" },
+  { id: 4,  grp: "B", t1: "Panthers",     t2: "Gladiators",   date: "Day 4",  time: "TBD", status: "UPCOMING" },
+  { id: 5,  grp: "A", t1: "Royals",       t2: "Warriors",     date: "Day 5",  time: "TBD", status: "UPCOMING" },
+  { id: 6,  grp: "B", t1: "Dominators",   t2: "Lions",        date: "Day 6",  time: "TBD", status: "UPCOMING" },
+  { id: 7,  grp: "A", t1: "Knights",      t2: "Marvels",      date: "Day 7",  time: "TBD", status: "UPCOMING" },
+  { id: 8,  grp: "B", t1: "Titans",       t2: "Panthers",     date: "Day 8",  time: "TBD", status: "UPCOMING" },
+  { id: 9,  grp: "A", t1: "Thunderbolts", t2: "Royals",       date: "Day 9",  time: "TBD", status: "UPCOMING" },
+  { id: 10, grp: "B", t1: "Gladiators",   t2: "Dominators",   date: "Day 10", time: "TBD", status: "UPCOMING" },
+  { id: 11, grp: "A", t1: "Marvels",      t2: "Royals",       date: "Day 11", time: "TBD", status: "UPCOMING" },
+  { id: 12, grp: "B", t1: "Lions",        t2: "Panthers",     date: "Day 12", time: "TBD", status: "UPCOMING" },
+  { id: 13, grp: "A", t1: "Warriors",     t2: "Thunderbolts", date: "Day 13", time: "TBD", status: "UPCOMING" },
+  { id: 14, grp: "B", t1: "Titans",       t2: "Gladiators",   date: "Day 14", time: "TBD", status: "UPCOMING" },
+  { id: 15, grp: "A", t1: "Knights",      t2: "Royals",       date: "Day 15", time: "TBD", status: "UPCOMING" },
+  { id: 16, grp: "B", t1: "Panthers",     t2: "Dominators",   date: "Day 16", time: "TBD", status: "UPCOMING" },
+  { id: 17, grp: "A", t1: "Marvels",      t2: "Warriors",     date: "Day 17", time: "TBD", status: "UPCOMING" },
+  { id: 18, grp: "B", t1: "Lions",        t2: "Gladiators",   date: "Day 18", time: "TBD", status: "UPCOMING" },
+  { id: 19, grp: "A", t1: "Knights",      t2: "Thunderbolts", date: "Day 19", time: "TBD", status: "UPCOMING" },
+  { id: 20, grp: "B", t1: "Titans",       t2: "Dominators",   date: "Day 20", time: "TBD", status: "UPCOMING" }
 ]
 
 async function run() {
@@ -83,6 +83,22 @@ async function run() {
     const content = selectRes.rows[0].content
     content.teams = newTeams
     content.leagueMatches = newLeagueMatches
+
+    // Update marquee message
+    content.marqueeMessage = "🔥 VPL matches have started! Stay tuned for real-time scores, team standings, and league schedules. Let the games begin!"
+
+    // Update T10 / 10 Over references in the DB settings content
+    if (content.heroSubtitle) {
+      content.heroSubtitle = content.heroSubtitle.replace(/T10/g, '8 Over')
+    }
+    if (Array.isArray(content.timelineEvents)) {
+      content.timelineEvents = content.timelineEvents.map(event => {
+        if (event && event.desc) {
+          event.desc = event.desc.replace(/T10/g, '8 Over')
+        }
+        return event
+      })
+    }
 
     // Update back to DB
     await client.query(

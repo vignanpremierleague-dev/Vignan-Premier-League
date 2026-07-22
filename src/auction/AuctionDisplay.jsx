@@ -302,8 +302,30 @@ export default function AuctionDisplay({
   const leftTeams  = teamNames.slice(0, half)
   const rightTeams = teamNames.slice(half)
 
-  // Not public yet
+  // Standby screens when display is stopped
   if (auctionState.is_public_visible === false) {
+    if (auctionState.stage === AUCTION_STAGES.ENDED) {
+      return (
+        <div style={{ ...rootStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center', maxWidth: 440, padding: '0 24px' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 18px', background: C.surface, border: `1px solid ${C.borderMid}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Tv size={24} color={C.textMuted} />
+            </div>
+            <h2 style={{ fontWeight: 900, fontSize: '1.6rem', margin: '0 0 10px', color: C.text }}>Auction Ended</h2>
+            <p style={{ color: C.textSub, fontSize: '.9rem', margin: '0 0 24px', lineHeight: 1.6 }}>The live VPL auction has concluded. Thank you for participating!</p>
+            <a href="/auction-results" style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              padding: '10px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#ff6b22,#ff4b00)',
+              color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: '.88rem',
+              boxShadow: '0 4px 12px rgba(255,107,34,.25)', transition: 'all .15s'
+            }}>
+              View Results
+            </a>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div style={{ ...rootStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', maxWidth: 440, padding: '0 24px' }}>

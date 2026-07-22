@@ -8,7 +8,6 @@ const links = [
   { label: 'Dignitaries', href: '/team',     route: true  },
   { label: 'Rules',       href: '/rules',    route: true  },
   { label: 'Schedule',    href: '/schedule', route: true  },
-  { label: 'Contact',     href: '/contact',  route: true  },
 ]
 
 export default function Navbar({ breadcrumb } = {}) {

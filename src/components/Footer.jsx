@@ -50,7 +50,7 @@ export default function Footer() {
               <span className="fire-text" style={{ fontFamily:'"Syne"', fontSize:'1.1rem', fontWeight:800 }}>VPL</span>
             </a>
             <p style={{ fontFamily:'"DM Sans"', color:'#8b8b8b', fontSize:'.84rem', lineHeight:1.85, maxWidth:240 }}>
-              Where Campus Meets Cricket. The ultimate inter-college T10 tournament with IPL-style player auctions.
+              Where Campus Meets Cricket. The ultimate inter-college 8 Over tournament with IPL-style player auctions.
             </p>
           </div>
 

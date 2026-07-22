@@ -25,7 +25,8 @@ export default function ControlSidebar({
   auctionType, stage, activePlayer, currentBid, basePrice,
   bidStep, loading, isPublic, isAuctionLive, auctionState,
   onSwitchType, onNominate, onBidChange, onBidStep, onAdjust,
-  onSellOpen, onReset, onDisplayOpen, onBack, onTogglePublic, onToggleAuctionLive, onUpdateTitle
+  onSellOpen, onReset, onDisplayOpen, onBack, onTogglePublic, onToggleAuctionLive, onUpdateTitle,
+  onSetStage
 }) {
   const isLive = stage === AUCTION_STAGES.LIVE
   const canAct = !!activePlayer && isLive
@@ -170,6 +171,37 @@ export default function ControlSidebar({
         >
           <CheckCircle size={14} /> Sell Player
         </button>
+
+        <Divider />
+
+        {/* ── Auction Status ──────────────────────────────────── */}
+        <div>
+          <div style={labelStyle}>Auction Status</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <button
+              onClick={() => onSetStage(AUCTION_STAGES.COMING_SOON)}
+              style={{
+                ...row,
+                background: stage === AUCTION_STAGES.COMING_SOON ? 'rgba(59,130,246,.12)' : C.surface,
+                color: stage === AUCTION_STAGES.COMING_SOON ? '#60a5fa' : C.textSub,
+                border: stage === AUCTION_STAGES.COMING_SOON ? '1px solid rgba(59,130,246,.3)' : `1px solid ${C.border}`,
+              }}
+            >
+              Coming Soon
+            </button>
+            <button
+              onClick={() => onSetStage(AUCTION_STAGES.ENDED)}
+              style={{
+                ...row,
+                background: stage === AUCTION_STAGES.ENDED ? 'rgba(230,57,70,.12)' : C.surface,
+                color: stage === AUCTION_STAGES.ENDED ? '#f87171' : C.textSub,
+                border: stage === AUCTION_STAGES.ENDED ? '1px solid rgba(230,57,70,.3)' : `1px solid ${C.border}`,
+              }}
+            >
+              End Auction
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ── Footer: 4 compact icon+label buttons in a 2x2 grid ── */}

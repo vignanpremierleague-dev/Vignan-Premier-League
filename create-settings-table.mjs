@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.vpl_site_settings (
 INSERT INTO public.vpl_site_settings (slug, content)
 VALUES ('primary', '{
   "registrationsOpen": true,
-  "marqueeMessage": "🔥 Welcome to VPL 2025! Registrations are now LIVE!",
+  "marqueeMessage": "🔥 VPL matches have started! Stay tuned for real-time scores, team standings, and league schedules. Let the games begin!",
   "contactEmail": "support@vignanpremierleague.com",
   "contactPhone": "+91 99999 99999",
   "whatsappLink": "https://chat.whatsapp.com/L7HXdLMblNRGTNwJbMZPVE?mode=gi_t",
@@ -48,41 +48,41 @@ VALUES ('primary', '{
   "studentCoordinators": [],
   "teams": {
     "A": [
-      {"name":"Team 1","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 2","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 3","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 4","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 5","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"}
+      {"name":"Warriors","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Knights","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Marvels","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Thunderbolts","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Royals","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"}
     ],
     "B": [
-      {"name":"Team 6","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 7","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 8","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 9","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
-      {"name":"Team 10","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"}
+      {"name":"Lions","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Titans","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Panthers","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Gladiators","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"},
+      {"name":"Dominators","p":0,"w":0,"l":0,"pts":0,"nrr":"+0.000"}
     ]
   },
   "leagueMatches": [
-    {"id":1,"grp":"A","t1":"Team 1","t2":"Team 2","date":"TBD","time":"TBD"},
-    {"id":2,"grp":"A","t1":"Team 3","t2":"Team 4","date":"TBD","time":"TBD"},
-    {"id":3,"grp":"A","t1":"Team 5","t2":"Team 1","date":"TBD","time":"TBD"},
-    {"id":4,"grp":"A","t1":"Team 2","t2":"Team 3","date":"TBD","time":"TBD"},
-    {"id":5,"grp":"A","t1":"Team 4","t2":"Team 5","date":"TBD","time":"TBD"},
-    {"id":6,"grp":"A","t1":"Team 1","t2":"Team 3","date":"TBD","time":"TBD"},
-    {"id":7,"grp":"A","t1":"Team 2","t2":"Team 4","date":"TBD","time":"TBD"},
-    {"id":8,"grp":"A","t1":"Team 3","t2":"Team 5","date":"TBD","time":"TBD"},
-    {"id":9,"grp":"A","t1":"Team 1","t2":"Team 4","date":"TBD","time":"TBD"},
-    {"id":10,"grp":"A","t1":"Team 2","t2":"Team 5","date":"TBD","time":"TBD"},
-    {"id":11,"grp":"B","t1":"Team 6","t2":"Team 7","date":"TBD","time":"TBD"},
-    {"id":12,"grp":"B","t1":"Team 8","t2":"Team 9","date":"TBD","time":"TBD"},
-    {"id":13,"grp":"B","t1":"Team 10","t2":"Team 6","date":"TBD","time":"TBD"},
-    {"id":14,"grp":"B","t1":"Team 7","t2":"Team 8","date":"TBD","time":"TBD"},
-    {"id":15,"grp":"B","t1":"Team 9","t2":"Team 10","date":"TBD","time":"TBD"},
-    {"id":16,"grp":"B","t1":"Team 6","t2":"Team 8","date":"TBD","time":"TBD"},
-    {"id":17,"grp":"B","t1":"Team 7","t2":"Team 9","date":"TBD","time":"TBD"},
-    {"id":18,"grp":"B","t1":"Team 8","t2":"Team 10","date":"TBD","time":"TBD"},
-    {"id":19,"grp":"B","t1":"Team 6","t2":"Team 9","date":"TBD","time":"TBD"},
-    {"id":20,"grp":"B","t1":"Team 7","t2":"Team 10","date":"TBD","time":"TBD"}
+    {"id":1,"grp":"A","t1":"Warriors","t2":"Knights","date":"Day 1","time":"TBD","status":"UPCOMING"},
+    {"id":2,"grp":"B","t1":"Lions","t2":"Titans","date":"Day 2","time":"TBD","status":"UPCOMING"},
+    {"id":3,"grp":"A","t1":"Marvels","t2":"Thunderbolts","date":"Day 3","time":"TBD","status":"UPCOMING"},
+    {"id":4,"grp":"B","t1":"Panthers","t2":"Gladiators","date":"Day 4","time":"TBD","status":"UPCOMING"},
+    {"id":5,"grp":"A","t1":"Royals","t2":"Warriors","date":"Day 5","time":"TBD","status":"UPCOMING"},
+    {"id":6,"grp":"B","t1":"Dominators","t2":"Lions","date":"Day 6","time":"TBD","status":"UPCOMING"},
+    {"id":7,"grp":"A","t1":"Knights","t2":"Marvels","date":"Day 7","time":"TBD","status":"UPCOMING"},
+    {"id":8,"grp":"B","t1":"Titans","t2":"Panthers","date":"Day 8","time":"TBD","status":"UPCOMING"},
+    {"id":9,"grp":"A","t1":"Thunderbolts","t2":"Royals","date":"Day 9","time":"TBD","status":"UPCOMING"},
+    {"id":10,"grp":"B","t1":"Gladiators","t2":"Dominators","date":"Day 10","time":"TBD","status":"UPCOMING"},
+    {"id":11,"grp":"A","t1":"Marvels","t2":"Royals","date":"Day 11","time":"TBD","status":"UPCOMING"},
+    {"id":12,"grp":"B","t1":"Lions","t2":"Panthers","date":"Day 12","time":"TBD","status":"UPCOMING"},
+    {"id":13,"grp":"A","t1":"Warriors","t2":"Thunderbolts","date":"Day 13","time":"TBD","status":"UPCOMING"},
+    {"id":14,"grp":"B","t1":"Titans","t2":"Gladiators","date":"Day 14","time":"TBD","status":"UPCOMING"},
+    {"id":15,"grp":"A","t1":"Knights","t2":"Royals","date":"Day 15","time":"TBD","status":"UPCOMING"},
+    {"id":16,"grp":"B","t1":"Panthers","t2":"Dominators","date":"Day 16","time":"TBD","status":"UPCOMING"},
+    {"id":17,"grp":"A","t1":"Marvels","t2":"Warriors","date":"Day 17","time":"TBD","status":"UPCOMING"},
+    {"id":18,"grp":"B","t1":"Lions","t2":"Gladiators","date":"Day 18","time":"TBD","status":"UPCOMING"},
+    {"id":19,"grp":"A","t1":"Knights","t2":"Thunderbolts","date":"Day 19","time":"TBD","status":"UPCOMING"},
+    {"id":20,"grp":"B","t1":"Titans","t2":"Dominators","date":"Day 20","time":"TBD","status":"UPCOMING"}
   ]
 }')
 ON CONFLICT (slug) DO NOTHING;

@@ -37,11 +37,13 @@ export const AUCTION_TYPE_COLOR = {
 }
 
 export const AUCTION_STAGES = {
+  COMING_SOON: 'coming_soon',
   IDLE: 'idle',
   LIVE: 'live',
   SOLD: 'sold',
   UNSOLD: 'unsold',
   COMPLETED: 'completed',
+  ENDED: 'ended',
 }
 
 export const TEAM_PURSE_LIMIT = 100

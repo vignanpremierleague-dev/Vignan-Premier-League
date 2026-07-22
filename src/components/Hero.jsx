@@ -6,7 +6,7 @@ export default function Hero({ settings, topOffset = 0 }) {
   const line1 = settings?.heroTitleLine1 || 'VIGNAN'
   const line2 = settings?.heroTitleLine2 || 'PREMIER'
   const line3 = settings?.heroTitleLine3 || 'LEAGUE'
-  const subtitle = settings?.heroSubtitle || 'T10 Format · IPL-Style Auction · Faculty Team Owners · Vignan Campus'
+  const subtitle = settings?.heroSubtitle || '8 Over Format · IPL-Style Auction · Faculty Team Owners · Vignan Campus'
   const primaryLabel = settings?.heroPrimaryCtaLabel || 'Register Now'
   const primaryHref = settings?.heroPrimaryCtaHref || '/register'
   const secondaryLabel = 'View Teams'
@@ -93,9 +93,8 @@ export default function Hero({ settings, topOffset = 0 }) {
         <div className="hero-fade-up hero-cta-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.8s' }}>
           {settings?.registrationsOpen === false ? (
             <>
-              <a href="/auction" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = '/auction' }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', display: 'inline-block', flexShrink: 0, animation: 'flicker .9s ease-in-out infinite' }} />
-                View Live Auction <ArrowUpRight style={{ width: 16, height: 16 }} />
+              <a href="/schedule" className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = '/schedule' }}>
+                View Schedule <ArrowUpRight style={{ width: 16, height: 16 }} />
               </a>
               <a href={secondaryHref} className="btn-ghost hero-btn-ghost">
                 {secondaryLabel} <ArrowUpRight style={{ width: 16, height: 16 }} />
@@ -106,8 +105,8 @@ export default function Hero({ settings, topOffset = 0 }) {
               <a href={primaryHref} className="btn-primary hero-btn-primary" onClick={e => { e.preventDefault(); window.location.href = primaryHref }}>
                 <Flame style={{ width: 16, height: 16 }} /> {primaryLabel}
               </a>
-              <a href="/auction" className="btn-ghost hero-btn-ghost" onClick={e => { e.preventDefault(); window.location.href = '/auction' }}>
-                <Flame style={{ width: 14, height: 14 }} /> View Live Auction <ArrowUpRight style={{ width: 16, height: 16 }} />
+              <a href="/schedule" className="btn-ghost hero-btn-ghost" onClick={e => { e.preventDefault(); window.location.href = '/schedule' }}>
+                View Schedule <ArrowUpRight style={{ width: 16, height: 16 }} />
               </a>
             </>
           )}

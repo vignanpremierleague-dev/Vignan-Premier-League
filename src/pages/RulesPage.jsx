@@ -8,9 +8,9 @@ const rules = [
   {
     icon: <Clock size={18} color="#ff6b22" />,
     title: 'Match Format',
-    summary: 'T10, 10 overs per side, 90-minute window',
+    summary: '8 over format, 8 overs per side, 70-minute window',
     items: [
-      'T10 format — 10 overs per side.',
+      '8 over format — 8 overs per side.',
       'Standard ICC cricket rules apply.',
       'Powerplay: first 2 overs with field restrictions.',
       'Match must complete within 90 minutes.',
@@ -21,9 +21,9 @@ const rules = [
   {
     icon: <Users size={18} color="#ff6b22" />,
     title: 'Team Composition',
-    summary: '11 players + 2 substitutes via auction',
+    summary: '11 players + 1 substitute via auction',
     items: [
-      '11 playing members + 2 substitutes per team.',
+      '11 playing members + 1 substitute per team.',
       'Players are drafted exclusively through the auction.',
       'Players may not refuse their selection after being bought.',
       'Substitutes can only field — they cannot bat or bowl.',

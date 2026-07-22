@@ -8,42 +8,42 @@ import { fetchSiteSettings } from '../lib/adminApi'
 /* ── Default Fallback Data ── */
 const defaultTeams = {
   A: [
-    { name: 'Dominators', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
     { name: 'Warriors', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-    { name: 'Gladiators', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
     { name: 'Knights', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-    { name: 'Lions', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    { name: 'Marvels', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    { name: 'Thunderbolts', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    { name: 'Royals', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
   ],
   B: [
-    { name: 'Royals', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    { name: 'Lions', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
     { name: 'Titans', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-    { name: 'Marvels', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
     { name: 'Panthers', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
-    { name: 'Thunderbolts', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    { name: 'Gladiators', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
+    { name: 'Dominators', p: 0, w: 0, l: 0, pts: 0, nrr: '+0.000' },
   ]
 }
 
 const defaultLeagueMatches = [
-  { id: 1, grp: 'A', t1: 'Team 1', t2: 'Team 2', date: 'TBD', time: 'TBD' },
-  { id: 2, grp: 'A', t1: 'Team 3', t2: 'Team 4', date: 'TBD', time: 'TBD' },
-  { id: 3, grp: 'A', t1: 'Team 5', t2: 'Team 1', date: 'TBD', time: 'TBD' },
-  { id: 4, grp: 'A', t1: 'Team 2', t2: 'Team 3', date: 'TBD', time: 'TBD' },
-  { id: 5, grp: 'A', t1: 'Team 4', t2: 'Team 5', date: 'TBD', time: 'TBD' },
-  { id: 6, grp: 'A', t1: 'Team 1', t2: 'Team 3', date: 'TBD', time: 'TBD' },
-  { id: 7, grp: 'A', t1: 'Team 2', t2: 'Team 4', date: 'TBD', time: 'TBD' },
-  { id: 8, grp: 'A', t1: 'Team 3', t2: 'Team 5', date: 'TBD', time: 'TBD' },
-  { id: 9, grp: 'A', t1: 'Team 1', t2: 'Team 4', date: 'TBD', time: 'TBD' },
-  { id: 10, grp: 'A', t1: 'Team 2', t2: 'Team 5', date: 'TBD', time: 'TBD' },
-  { id: 11, grp: 'B', t1: 'Team 6', t2: 'Team 7', date: 'TBD', time: 'TBD' },
-  { id: 12, grp: 'B', t1: 'Team 8', t2: 'Team 9', date: 'TBD', time: 'TBD' },
-  { id: 13, grp: 'B', t1: 'Team 10', t2: 'Team 6', date: 'TBD', time: 'TBD' },
-  { id: 14, grp: 'B', t1: 'Team 7', t2: 'Team 8', date: 'TBD', time: 'TBD' },
-  { id: 15, grp: 'B', t1: 'Team 9', t2: 'Team 10', date: 'TBD', time: 'TBD' },
-  { id: 16, grp: 'B', t1: 'Team 6', t2: 'Team 8', date: 'TBD', time: 'TBD' },
-  { id: 17, grp: 'B', t1: 'Team 7', t2: 'Team 9', date: 'TBD', time: 'TBD' },
-  { id: 18, grp: 'B', t1: 'Team 8', t2: 'Team 10', date: 'TBD', time: 'TBD' },
-  { id: 19, grp: 'B', t1: 'Team 6', t2: 'Team 9', date: 'TBD', time: 'TBD' },
-  { id: 20, grp: 'B', t1: 'Team 7', t2: 'Team 10', date: 'TBD', time: 'TBD' },
+  { id: 1,  grp: 'A', t1: 'Warriors',     t2: 'Knights',      date: 'Day 1',  time: 'TBD', status: 'UPCOMING' },
+  { id: 2,  grp: 'B', t1: 'Lions',        t2: 'Titans',       date: 'Day 2',  time: 'TBD', status: 'UPCOMING' },
+  { id: 3,  grp: 'A', t1: 'Marvels',      t2: 'Thunderbolts', date: 'Day 3',  time: 'TBD', status: 'UPCOMING' },
+  { id: 4,  grp: 'B', t1: 'Panthers',     t2: 'Gladiators',   date: 'Day 4',  time: 'TBD', status: 'UPCOMING' },
+  { id: 5,  grp: 'A', t1: 'Royals',       t2: 'Warriors',     date: 'Day 5',  time: 'TBD', status: 'UPCOMING' },
+  { id: 6,  grp: 'B', t1: 'Dominators',   t2: 'Lions',        date: 'Day 6',  time: 'TBD', status: 'UPCOMING' },
+  { id: 7,  grp: 'A', t1: 'Knights',      t2: 'Marvels',      date: 'Day 7',  time: 'TBD', status: 'UPCOMING' },
+  { id: 8,  grp: 'B', t1: 'Titans',       t2: 'Panthers',     date: 'Day 8',  time: 'TBD', status: 'UPCOMING' },
+  { id: 9,  grp: 'A', t1: 'Thunderbolts', t2: 'Royals',       date: 'Day 9',  time: 'TBD', status: 'UPCOMING' },
+  { id: 10, grp: 'B', t1: 'Gladiators',   t2: 'Dominators',   date: 'Day 10', time: 'TBD', status: 'UPCOMING' },
+  { id: 11, grp: 'A', t1: 'Marvels',      t2: 'Royals',       date: 'Day 11', time: 'TBD', status: 'UPCOMING' },
+  { id: 12, grp: 'B', t1: 'Lions',        t2: 'Panthers',     date: 'Day 12', time: 'TBD', status: 'UPCOMING' },
+  { id: 13, grp: 'A', t1: 'Warriors',     t2: 'Thunderbolts', date: 'Day 13', time: 'TBD', status: 'UPCOMING' },
+  { id: 14, grp: 'B', t1: 'Titans',       t2: 'Gladiators',   date: 'Day 14', time: 'TBD', status: 'UPCOMING' },
+  { id: 15, grp: 'A', t1: 'Knights',      t2: 'Royals',       date: 'Day 15', time: 'TBD', status: 'UPCOMING' },
+  { id: 16, grp: 'B', t1: 'Panthers',     t2: 'Dominators',   date: 'Day 16', time: 'TBD', status: 'UPCOMING' },
+  { id: 17, grp: 'A', t1: 'Marvels',      t2: 'Warriors',     date: 'Day 17', time: 'TBD', status: 'UPCOMING' },
+  { id: 18, grp: 'B', t1: 'Lions',        t2: 'Gladiators',   date: 'Day 18', time: 'TBD', status: 'UPCOMING' },
+  { id: 19, grp: 'A', t1: 'Knights',      t2: 'Thunderbolts', date: 'Day 19', time: 'TBD', status: 'UPCOMING' },
+  { id: 20, grp: 'B', t1: 'Titans',       t2: 'Dominators',   date: 'Day 20', time: 'TBD', status: 'UPCOMING' }
 ]
 const defaultKnockout = {
   semiFinal1: { label: 'Semi-Final 1', team1Seed: 'A1', team1Name: 'Group A Winner', team2Seed: 'B2', team2Name: 'Group B Runner-up' },
@@ -52,7 +52,7 @@ const defaultKnockout = {
 }
 
 /* ── Component: Match Cards (IPL Style) ── */
-function MatchTable({ label, accent, matches }) {
+function MatchTable({ label, matches }) {
   const statusTone = (status) => {
     if (status === 'LIVE') return { bg: 'rgba(239,68,68,.16)', color: '#ef4444', border: 'rgba(239,68,68,.45)' }
     if (status === 'COMPLETED') return { bg: 'rgba(74,222,128,.16)', color: '#4ade80', border: 'rgba(74,222,128,.35)' }
@@ -63,52 +63,57 @@ function MatchTable({ label, accent, matches }) {
   return (
     <div style={{ marginBottom: 48 }}>
       <div style={{ padding: '8px 0 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, flexShrink: 0, boxShadow: `0 0 10px ${accent}80` }} />
-        <span style={{ fontFamily: '"Syne",system-ui,sans-serif', fontWeight: 800, fontSize: '1.05rem', color: accent, textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff6b22', flexShrink: 0, boxShadow: `0 0 10px #ff6b2280` }} />
+        <span style={{ fontFamily: '"Syne",system-ui,sans-serif', fontWeight: 800, fontSize: '1.05rem', color: '#ff6b22', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 16 }}>
-        {matches.map((m, i) => (
-          <div key={i} className="match-card">
-            <div className="match-card-head" style={{ borderBottom: `1px solid ${accent}30` }}>
-              <span className="match-id">{m.type === 'final' ? 'Final' : m.type === 'knockout' ? `SF ${m.id}` : `Match ${m.id}`}</span>
-              <span className="match-status" style={{ background: statusTone(m.status).bg, color: statusTone(m.status).color, borderColor: statusTone(m.status).border }}>
-                {m.status === 'LIVE' && <span className="live-dot" />}
-                {m.status === 'LIVE' ? 'Live' : m.status === 'COMPLETED' ? 'Ended' : m.status === 'ABANDONED' ? 'Abandoned' : 'Upcoming'}
-              </span>
-            </div>
+        {matches.map((m, i) => {
+          const cardAccent = m.grp === 'A' ? '#ff6b22' : '#3b82f6'
+          return (
+            <div key={i} className="match-card">
+              <div className="match-card-head" style={{ borderBottom: `1px solid ${cardAccent}30` }}>
+                <span className="match-id" style={{ color: cardAccent }}>
+                  {m.type === 'final' ? 'Final' : m.type === 'knockout' ? `SF ${m.id}` : `Pool ${m.grp} · Match ${m.id}`}
+                </span>
+                <span className="match-status" style={{ background: statusTone(m.status).bg, color: statusTone(m.status).color, borderColor: statusTone(m.status).border }}>
+                  {m.status === 'LIVE' && <span className="live-dot" />}
+                  {m.status === 'LIVE' ? 'Live' : m.status === 'COMPLETED' ? 'Ended' : m.status === 'ABANDONED' ? 'Abandoned' : 'Upcoming'}
+                </span>
+              </div>
 
-            <div className="match-card-body">
-              <div className="fixture-row">
-                <div className="fixture-team fixture-team-left">
-                  <span className="team-pip" style={{ background: `${accent}20`, borderColor: `${accent}55`, color: accent }}>1</span>
-                  <span className="team-name">{m.t1}</span>
-                </div>
+              <div className="match-card-body">
+                <div className="fixture-row">
+                  <div className="fixture-team fixture-team-left">
+                    <span className="team-pip" style={{ background: `${cardAccent}20`, borderColor: `${cardAccent}55`, color: cardAccent }}>1</span>
+                    <span className="team-name">{m.t1}</span>
+                  </div>
 
-                <span className="vs-pill" style={{ color: accent, borderColor: `${accent}45` }}>VS</span>
+                  <span className="vs-pill" style={{ color: cardAccent, borderColor: `${cardAccent}45` }}>VS</span>
 
-                <div className="fixture-team fixture-team-right">
-                  <span className="team-name">{m.t2}</span>
-                  <span className="team-pip" style={{ background: `${accent}20`, borderColor: `${accent}55`, color: accent }}>2</span>
+                  <div className="fixture-team fixture-team-right">
+                    <span className="team-name">{m.t2}</span>
+                    <span className="team-pip" style={{ background: `${cardAccent}20`, borderColor: `${cardAccent}55`, color: cardAccent }}>2</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="match-card-foot">
-              {m.status === 'COMPLETED' || m.status === 'ABANDONED' ? (
-                <p className="match-result">
-                  {m.result || (m.winner ? `${m.winner} won` : 'Match Ended')}
-                </p>
-              ) : (
-                <div className="match-meta">
-                  <span><CalendarDays size={14}/> {m.date}</span>
-                  <span className="meta-dot">•</span>
-                  <span>{m.time}</span>
-                </div>
-              )}
+              <div className="match-card-foot">
+                {m.status === 'COMPLETED' || m.status === 'ABANDONED' ? (
+                  <p className="match-result">
+                    {m.result || (m.winner ? `${m.winner} won` : 'Match Ended')}
+                  </p>
+                ) : (
+                  <div className="match-meta">
+                    <span><CalendarDays size={14}/> {m.date}</span>
+                    <span className="meta-dot">•</span>
+                    <span>{m.time}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -249,14 +254,8 @@ export default function SchedulesPage() {
               League Stage
             </h2>
             <MatchTable
-              label="Group A Fixtures"
-              accent="#ff6b22"
-              matches={leagueMatches.filter(m => m.grp === 'A')}
-            />
-            <MatchTable
-              label="Group B Fixtures"
-              accent="#3b82f6"
-              matches={leagueMatches.filter(m => m.grp === 'B')}
+              label="League Fixtures"
+              matches={[...leagueMatches].sort((a, b) => a.id - b.id)}
             />
           </div>
 
