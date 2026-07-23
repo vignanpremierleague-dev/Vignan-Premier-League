@@ -120,7 +120,27 @@ function MatchTable({ label, matches }) {
 }
 
 /* ── Component: Points Table ── */
-function PointsTable({ label, accent, teamData }) {
+function PointsTable({ label, accent, teamData = [] }) {
+  const sortedTeamData = [...(teamData || [])].sort((a, b) => {
+    // 1. Points (Pts) - Descending
+    const ptsA = Number(a.pts) || 0
+    const ptsB = Number(b.pts) || 0
+    if (ptsB !== ptsA) return ptsB - ptsA
+
+    // 2. Wins (W) - Descending
+    const wA = Number(a.w) || 0
+    const wB = Number(b.w) || 0
+    if (wB !== wA) return wB - wA
+
+    // 3. Net Run Rate (NRR) - Descending
+    const nrrA = parseFloat(a.nrr) || 0
+    const nrrB = parseFloat(b.nrr) || 0
+    if (nrrB !== nrrA) return nrrB - nrrA
+
+    // 4. Team Name (Alphabetical) - Ascending
+    return (a.name || '').localeCompare(b.name || '')
+  })
+
   return (
     <div className="group-card">
       <div className="gc-header" style={{ borderBottom: `1px solid ${accent}40` }}>
@@ -139,8 +159,8 @@ function PointsTable({ label, accent, teamData }) {
             </tr>
           </thead>
           <tbody>
-            {teamData.map((t, i) => (
-              <tr key={t.name} style={{ borderBottom: i < teamData.length - 1 ? '1px solid rgba(255,255,255,.03)' : 'none' }}>
+            {sortedTeamData.map((t, i) => (
+              <tr key={t.name} style={{ borderBottom: i < sortedTeamData.length - 1 ? '1px solid rgba(255,255,255,.03)' : 'none' }}>
                 <td className="pt-team">
                   <span style={{ color: '#555', marginRight: 8, fontSize: '.7rem' }}>{i + 1}</span>
                   <span>{t.name}</span>
