@@ -1514,9 +1514,10 @@ const DEFAULT_MATCHES = Array.from({ length: 20 }, (_, i) => ({
   date: 'TBD', time: 'TBD', winner: '',
 }))
 const DEFAULT_KNOCKOUT = {
-  semiFinal1: { label: 'Semi-Final 1', team1Seed: 'A1', team1Name: 'Group A Winner', team2Seed: 'B2', team2Name: 'Group B Runner-up' },
-  semiFinal2: { label: 'Semi-Final 2', team1Seed: 'B1', team1Name: 'Group B Winner', team2Seed: 'A2', team2Name: 'Group A Runner-up' },
-  final: { label: 'Grand Finale', team1Name: 'Winner SF1', team2Name: 'Winner SF2' },
+  qualifier1: { label: 'Qualifier 1', team1Seed: 'A1', team1Name: 'Pool A 1st', team2Seed: 'B1', team2Name: 'Pool B 1st' },
+  eliminator: { label: 'Eliminator', team1Seed: 'A2', team1Name: 'Pool A 2nd', team2Seed: 'B2', team2Name: 'Pool B 2nd' },
+  qualifier2: { label: 'Qualifier 2', team1Name: 'Loser Q1', team2Name: 'Winner Eliminator' },
+  final: { label: 'Finals', team1Name: 'Winner Q1', team2Name: 'Winner Q2' },
 }
 
 function buildScheduleForm(settings) {
@@ -1557,19 +1558,24 @@ function buildScheduleForm(settings) {
       result: m?.result || '',
     })),
     knockout: {
-      semiFinal1: {
-        label: source?.knockout?.semiFinal1?.label || DEFAULT_KNOCKOUT.semiFinal1.label,
-        team1Seed: source?.knockout?.semiFinal1?.team1Seed || DEFAULT_KNOCKOUT.semiFinal1.team1Seed,
-        team1Name: source?.knockout?.semiFinal1?.team1Name || DEFAULT_KNOCKOUT.semiFinal1.team1Name,
-        team2Seed: source?.knockout?.semiFinal1?.team2Seed || DEFAULT_KNOCKOUT.semiFinal1.team2Seed,
-        team2Name: source?.knockout?.semiFinal1?.team2Name || DEFAULT_KNOCKOUT.semiFinal1.team2Name,
+      qualifier1: {
+        label: source?.knockout?.qualifier1?.label || DEFAULT_KNOCKOUT.qualifier1.label,
+        team1Seed: source?.knockout?.qualifier1?.team1Seed || DEFAULT_KNOCKOUT.qualifier1.team1Seed,
+        team1Name: source?.knockout?.qualifier1?.team1Name || DEFAULT_KNOCKOUT.qualifier1.team1Name,
+        team2Seed: source?.knockout?.qualifier1?.team2Seed || DEFAULT_KNOCKOUT.qualifier1.team2Seed,
+        team2Name: source?.knockout?.qualifier1?.team2Name || DEFAULT_KNOCKOUT.qualifier1.team2Name,
       },
-      semiFinal2: {
-        label: source?.knockout?.semiFinal2?.label || DEFAULT_KNOCKOUT.semiFinal2.label,
-        team1Seed: source?.knockout?.semiFinal2?.team1Seed || DEFAULT_KNOCKOUT.semiFinal2.team1Seed,
-        team1Name: source?.knockout?.semiFinal2?.team1Name || DEFAULT_KNOCKOUT.semiFinal2.team1Name,
-        team2Seed: source?.knockout?.semiFinal2?.team2Seed || DEFAULT_KNOCKOUT.semiFinal2.team2Seed,
-        team2Name: source?.knockout?.semiFinal2?.team2Name || DEFAULT_KNOCKOUT.semiFinal2.team2Name,
+      eliminator: {
+        label: source?.knockout?.eliminator?.label || DEFAULT_KNOCKOUT.eliminator.label,
+        team1Seed: source?.knockout?.eliminator?.team1Seed || DEFAULT_KNOCKOUT.eliminator.team1Seed,
+        team1Name: source?.knockout?.eliminator?.team1Name || DEFAULT_KNOCKOUT.eliminator.team1Name,
+        team2Seed: source?.knockout?.eliminator?.team2Seed || DEFAULT_KNOCKOUT.eliminator.team2Seed,
+        team2Name: source?.knockout?.eliminator?.team2Name || DEFAULT_KNOCKOUT.eliminator.team2Name,
+      },
+      qualifier2: {
+        label: source?.knockout?.qualifier2?.label || DEFAULT_KNOCKOUT.qualifier2.label,
+        team1Name: source?.knockout?.qualifier2?.team1Name || DEFAULT_KNOCKOUT.qualifier2.team1Name,
+        team2Name: source?.knockout?.qualifier2?.team2Name || DEFAULT_KNOCKOUT.qualifier2.team2Name,
       },
       final: {
         label: source?.knockout?.final?.label || DEFAULT_KNOCKOUT.final.label,
@@ -1639,8 +1645,9 @@ function SchedulePanel({ settings, onSave, saving, isCompact, players }) {
       },
       leagueMatches: DEFAULT_MATCHES.map((m) => ({ ...m })),
       knockout: {
-        semiFinal1: { ...DEFAULT_KNOCKOUT.semiFinal1 },
-        semiFinal2: { ...DEFAULT_KNOCKOUT.semiFinal2 },
+        qualifier1: { ...DEFAULT_KNOCKOUT.qualifier1 },
+        eliminator: { ...DEFAULT_KNOCKOUT.eliminator },
+        qualifier2: { ...DEFAULT_KNOCKOUT.qualifier2 },
         final: { ...DEFAULT_KNOCKOUT.final },
       },
     }))
@@ -1899,26 +1906,36 @@ function SchedulePanel({ settings, onSave, saving, isCompact, players }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <div style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
-            <p style={{ color: '#ff6b22', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Semi Final 1</p>
+            <p style={{ color: '#ff6b22', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Qualifier 1</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
-              <input value={form.knockout.semiFinal1.label} onChange={e => updateKnockout('semiFinal1', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier1.label} onChange={e => updateKnockout('qualifier1', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <div />
-              <input value={form.knockout.semiFinal1.team1Seed} onChange={e => updateKnockout('semiFinal1', 'team1Seed', e.target.value)} placeholder="Seed 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
-              <input value={form.knockout.semiFinal1.team1Name} onChange={e => updateKnockout('semiFinal1', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
-              <input value={form.knockout.semiFinal1.team2Seed} onChange={e => updateKnockout('semiFinal1', 'team2Seed', e.target.value)} placeholder="Seed 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
-              <input value={form.knockout.semiFinal1.team2Name} onChange={e => updateKnockout('semiFinal1', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier1.team1Seed} onChange={e => updateKnockout('qualifier1', 'team1Seed', e.target.value)} placeholder="Seed 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier1.team1Name} onChange={e => updateKnockout('qualifier1', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier1.team2Seed} onChange={e => updateKnockout('qualifier1', 'team2Seed', e.target.value)} placeholder="Seed 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier1.team2Name} onChange={e => updateKnockout('qualifier1', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
             </div>
           </div>
 
           <div style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
-            <p style={{ color: '#3b82f6', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Semi Final 2</p>
+            <p style={{ color: '#3b82f6', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Eliminator</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
-              <input value={form.knockout.semiFinal2.label} onChange={e => updateKnockout('semiFinal2', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.eliminator.label} onChange={e => updateKnockout('eliminator', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <div />
-              <input value={form.knockout.semiFinal2.team1Seed} onChange={e => updateKnockout('semiFinal2', 'team1Seed', e.target.value)} placeholder="Seed 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
-              <input value={form.knockout.semiFinal2.team1Name} onChange={e => updateKnockout('semiFinal2', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
-              <input value={form.knockout.semiFinal2.team2Seed} onChange={e => updateKnockout('semiFinal2', 'team2Seed', e.target.value)} placeholder="Seed 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
-              <input value={form.knockout.semiFinal2.team2Name} onChange={e => updateKnockout('semiFinal2', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.eliminator.team1Seed} onChange={e => updateKnockout('eliminator', 'team1Seed', e.target.value)} placeholder="Seed 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.eliminator.team1Name} onChange={e => updateKnockout('eliminator', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.eliminator.team2Seed} onChange={e => updateKnockout('eliminator', 'team2Seed', e.target.value)} placeholder="Seed 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.eliminator.team2Name} onChange={e => updateKnockout('eliminator', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+            </div>
+          </div>
+
+          <div style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
+            <p style={{ color: '#a855f7', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Qualifier 2</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
+              <input value={form.knockout.qualifier2.label} onChange={e => updateKnockout('qualifier2', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <div />
+              <input value={form.knockout.qualifier2.team1Name} onChange={e => updateKnockout('qualifier2', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier2.team2Name} onChange={e => updateKnockout('qualifier2', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
             </div>
           </div>
         </div>

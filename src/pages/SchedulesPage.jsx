@@ -2,7 +2,7 @@ import { Flame, Trophy, CalendarDays, Users, Swords, Shield, ScrollText, ArrowDo
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { fetchSiteSettings } from '../lib/adminApi'
 
 /* ── Default Fallback Data ── */
@@ -46,9 +46,10 @@ const defaultLeagueMatches = [
   { id: 20, grp: 'B', t1: 'Titans',       t2: 'Dominators',   date: 'Day 20', time: 'TBD', status: 'UPCOMING' }
 ]
 const defaultKnockout = {
-  semiFinal1: { label: 'Semi-Final 1', team1Seed: 'A1', team1Name: 'Group A Winner', team2Seed: 'B2', team2Name: 'Group B Runner-up' },
-  semiFinal2: { label: 'Semi-Final 2', team1Seed: 'B1', team1Name: 'Group B Winner', team2Seed: 'A2', team2Name: 'Group A Runner-up' },
-  final: { label: 'Grand Finale', team1Name: 'Winner SF1', team2Name: 'Winner SF2' },
+  qualifier1: { label: 'Qualifier 1', team1Seed: 'A1', team1Name: 'Pool A 1st', team2Seed: 'B1', team2Name: 'Pool B 1st' },
+  eliminator: { label: 'Eliminator', team1Seed: 'A2', team1Name: 'Pool A 2nd', team2Seed: 'B2', team2Name: 'Pool B 2nd' },
+  qualifier2: { label: 'Qualifier 2', team1Name: 'Loser Q1', team2Name: 'Winner Eliminator' },
+  final: { label: 'Finals', team1Name: 'Winner Q1', team2Name: 'Winner Q2' },
 }
 
 /* ── Component: Match Cards (IPL Style) ── */
@@ -180,41 +181,109 @@ function PointsTable({ label, accent, teamData = [] }) {
 }
 
 /* ── Component: Tournament Bracket (Tree) ── */
+function FlowingConnector({ className, pathType, delayStr }) {
+  const ref = useRef(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setSize({ w: entry.contentRect.width, h: entry.contentRect.height });
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  let pathData = '';
+  const { w, h } = size;
+  const R = 16; // Curve radius
+
+  if (w > 0 && h > 0) {
+    if (pathType === 'q1-drop') {
+      pathData = `M 0 0 L ${w - R} 0 Q ${w} 0 ${w} ${R} L ${w} ${h}`;
+    } else if (pathType === 'elim-up') {
+      pathData = `M 0 ${h} L ${w - R} ${h} Q ${w} ${h} ${w} ${h - R} L ${w} 0`;
+    } else if (pathType === 'horizontal') {
+      pathData = `M 0 ${h/2} L ${w} ${h/2}`;
+    }
+  }
+
+  return (
+    <div ref={ref} className={`c-base ${className}`}>
+      {w > 0 && h > 0 && (
+        <svg width="100%" height="100%" style={{ overflow: 'visible', position: 'absolute', top: 0, left: 0 }}>
+          <path d={pathData} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+          <path 
+            d={pathData} 
+            fill="none" 
+            stroke="#ffb800" 
+            strokeWidth="8" 
+            strokeDasharray="80 1000"
+            style={{ animation: 'svgFlow 3s infinite linear', animationDelay: delayStr, filter: 'blur(4px)' }}
+          />
+          <path 
+            d={pathData} 
+            fill="none" 
+            stroke="#fff" 
+            strokeWidth="2" 
+            strokeDasharray="80 1000"
+            style={{ animation: 'svgFlow 3s infinite linear', animationDelay: delayStr }}
+          />
+        </svg>
+      )}
+    </div>
+  );
+}
+
 function TournamentBracket({ knockout }) {
   return (
     <div className="sched-anim bracket-wrapper">
       <div className="bracket-container">
 
-        {/* Semi-Finals Column */}
+        {/* Qualifier 1 and Eliminator Column */}
         <div className="bracket-col">
-          {/* SF 1 */}
+          {/* Qualifier 1 */}
           <div className="bracket-match">
-            <div className="bm-label" style={{ color: '#ff3366' }}>{knockout.semiFinal1.label}</div>
-            <div className="bm-team"><span className="seed">{knockout.semiFinal1.team1Seed}</span> {knockout.semiFinal1.team1Name}</div>
-            <div className="bm-team"><span className="seed">{knockout.semiFinal1.team2Seed}</span> {knockout.semiFinal1.team2Name}</div>
-            <div className="connector-h c-h-right" />
-            <div className="connector-v c-v-down" />
+            <div className="bm-label" style={{ color: '#ff3366' }}>{knockout.qualifier1.label}</div>
+            <div className="bm-team"><span className="seed">{knockout.qualifier1.team1Seed}</span> {knockout.qualifier1.team1Name}</div>
+            <div className="bm-team"><span className="seed">{knockout.qualifier1.team2Seed}</span> {knockout.qualifier1.team2Name}</div>
+            <FlowingConnector className="c-q1-q2" pathType="q1-drop" delayStr="0s" />
+            <FlowingConnector className="c-q1-final" pathType="q1-drop" delayStr="1.5s" />
           </div>
 
-          {/* SF 2 */}
+          {/* Eliminator */}
           <div className="bracket-match">
-            <div className="bm-label" style={{ color: '#ff3366' }}>{knockout.semiFinal2.label}</div>
-            <div className="bm-team"><span className="seed">{knockout.semiFinal2.team1Seed}</span> {knockout.semiFinal2.team1Name}</div>
-            <div className="bm-team"><span className="seed">{knockout.semiFinal2.team2Seed}</span> {knockout.semiFinal2.team2Name}</div>
-            <div className="connector-h c-h-right" />
-            <div className="connector-v c-v-up" />
+            <div className="bm-label" style={{ color: '#3b82f6' }}>{knockout.eliminator.label}</div>
+            <div className="bm-team"><span className="seed">{knockout.eliminator.team1Seed}</span> {knockout.eliminator.team1Name}</div>
+            <div className="bm-team"><span className="seed">{knockout.eliminator.team2Seed}</span> {knockout.eliminator.team2Name}</div>
+            <FlowingConnector className="c-elim-q2" pathType="elim-up" delayStr="0s" />
+          </div>
+        </div>
+
+        {/* Qualifier 2 Column */}
+        <div className="bracket-col bracket-col-center">
+          <div className="bracket-match">
+            <div className="bm-label" style={{ color: '#a855f7' }}>{knockout.qualifier2.label}</div>
+            <div className="bm-team">{knockout.qualifier2.team1Name}</div>
+            <div className="bm-team">{knockout.qualifier2.team2Name}</div>
+            <FlowingConnector className="c-entry-q2" pathType="horizontal" delayStr="0.8s" />
+            <FlowingConnector className="c-exit-q2" pathType="horizontal" delayStr="1.6s" />
           </div>
         </div>
 
         {/* Finals Column */}
         <div className="bracket-col bracket-col-center">
-          <div className="bracket-match bm-final">
+          <div className="bracket-match bm-final match-final">
             <div className="bm-label" style={{ color: '#ffb800', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Trophy size={14} color="#ffb800" /> {knockout.final.label}
             </div>
             <div className="bm-team">{knockout.final.team1Name}</div>
             <div className="bm-team">{knockout.final.team2Name}</div>
-            <div className="connector-h c-h-final" />
+            
+            <FlowingConnector className="c-entry-final" pathType="horizontal" delayStr="2.4s" />
           </div>
         </div>
 
@@ -233,7 +302,12 @@ export default function SchedulesPage() {
 
   const teams = settings?.teams || defaultTeams
   const leagueMatches = settings?.leagueMatches || defaultLeagueMatches
-  const knockout = settings?.knockout || defaultKnockout
+  const knockout = {
+    qualifier1: settings?.knockout?.qualifier1 || defaultKnockout.qualifier1,
+    eliminator: settings?.knockout?.eliminator || defaultKnockout.eliminator,
+    qualifier2: settings?.knockout?.qualifier2 || defaultKnockout.qualifier2,
+    final: settings?.knockout?.final || defaultKnockout.final,
+  }
 
   return (
     <div style={{
@@ -261,9 +335,14 @@ export default function SchedulesPage() {
         </div>
 
         {/* ── Groups Overview (Points Tables) ── */}
-        <div className="sched-anim" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, marginBottom: 50, animationDelay: '0.1s' }}>
+        <div className="sched-anim" style={{ animationDelay: '0.1s' }}>
+          <h2 style={{ fontFamily: '"Syne"', fontSize: '1.8rem', color: '#efefef', margin: '0 0 24px', textAlign: 'center' }}>
+            Points Table
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, marginBottom: 50 }}>
           <PointsTable label="Group A Standings" accent="#ff6b22" teamData={teams.A} />
           <PointsTable label="Group B Standings" accent="#3b82f6" teamData={teams.B} />
+          </div>
         </div>
 
         <div className="sched-anim" style={{ marginTop: 24, animationDelay: '0.2s' }}>
@@ -474,20 +553,28 @@ export default function SchedulesPage() {
         .pt-pts  { text-align: center; color: #ffb800; font-weight: 700; }
         .pt-nrr  { text-align: center; color: #888; font-size: .9rem; }
 
-        /* Bracket Tree Styles */
+        /* ── Schedules Bracket ── */
         .bracket-wrapper {
-          width: 100%; overflow-x: auto; padding: 40px 20px;
+          display: flex; flex-direction: column; width: 100%; 
+          overflow-x: auto; -webkit-overflow-scrolling: touch;
+          padding-bottom: 30px;
         }
+        
+        .bracket-wrapper::-webkit-scrollbar { height: 6px; }
+        .bracket-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .bracket-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
         .bracket-container {
-          display: flex; align-items: center; justify-content: center; gap: 80px;
-          min-width: max-content; margin: 0 auto;
+          display: flex; align-items: center;
+          gap: 60px; margin: 20px auto 0 auto; 
+          padding: 20px; width: max-content;
         }
         .bracket-col {
-          display: flex; flex-direction: column; gap: 80px; position: relative;
+          display: flex; flex-direction: column; gap: 60px; position: relative;
         }
         .bracket-match {
           background: rgba(18,18,18,.95); border: 1px solid rgba(255,255,255,.06);
-          border-radius: 16px; width: 340px; position: relative; z-index: 2;
+          border-radius: 16px; width: 290px; position: relative; z-index: 2;
           box-shadow: 0 10px 40px -10px rgba(0,0,0,0.6);
         }
         /* Glowing Final focus */
@@ -514,63 +601,52 @@ export default function SchedulesPage() {
           border-radius: 6px; font-size: .75rem; color: #bbb; margin-right: 12px; font-weight: 700;
         }
 
-        /* ── Animated Golden Aura Connectors ── */
-        .connector-h, .connector-v {
-          position: absolute; background: rgba(255,255,255,.06); overflow: hidden;
-          border-radius: 2px; z-index: 1;
-        }
-        .connector-h::after, .connector-v::after {
-          content: ''; position: absolute; inset: 0;
-          box-shadow: 0 0 12px rgba(255,184,0,0.8);
-        }
-        
-        .c-h-right { right: -40px; top: 50%; width: 40px; height: 4px; transform: translateY(-50%); }
-        .c-v-down  { right: -40px; top: 50%; width: 4px; height: calc(50% + 40px + 2px); }
-        .c-v-up    { right: -40px; bottom: 50%; width: 4px; height: calc(50% + 40px + 2px); }
-        .c-h-final { left: -40px; top: 50%; width: 40px; height: 4px; transform: translateY(-50%); }
-
-        .c-h-right::after { background: linear-gradient(90deg, transparent, #ffb800, #fff); animation: flowH_SF 2.4s linear infinite; }
-        .c-v-down::after  { background: linear-gradient(180deg, transparent, #ffb800, #fff); animation: flowV_Down 2.4s linear infinite; }
-        .c-v-up::after    { background: linear-gradient(0deg, transparent, #ffb800, #fff); animation: flowV_Up 2.4s linear infinite; }
-        .c-h-final::after { background: linear-gradient(90deg, transparent, #ffb800, #fff); animation: flowH_Final 2.4s linear infinite; }
-        
-        @keyframes flowH_SF {
-          0%   { transform: translateX(-100%); opacity: 0; }
-          2%   { transform: translateX(-100%); opacity: 1; }
-          25%  { transform: translateX(100%); opacity: 1; }
-          27%  { transform: translateX(100%); opacity: 0; }
-          100% { transform: translateX(100%); opacity: 0; }
+        /* ── SVG Flowing Connectors ── */
+        .c-base {
+          position: absolute; z-index: 1; pointer-events: none;
         }
 
-        @keyframes flowV_Down {
-          0%   { transform: translateY(-100%); opacity: 0; }
-          23%  { transform: translateY(-100%); opacity: 0; }
-          25%  { transform: translateY(-100%); opacity: 1; }
-          65%  { transform: translateY(100%); opacity: 1; }
-          67%  { transform: translateY(100%); opacity: 0; }
-          100% { transform: translateY(100%); opacity: 0; }
+        .c-q1-q2 {
+          left: 100%; top: 50%;
+          width: 30px; height: calc(50% + 30px + 2px);
         }
 
-        @keyframes flowV_Up {
-          0%   { transform: translateY(100%); opacity: 0; }
-          23%  { transform: translateY(100%); opacity: 0; }
-          25%  { transform: translateY(100%); opacity: 1; }
-          65%  { transform: translateY(-100%); opacity: 1; }
-          67%  { transform: translateY(-100%); opacity: 0; }
-          100% { transform: translateY(-100%); opacity: 0; }
+        .c-elim-q2 {
+          left: 100%; bottom: 50%;
+          width: 30px; height: calc(50% + 30px + 2px);
         }
 
-        @keyframes flowH_Final {
-          0%   { transform: translateX(-100%); opacity: 0; }
-          63%  { transform: translateX(-100%); opacity: 0; }
-          65%  { transform: translateX(-100%); opacity: 1; }
-          90%  { transform: translateX(100%); opacity: 1; }
-          92%  { transform: translateX(100%); opacity: 0; }
-          100% { transform: translateX(100%); opacity: 0; }
+        .c-q1-final {
+          left: 100%; top: 50%;
+          width: 380px; height: calc(50% + 30px + 2px);
+        }
+
+        .c-entry-q2 {
+          left: -30px; top: 50%;
+          width: 30px; height: 4px;
+          transform: translateY(-50%);
+        }
+
+        .c-exit-q2 {
+          left: 100%; top: 50%;
+          width: 30px; height: 4px;
+          transform: translateY(-50%);
+        }
+
+        .c-entry-final {
+          left: -30px; top: 50%;
+          width: 30px; height: 4px;
+          transform: translateY(-50%);
+        }
+
+        @keyframes svgFlow {
+          from { stroke-dashoffset: 1080; }
+          to { stroke-dashoffset: 0; }
         }
 
         /* Responsive Screen Scales */
-        @media (max-width: 650px) {
+        /* Responsive Screen Scales */
+        @media (max-width: 1024px) {
           
           /* Scaled & Legible Mobile Tables */
           .sched-table, .points-table { font-size: 0.90rem; }
@@ -583,34 +659,72 @@ export default function SchedulesPage() {
           .team-name { font-size: 1rem; }
           .match-meta { font-size: .74rem; }
           
-          /* Vertical Stack Bracket on Mobile */
+          /* Full Screen Design made Vertical */
           .bracket-wrapper { padding: 20px 0; overflow-x: hidden; }
-          .bracket-container { flex-direction: column-reverse; gap: 40px; min-width: auto; }
           
-          /* Semis side-by-side */
-          .bracket-col { flex-direction: row; gap: 12px; align-items: flex-start; width: 100%; justify-content: center; }
-          
-          .bracket-match { width: 50%; max-width: 160px; }
-          .bm-final { width: 100%; max-width: 250px; }
-          
-          /* Prevent squash on small cards */
-          .bm-label { font-size: 0.75rem; padding: 10px 8px; white-space: nowrap; }
-          .bm-team { font-size: 0.85rem; padding: 12px 8px; flex-wrap: wrap; }
-          .seed { width: 22px; height: 22px; font-size: .65rem; margin-right: 6px; }
-          
-          /* Golden Aura Flow Upwards to Final */
-          .c-h-right, .c-h-final { display: none; }
-          
-          /* Drop lines from bottom of Final to top of both Semis */
-          .c-v-down, .c-v-up { 
-            display: block; left: 50%; right: auto; top: -40px; bottom: auto; 
-            width: 4px; height: 40px; transform: translateX(-50%); 
-            background: rgba(255,255,255,.06);
+          .bracket-container { 
+            display: flex; flex-direction: column-reverse; align-items: center; 
+            gap: 50px; margin: 0 auto; padding: 0; width: 100%; min-width: auto;
           }
           
-          .c-v-down::after, .c-v-up::after { 
-            background: linear-gradient(0deg, transparent, #ffb800, #fff); 
-            animation: flowV_Up 2.4s linear infinite; 
+          .bracket-col { 
+            display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; 
+            align-items: center; width: 100%; gap: 30px; position: relative;
+          }
+          
+          /* Force Q1 and Elim to stay side-by-side on small screens */
+          .bracket-col:first-child { 
+            flex-wrap: nowrap; gap: 12px; width: 100%; padding: 0 10px; box-sizing: border-box;
+          }
+          .bracket-col:first-child .bm-label { font-size: 0.65rem; padding: 6px; }
+          .bracket-col:first-child .bm-team { font-size: 0.75rem; padding: 8px 6px; }
+          .bracket-col:first-child .seed { width: 16px; height: 16px; font-size: 0.6rem; margin-right: 4px; line-height: 16px; }
+          
+          /* Identical Card Sizes to Desktop */
+          .bracket-match { width: 100%; max-width: 290px; }
+          .bm-final { transform: none; margin: 0; }
+          
+          /* Hide Desktop Connectors */
+          .c-base { display: none !important; }
+          
+          /* Simple Vertical Hierarchy Lines */
+          /* Line from Final down to Q2 */
+          .bracket-col:nth-child(2)::before {
+            content: ''; position: absolute;
+            top: -40px; left: 50%; width: 2px; height: 30px;
+            background: rgba(255,184,0,0.5); transform: translateX(-50%);
+          }
+          
+          /* Line from Q2 down to Q1/Elim Fork */
+          .bracket-col:nth-child(1)::before {
+            content: ''; position: absolute;
+            top: -40px; left: 50%; width: 2px; height: 30px;
+            background: rgba(255,184,0,0.5); transform: translateX(-50%);
+          }
+          
+          /* Perfect T-Junction Fork for Q1 and Elim */
+          /* Q1 (Left) draws line from center to middle of the 12px gap */
+          .bracket-col:nth-child(1) .bracket-match:nth-child(1)::before {
+            content: ''; position: absolute;
+            top: -10px; left: 50%; right: -6px; height: 2px;
+            background: rgba(255,184,0,0.5);
+          }
+          .bracket-col:nth-child(1) .bracket-match:nth-child(1)::after {
+            content: ''; position: absolute;
+            top: -10px; left: 50%; width: 2px; height: 10px;
+            background: rgba(255,184,0,0.5); transform: translateX(-50%);
+          }
+          
+          /* Elim (Right) draws line from middle of 12px gap to its center */
+          .bracket-col:nth-child(1) .bracket-match:nth-child(2)::before {
+            content: ''; position: absolute;
+            top: -10px; left: -6px; right: 50%; height: 2px;
+            background: rgba(255,184,0,0.5);
+          }
+          .bracket-col:nth-child(1) .bracket-match:nth-child(2)::after {
+            content: ''; position: absolute;
+            top: -10px; left: 50%; width: 2px; height: 10px;
+            background: rgba(255,184,0,0.5); transform: translateX(-50%);
           }
         }
       `}</style>
