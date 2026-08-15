@@ -75,7 +75,7 @@ function MatchTable({ label, matches }) {
             <div key={i} className="match-card">
               <div className="match-card-head" style={{ borderBottom: `1px solid ${cardAccent}30` }}>
                 <span className="match-id" style={{ color: cardAccent }}>
-                  {m.type === 'final' ? 'Final' : m.type === 'knockout' ? `SF ${m.id}` : `Pool ${m.grp} · Match ${m.id}`}
+                  {m.type === 'final' ? 'Final' : m.type === 'playoff' ? m.id : m.type === 'knockout' ? `SF ${m.id}` : `Pool ${m.grp} · Match ${m.id}`}
                 </span>
                 <span className="match-status" style={{ background: statusTone(m.status).bg, color: statusTone(m.status).color, borderColor: statusTone(m.status).border }}>
                   {m.status === 'LIVE' && <span className="live-dot" />}
@@ -329,7 +329,7 @@ export default function SchedulesPage() {
             Tournament Fixtures
           </h1>
           <p style={{ color: '#bbb', fontSize: '.9rem', lineHeight: 1.7, maxWidth: 500, margin: '0 auto' }}>
-            10 Teams. 2 Groups. 23 Matches. One Champions Trophy. The tournament runs across July - August, with finalized fixture dates and team names updated here.
+            10 Teams. 2 Groups. 24 Matches. One Champions Trophy. The tournament runs across July - August, with finalized fixture dates and team names updated here.
           </p>
           <div style={{ width: 40, height: 3, background: 'linear-gradient(90deg,#ff6b22,#ffb800)', borderRadius: 2, margin: '20px auto 0' }} />
         </div>
@@ -360,10 +360,43 @@ export default function SchedulesPage() {
 
           {/* Knockout Stage View (Tournament Bracket Tree) */}
           <div style={{ paddingTop: 20, borderTop: '1px solid rgba(255,255,255,.05)' }}>
-            <h2 style={{ fontFamily: '"Syne"', fontSize: '1.8rem', color: '#ffb800', margin: '0 0 10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <h2 style={{ fontFamily: '"Syne"', fontSize: '1.8rem', color: '#ffb800', margin: '0 0 24px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
               <Trophy size={24} color="#ffb800" /> Knockout Stage
             </h2>
-            <TournamentBracket knockout={knockout} />
+            
+            <MatchTable
+              label="Playoff Fixtures"
+              matches={[
+                {
+                  id: 'Qualifier 1', type: 'playoff', grp: 'A',
+                  t1: knockout.qualifier1.team1Name, t2: knockout.qualifier1.team2Name,
+                  date: knockout.qualifier1.date || 'TBD', time: knockout.qualifier1.time || 'TBD',
+                  status: knockout.qualifier1.status || 'UPCOMING', result: knockout.qualifier1.result || '', winner: knockout.qualifier1.winner || ''
+                },
+                {
+                  id: 'Eliminator', type: 'playoff', grp: 'B',
+                  t1: knockout.eliminator.team1Name, t2: knockout.eliminator.team2Name,
+                  date: knockout.eliminator.date || 'TBD', time: knockout.eliminator.time || 'TBD',
+                  status: knockout.eliminator.status || 'UPCOMING', result: knockout.eliminator.result || '', winner: knockout.eliminator.winner || ''
+                },
+                {
+                  id: 'Qualifier 2', type: 'playoff', grp: 'A',
+                  t1: knockout.qualifier2.team1Name, t2: knockout.qualifier2.team2Name,
+                  date: knockout.qualifier2.date || 'TBD', time: knockout.qualifier2.time || 'TBD',
+                  status: knockout.qualifier2.status || 'UPCOMING', result: knockout.qualifier2.result || '', winner: knockout.qualifier2.winner || ''
+                },
+                {
+                  id: 'Final', type: 'final', grp: 'B',
+                  t1: knockout.final.team1Name, t2: knockout.final.team2Name,
+                  date: knockout.final.date || 'TBD', time: knockout.final.time || 'TBD',
+                  status: knockout.final.status || 'UPCOMING', result: knockout.final.result || '', winner: knockout.final.winner || ''
+                }
+              ]}
+            />
+            
+            <div style={{ marginTop: 20 }}>
+              <TournamentBracket knockout={knockout} />
+            </div>
           </div>
         </div>
 

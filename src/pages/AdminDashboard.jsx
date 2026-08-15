@@ -1514,10 +1514,10 @@ const DEFAULT_MATCHES = Array.from({ length: 20 }, (_, i) => ({
   date: 'TBD', time: 'TBD', winner: '',
 }))
 const DEFAULT_KNOCKOUT = {
-  qualifier1: { label: 'Qualifier 1', team1Seed: 'A1', team1Name: 'Pool A 1st', team2Seed: 'B1', team2Name: 'Pool B 1st' },
-  eliminator: { label: 'Eliminator', team1Seed: 'A2', team1Name: 'Pool A 2nd', team2Seed: 'B2', team2Name: 'Pool B 2nd' },
-  qualifier2: { label: 'Qualifier 2', team1Name: 'Loser Q1', team2Name: 'Winner Eliminator' },
-  final: { label: 'Finals', team1Name: 'Winner Q1', team2Name: 'Winner Q2' },
+  qualifier1: { label: 'Qualifier 1', team1Seed: 'A1', team1Name: 'Pool A 1st', team2Seed: 'B1', team2Name: 'Pool B 1st', winner: '', date: 'TBD', time: 'TBD', status: 'UPCOMING', result: '' },
+  eliminator: { label: 'Eliminator', team1Seed: 'A2', team1Name: 'Pool A 2nd', team2Seed: 'B2', team2Name: 'Pool B 2nd', winner: '', date: 'TBD', time: 'TBD', status: 'UPCOMING', result: '' },
+  qualifier2: { label: 'Qualifier 2', team1Name: 'Loser Q1', team2Name: 'Winner Eliminator', winner: '', date: 'TBD', time: 'TBD', status: 'UPCOMING', result: '' },
+  final: { label: 'Finals', team1Name: 'Winner Q1', team2Name: 'Winner Q2', winner: '', date: 'TBD', time: 'TBD', status: 'UPCOMING', result: '' },
 }
 
 function buildScheduleForm(settings) {
@@ -1564,6 +1564,11 @@ function buildScheduleForm(settings) {
         team1Name: source?.knockout?.qualifier1?.team1Name || DEFAULT_KNOCKOUT.qualifier1.team1Name,
         team2Seed: source?.knockout?.qualifier1?.team2Seed || DEFAULT_KNOCKOUT.qualifier1.team2Seed,
         team2Name: source?.knockout?.qualifier1?.team2Name || DEFAULT_KNOCKOUT.qualifier1.team2Name,
+        winner: source?.knockout?.qualifier1?.winner || '',
+        date: source?.knockout?.qualifier1?.date || 'TBD',
+        time: source?.knockout?.qualifier1?.time || 'TBD',
+        status: source?.knockout?.qualifier1?.status || 'UPCOMING',
+        result: source?.knockout?.qualifier1?.result || '',
       },
       eliminator: {
         label: source?.knockout?.eliminator?.label || DEFAULT_KNOCKOUT.eliminator.label,
@@ -1571,16 +1576,31 @@ function buildScheduleForm(settings) {
         team1Name: source?.knockout?.eliminator?.team1Name || DEFAULT_KNOCKOUT.eliminator.team1Name,
         team2Seed: source?.knockout?.eliminator?.team2Seed || DEFAULT_KNOCKOUT.eliminator.team2Seed,
         team2Name: source?.knockout?.eliminator?.team2Name || DEFAULT_KNOCKOUT.eliminator.team2Name,
+        winner: source?.knockout?.eliminator?.winner || '',
+        date: source?.knockout?.eliminator?.date || 'TBD',
+        time: source?.knockout?.eliminator?.time || 'TBD',
+        status: source?.knockout?.eliminator?.status || 'UPCOMING',
+        result: source?.knockout?.eliminator?.result || '',
       },
       qualifier2: {
         label: source?.knockout?.qualifier2?.label || DEFAULT_KNOCKOUT.qualifier2.label,
         team1Name: source?.knockout?.qualifier2?.team1Name || DEFAULT_KNOCKOUT.qualifier2.team1Name,
         team2Name: source?.knockout?.qualifier2?.team2Name || DEFAULT_KNOCKOUT.qualifier2.team2Name,
+        winner: source?.knockout?.qualifier2?.winner || '',
+        date: source?.knockout?.qualifier2?.date || 'TBD',
+        time: source?.knockout?.qualifier2?.time || 'TBD',
+        status: source?.knockout?.qualifier2?.status || 'UPCOMING',
+        result: source?.knockout?.qualifier2?.result || '',
       },
       final: {
         label: source?.knockout?.final?.label || DEFAULT_KNOCKOUT.final.label,
         team1Name: source?.knockout?.final?.team1Name || DEFAULT_KNOCKOUT.final.team1Name,
         team2Name: source?.knockout?.final?.team2Name || DEFAULT_KNOCKOUT.final.team2Name,
+        winner: source?.knockout?.final?.winner || '',
+        date: source?.knockout?.final?.date || 'TBD',
+        time: source?.knockout?.final?.time || 'TBD',
+        status: source?.knockout?.final?.status || 'UPCOMING',
+        result: source?.knockout?.final?.result || '',
       },
     },
   }
@@ -1627,13 +1647,54 @@ function SchedulePanel({ settings, onSave, saving, isCompact, players }) {
   }
 
   const updateKnockout = (stage, key, value) => {
-    updateForm('knockout', {
+    let nextKnockout = {
       ...form.knockout,
       [stage]: {
         ...form.knockout[stage],
         [key]: value,
       },
-    })
+    }
+
+    // Auto-advance logic for winners
+    if (key === 'winner') {
+      const winner = value;
+      if (stage === 'qualifier1') {
+        const t1 = nextKnockout.qualifier1.team1Name;
+        const t2 = nextKnockout.qualifier1.team2Name;
+        const loser = winner === t1 ? t2 : winner === t2 ? t1 : 'Loser Q1';
+        nextKnockout.final.team1Name = winner || 'Winner Q1';
+        nextKnockout.qualifier2.team1Name = loser || 'Loser Q1';
+      }
+      if (stage === 'eliminator') {
+        nextKnockout.qualifier2.team2Name = winner || 'Winner Eliminator';
+      }
+      if (stage === 'qualifier2') {
+        nextKnockout.final.team2Name = winner || 'Winner Q2';
+      }
+    }
+
+    updateForm('knockout', nextKnockout)
+  }
+
+  const autoFillKnockouts = () => {
+    const sortTeams = (teamsList) => [...teamsList].sort((a, b) => {
+      if (Number(b.pts) !== Number(a.pts)) return Number(b.pts) - Number(a.pts);
+      if (Number(b.w) !== Number(a.w)) return Number(b.w) - Number(a.w);
+      if (parseFloat(b.nrr) !== parseFloat(a.nrr)) return parseFloat(b.nrr) - parseFloat(a.nrr);
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const sortedA = sortTeams(form.teams.A);
+    const sortedB = sortTeams(form.teams.B);
+
+    if (window.confirm('Auto-fill Qualifier 1 and Eliminator teams based on current Points Table standings?')) {
+      let nextKnockout = { ...form.knockout };
+      nextKnockout.qualifier1.team1Name = sortedA[0]?.name || 'Pool A 1st';
+      nextKnockout.qualifier1.team2Name = sortedB[0]?.name || 'Pool B 1st';
+      nextKnockout.eliminator.team1Name = sortedA[1]?.name || 'Pool A 2nd';
+      nextKnockout.eliminator.team2Name = sortedB[1]?.name || 'Pool B 2nd';
+      updateForm('knockout', nextKnockout);
+    }
   }
 
   const resetTournamentData = () => {
@@ -1902,51 +1963,113 @@ function SchedulePanel({ settings, onSave, saving, isCompact, players }) {
 
       {/* KNOCKOUT STAGE MANAGER */}
       <div style={{ background: '#111', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,.08)', marginBottom: 24 }}>
-        <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: 16 }}>Knockout Stage</h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>Knockout Stage</h3>
+          <button onClick={autoFillKnockouts} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'rgba(255,184,0,.1)', color: '#ffb800', border: '1px solid rgba(255,184,0,.2)', borderRadius: 8, cursor: 'pointer', fontSize: '.8rem' }}>
+            <RefreshCw size={14} /> Auto-Fill Playoff Teams
+          </button>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <div style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
             <p style={{ color: '#ff6b22', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Qualifier 1</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 10 }}>
               <input value={form.knockout.qualifier1.label} onChange={e => updateKnockout('qualifier1', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <div />
               <input value={form.knockout.qualifier1.team1Seed} onChange={e => updateKnockout('qualifier1', 'team1Seed', e.target.value)} placeholder="Seed 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <input value={form.knockout.qualifier1.team1Name} onChange={e => updateKnockout('qualifier1', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <input value={form.knockout.qualifier1.team2Seed} onChange={e => updateKnockout('qualifier1', 'team2Seed', e.target.value)} placeholder="Seed 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <input value={form.knockout.qualifier1.team2Name} onChange={e => updateKnockout('qualifier1', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier1.date} onChange={e => updateKnockout('qualifier1', 'date', e.target.value)} placeholder="Date" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier1.time} onChange={e => updateKnockout('qualifier1', 'time', e.target.value)} placeholder="Time" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <select value={form.knockout.qualifier1.status} onChange={e => updateKnockout('qualifier1', 'status', e.target.value)} style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }}>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="LIVE">Live</option>
+                <option value="COMPLETED">Ended</option>
+                <option value="ABANDONED">Abandoned</option>
+              </select>
+              <input value={form.knockout.qualifier1.result} onChange={e => updateKnockout('qualifier1', 'result', e.target.value)} placeholder="Result (e.g. won by 10 runs)" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
             </div>
+            <select value={form.knockout.qualifier1.winner} onChange={e => updateKnockout('qualifier1', 'winner', e.target.value)} style={{ width: '100%', background: '#222', color: '#22c55e', padding: 10, borderRadius: 8, border: '1px solid rgba(34,197,94,.3)' }}>
+              <option value="">Select Match Winner</option>
+              {form.knockout.qualifier1.team1Name && form.knockout.qualifier1.team1Name !== 'Pool A 1st' && <option value={form.knockout.qualifier1.team1Name}>{form.knockout.qualifier1.team1Name}</option>}
+              {form.knockout.qualifier1.team2Name && form.knockout.qualifier1.team2Name !== 'Pool B 1st' && <option value={form.knockout.qualifier1.team2Name}>{form.knockout.qualifier1.team2Name}</option>}
+            </select>
           </div>
 
           <div style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
             <p style={{ color: '#3b82f6', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Eliminator</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 10 }}>
               <input value={form.knockout.eliminator.label} onChange={e => updateKnockout('eliminator', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <div />
               <input value={form.knockout.eliminator.team1Seed} onChange={e => updateKnockout('eliminator', 'team1Seed', e.target.value)} placeholder="Seed 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <input value={form.knockout.eliminator.team1Name} onChange={e => updateKnockout('eliminator', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <input value={form.knockout.eliminator.team2Seed} onChange={e => updateKnockout('eliminator', 'team2Seed', e.target.value)} placeholder="Seed 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <input value={form.knockout.eliminator.team2Name} onChange={e => updateKnockout('eliminator', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.eliminator.date} onChange={e => updateKnockout('eliminator', 'date', e.target.value)} placeholder="Date" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.eliminator.time} onChange={e => updateKnockout('eliminator', 'time', e.target.value)} placeholder="Time" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <select value={form.knockout.eliminator.status} onChange={e => updateKnockout('eliminator', 'status', e.target.value)} style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }}>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="LIVE">Live</option>
+                <option value="COMPLETED">Ended</option>
+                <option value="ABANDONED">Abandoned</option>
+              </select>
+              <input value={form.knockout.eliminator.result} onChange={e => updateKnockout('eliminator', 'result', e.target.value)} placeholder="Result (e.g. won by 10 runs)" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
             </div>
+            <select value={form.knockout.eliminator.winner} onChange={e => updateKnockout('eliminator', 'winner', e.target.value)} style={{ width: '100%', background: '#222', color: '#22c55e', padding: 10, borderRadius: 8, border: '1px solid rgba(34,197,94,.3)' }}>
+              <option value="">Select Match Winner</option>
+              {form.knockout.eliminator.team1Name && form.knockout.eliminator.team1Name !== 'Pool A 2nd' && <option value={form.knockout.eliminator.team1Name}>{form.knockout.eliminator.team1Name}</option>}
+              {form.knockout.eliminator.team2Name && form.knockout.eliminator.team2Name !== 'Pool B 2nd' && <option value={form.knockout.eliminator.team2Name}>{form.knockout.eliminator.team2Name}</option>}
+            </select>
           </div>
 
           <div style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
             <p style={{ color: '#a855f7', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Qualifier 2</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 10 }}>
               <input value={form.knockout.qualifier2.label} onChange={e => updateKnockout('qualifier2', 'label', e.target.value)} placeholder="Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <div />
               <input value={form.knockout.qualifier2.team1Name} onChange={e => updateKnockout('qualifier2', 'team1Name', e.target.value)} placeholder="Team 1 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
               <input value={form.knockout.qualifier2.team2Name} onChange={e => updateKnockout('qualifier2', 'team2Name', e.target.value)} placeholder="Team 2 name" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier2.date} onChange={e => updateKnockout('qualifier2', 'date', e.target.value)} placeholder="Date" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <input value={form.knockout.qualifier2.time} onChange={e => updateKnockout('qualifier2', 'time', e.target.value)} placeholder="Time" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+              <select value={form.knockout.qualifier2.status} onChange={e => updateKnockout('qualifier2', 'status', e.target.value)} style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }}>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="LIVE">Live</option>
+                <option value="COMPLETED">Ended</option>
+                <option value="ABANDONED">Abandoned</option>
+              </select>
+              <input value={form.knockout.qualifier2.result} onChange={e => updateKnockout('qualifier2', 'result', e.target.value)} placeholder="Result (e.g. won by 10 runs)" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
             </div>
+            <select value={form.knockout.qualifier2.winner} onChange={e => updateKnockout('qualifier2', 'winner', e.target.value)} style={{ width: '100%', background: '#222', color: '#22c55e', padding: 10, borderRadius: 8, border: '1px solid rgba(34,197,94,.3)' }}>
+              <option value="">Select Match Winner</option>
+              {form.knockout.qualifier2.team1Name && form.knockout.qualifier2.team1Name !== 'Loser Q1' && <option value={form.knockout.qualifier2.team1Name}>{form.knockout.qualifier2.team1Name}</option>}
+              {form.knockout.qualifier2.team2Name && form.knockout.qualifier2.team2Name !== 'Winner Eliminator' && <option value={form.knockout.qualifier2.team2Name}>{form.knockout.qualifier2.team2Name}</option>}
+            </select>
           </div>
         </div>
 
         <div style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
           <p style={{ color: '#ffb800', fontSize: '.78rem', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Final</p>
-          <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr 1fr', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 10 }}>
             <input value={form.knockout.final.label} onChange={e => updateKnockout('final', 'label', e.target.value)} placeholder="Final Label" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+            <div />
             <input value={form.knockout.final.team1Name} onChange={e => updateKnockout('final', 'team1Name', e.target.value)} placeholder="Finalist 1" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
             <input value={form.knockout.final.team2Name} onChange={e => updateKnockout('final', 'team2Name', e.target.value)} placeholder="Finalist 2" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+            <input value={form.knockout.final.date} onChange={e => updateKnockout('final', 'date', e.target.value)} placeholder="Date" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+            <input value={form.knockout.final.time} onChange={e => updateKnockout('final', 'time', e.target.value)} placeholder="Time" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
+            <select value={form.knockout.final.status} onChange={e => updateKnockout('final', 'status', e.target.value)} style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }}>
+              <option value="UPCOMING">Upcoming</option>
+              <option value="LIVE">Live</option>
+              <option value="COMPLETED">Ended</option>
+              <option value="ABANDONED">Abandoned</option>
+            </select>
+            <input value={form.knockout.final.result} onChange={e => updateKnockout('final', 'result', e.target.value)} placeholder="Result (e.g. won by 10 runs)" style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 8 }} />
           </div>
+          <select value={form.knockout.final.winner} onChange={e => updateKnockout('final', 'winner', e.target.value)} style={{ width: '100%', background: '#222', color: '#22c55e', padding: 10, borderRadius: 8, border: '1px solid rgba(34,197,94,.3)' }}>
+            <option value="">Select Match Winner (Champion)</option>
+            {form.knockout.final.team1Name && form.knockout.final.team1Name !== 'Winner Q1' && <option value={form.knockout.final.team1Name}>{form.knockout.final.team1Name}</option>}
+            {form.knockout.final.team2Name && form.knockout.final.team2Name !== 'Winner Q2' && <option value={form.knockout.final.team2Name}>{form.knockout.final.team2Name}</option>}
+          </select>
         </div>
       </div>
 
